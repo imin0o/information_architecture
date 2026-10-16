@@ -6,6 +6,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "sources"
 MANIFEST = SOURCES / "manifest.yaml"
 ORIGINALS = SOURCES / "originals"
+EXTRACTED = SOURCES / "extracted"
 SCHEMAS = ROOT / "schemas"
 FIXTURES = ROOT / "tests" / "fixtures"
 FIXTURES_INDEX = FIXTURES / "fixtures.yaml"

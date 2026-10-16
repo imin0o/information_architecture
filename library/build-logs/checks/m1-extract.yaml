@@ -1,0 +1,10 @@
+schema_version: 0.1.0
+result: pass
+checks:
+- check: extracted
+  result: pass
+  snapshots: 3
+  original_hash_check:
+    run: 3
+    not_run: 0
+  errors: []

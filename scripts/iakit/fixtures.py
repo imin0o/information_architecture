@@ -3,12 +3,13 @@
 import hashlib
 import json
 
-from . import fixture_epub, fixture_pdf, yamlio
+from . import fixture_epub, fixture_pdf, fixture_pdf_unicode, yamlio
 from .paths import FIXTURES, FIXTURES_INDEX
 
 BUILDERS = {
     "pdf/page-labels.pdf": (fixture_pdf.build, fixture_pdf.expected, "pdf"),
     "epub/reflowable.epub": (fixture_epub.build, fixture_epub.expected, "epub"),
+    "pdf/unicode-layout.pdf": (fixture_pdf_unicode.build, fixture_pdf_unicode.expected, "pdf"),
 }
 HEADER = (
     "# 自作素材の登録簿。iakit fixtures build で生成し、手で編集しない。\n"
@@ -18,6 +19,8 @@ HEADER = (
 # M0: PDFページ番号・EPUB位置参照の初版。生成器更新前に旧版の値を保存する。
 HISTORICAL_CATALOGUE_HASHES = frozenset({
     "613e0d2949b0304264d333ab12fb12710f3eca4185de97f7656a11b25abcefe0",
+    # M1: Unicode・合字・2段組・Type3の回帰素材を追加した版。
+    "766e3bbb033302989fe3972e5c98cb594a6b17935950cd03da71a61505b74b1c",
 })
 
 

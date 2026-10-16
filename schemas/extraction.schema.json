@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "extraction.schema.json",
+  "title": "抽出メタデータ sources/extracted/<extraction_id>/extraction.yaml（BR-01）",
+  "type": "object",
+  "required": ["schema_version", "extraction_id", "created_at", "source", "extractor", "normalization", "text", "locations", "quality"],
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "properties": {
+    "schema_version": {"const": "0.1.0"},
+    "extraction_id": {"type": "string", "pattern": "^EXTRACT-[A-Z0-9]+-[0-9]{3}$"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "source": {
+      "type": "object",
+      "required": ["source_id", "sha256", "format", "size_bytes", "bibliography_state"],
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {"type": "string", "pattern": "^(BOOK-[0-9]{3}|FIXTURE-[a-z0-9-]+)$"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "format": {"enum": ["pdf", "epub"]},
+        "size_bytes": {"type": "integer", "minimum": 1},
+        "bibliography_state": {
+          "description": "trial は書誌未確認の試験抽出。confirmed は抽出時点で書誌確認済み",
+          "enum": ["trial", "confirmed"]
+        }
+      }
+    },
+    "extractor": {
+      "type": "object",
+      "required": ["adapter", "method", "python", "libraries", "options", "fallback", "llm_calls", "upstream"],
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {"type": "string"},
+        "method": {"type": "string"},
+        "python": {"type": "string"},
+        "libraries": {"type": "object", "additionalProperties": {"type": "string"}},
+        "options": {"type": "object"},
+        "fallback": {"type": ["string", "null"]},
+        "llm_calls": {"const": 0},
+        "upstream": {
+          "type": "object",
+          "required": ["repository", "commit", "license", "code_executed"],
+          "additionalProperties": false,
+          "properties": {
+            "repository": {"type": "string"},
+            "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+            "license": {"type": "string"},
+            "code_executed": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "normalization": {
+      "type": "object",
+      "required": ["id", "encoding", "bom", "newline", "unicode", "unit_final_newline"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"const": "iakit-norm-1"},
+        "encoding": {"const": "utf-8"},
+        "bom": {"const": false},
+        "newline": {"const": "lf"},
+        "unicode": {"const": "none"},
+        "unit_final_newline": {"const": true}
+      }
+    },
+    "text": {
+      "type": "object",
+      "required": ["path", "sha256", "bytes", "lines"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"const": "text.txt"},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "bytes": {"type": "integer", "minimum": 0},
+        "lines": {"type": "integer", "minimum": 0}
+      }
+    },
+    "locations": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "path": {"const": "locations.yaml"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "quality": {
+      "type": "object",
+      "required": ["units", "units_without_text", "unit_errors", "unreadable_elements", "invisible_codepoints",
+                   "replacement_chars", "newlines_converted", "warnings", "warning_count", "sample_review"],
+      "additionalProperties": false,
+      "properties": {
+        "units": {"type": "integer", "minimum": 0},
+        "units_without_text": {"type": "integer", "minimum": 0},
+        "unit_errors": {"type": "integer", "minimum": 0},
+        "unreadable_elements": {"type": "integer", "minimum": 0},
+        "invisible_codepoints": {"type": "integer", "minimum": 0},
+        "replacement_chars": {"type": "integer", "minimum": 0},
+        "newlines_converted": {
+          "type": "object",
+          "required": ["crlf", "cr"],
+          "additionalProperties": false,
+          "properties": {"crlf": {"type": "integer", "minimum": 0}, "cr": {"type": "integer", "minimum": 0}}
+        },
+        "warnings": {"type": "array", "items": {"type": "string"}},
+        "warning_count": {"type": "integer", "minimum": 0},
+        "sample_review": {
+          "description": "人による代表箇所の品質確認。抽出処理では not_run のまま",
+          "enum": ["not_run", "done"]
+        }
+      }
+    }
+  }
+}

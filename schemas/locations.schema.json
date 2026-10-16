@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "locations.schema.json",
+  "title": "位置対応表 sources/extracted/<extraction_id>/locations.yaml（BR-01）",
+  "description": "行番号はtext.txtのLF区切り・1始まり・両端を含む。本文を含まない",
+  "type": "object",
+  "required": ["schema_version", "extraction_id", "text_sha256", "format", "page_labels", "printed_page_numbers"],
+  "additionalProperties": false,
+  "$defs": {
+    "range": {
+      "type": "object",
+      "required": ["start_line", "end_line", "status", "error"],
+      "properties": {
+        "start_line": {"type": ["integer", "null"], "minimum": 1},
+        "end_line": {"type": ["integer", "null"], "minimum": 1},
+        "status": {"enum": ["text", "no_text", "error"]},
+        "error": {"type": ["string", "null"]}
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "0.1.0"},
+    "extraction_id": {"type": "string", "pattern": "^EXTRACT-[A-Z0-9]+-[0-9]{3}$"},
+    "text_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "format": {"enum": ["pdf", "epub"]},
+    "page_labels": {"enum": ["present", "absent"]},
+    "printed_page_numbers": {
+      "description": "印刷ページ番号の出所。PageLabelsの値は原典の印刷面と人が照合するまで確認済みとしない",
+      "enum": ["from_page_labels", null]
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "allOf": [{"$ref": "#/$defs/range"}],
+        "type": "object",
+        "required": ["pdf_page_index", "printed_page_label", "images"],
+        "unevaluatedProperties": false,
+        "properties": {
+          "pdf_page_index": {"type": "integer", "minimum": 1},
+          "images": {"description": "ページ直下の画像XObjectの数。文字として読めない図の目安", "type": "integer", "minimum": 0},
+          "printed_page_label": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "allOf": [{"$ref": "#/$defs/range"}],
+        "type": "object",
+        "required": ["href", "in_spine", "linear", "elements", "unreadable"],
+        "unevaluatedProperties": false,
+        "properties": {
+          "href": {"type": "string"},
+          "in_spine": {"type": "boolean"},
+          "linear": {"type": ["boolean", "null"]},
+          "elements": {
+            "type": "array",
+            "items": {
+              "type": "object", "required": ["id", "line"], "additionalProperties": false,
+              "properties": {"id": {"type": "string"}, "line": {"type": "integer", "minimum": 1}}
+            }
+          },
+          "unreadable": {
+            "type": "array",
+            "items": {
+              "type": "object", "required": ["element_id", "kind", "alt_text"], "additionalProperties": false,
+              "properties": {
+                "element_id": {"type": ["string", "null"]},
+                "kind": {"enum": ["image", "media", "math"]},
+                "alt_text": {"type": "boolean"}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {"properties": {"format": {"const": "pdf"}}, "required": ["pages"], "not": {"required": ["documents"]}},
+    {"properties": {"format": {"const": "epub"}}, "required": ["documents"], "not": {"required": ["pages"]}}
+  ]
+}

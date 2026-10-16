@@ -69,3 +69,14 @@ uv run --locked iakit leaks check --dir dist
 `candidate` は推定値、`bibliography` は人が原典で確認した値として分離する。書誌の確認者・確認日時は組で記録する。`registered` 以降には確認済みの題名・著者も必要であり、ISBN等は確認できるまでnullでよい。日時は時差付きのRFC3339表記とする。これらは記録の整合確認であり、人の確認そのものを自動化しない。
 
 M1では `BOOK-ID + 原典SHA-256 → extraction_id + 抽出テキストSHA-256 + 抽出条件 → locations.yaml` を結ぶ。対応表にも抽出ID・対象テキストハッシュを記録し、再抽出には新IDを割り当てる。書誌未確認の試験抽出は書誌確認済み状態と分けて扱う。複数形式・異版を併存させる際はBOOKと原典ファイルを一対多に拡張する。
+
+```sh
+uv run --locked iakit extract run --book BOOK-003          # sources/extracted/EXTRACT-003-<連番>/ を作る
+uv run --locked iakit extract run --fixture pdf/page-labels.pdf --root .tmp/extracted
+uv run --locked iakit extract check --local                # 対応表・ハッシュと原典の照合
+uv run --locked iakit excerpt ref --extraction sources/extracted/EXTRACT-003-001 --lines 120-124
+```
+
+出力は抽出ID・ハッシュ・件数・位置の候補だけで、本文を含まない。上流book-to-skillとの差分と採用条件は [adapters/book-to-skill/README.md](adapters/book-to-skill/README.md) に記録する。
+
+ホストでのSkill配置は `uv run --locked iakit hosts probe --host claude --host codex` で確認する。自作の `tests/host-compat/iakit-host-probe/` を一時ディレクトリに置き、各ホストのCLIへ質問を送る。終了時に一時ディレクトリを削除する。

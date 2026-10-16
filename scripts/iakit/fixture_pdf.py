@@ -43,9 +43,16 @@ def build() -> bytes:
             f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
             f"/Resources << /Font << /F1 3 0 R >> >> /Contents {content_id} 0 R >>"
         ).encode("ascii")
-        stream = _content_stream(lines)
-        objects[content_id] = b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"endstream"
+        objects[content_id] = stream(_content_stream(lines))
+    return assemble(objects)
 
+
+def stream(data: bytes, extra: str = "") -> bytes:
+    return b"<< %s/Length %d >>\nstream\n" % (extra.encode("ascii"), len(data)) + data + b"endstream"
+
+
+def assemble(objects: dict[int, bytes]) -> bytes:
+    """オブジェクト番号順に本体・xref・trailerを組み立てる。1番をCatalogとする。"""
     out = bytearray(b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\n")
     offsets = {}
     for obj_id in sorted(objects):

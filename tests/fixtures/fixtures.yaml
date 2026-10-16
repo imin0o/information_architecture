@@ -57,3 +57,26 @@ files:
       href: text/ch1.xhtml
       starts_with: This paragraph has no element ID
     printed_page_numbers: null
+- path: pdf/unicode-layout.pdf
+  format: pdf
+  origin: self-made
+  sha256: 3f9e838789b9492bdf566b574e6a8236cc97fe6e01d61a336daebdb77de90d2c
+  expected:
+    page_count: 3
+    page_labels: null
+    pages:
+    - pdf_page_index: 1
+      lines:
+      - 情報設計の自作試験
+      - 'Precomposed: café / decomposed: café'
+      - 'Ligatures: ﬁnd office'
+      - 'Width: Ａ１ Radical: ⼈'
+    - pdf_page_index: 2
+      lines:
+      - Left column line one
+      - Left column line two
+      - Right column line one
+      - Right column line two
+    - pdf_page_index: 3
+      lines:
+      - Embedded glyphs

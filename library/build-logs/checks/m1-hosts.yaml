@@ -1,0 +1,45 @@
+schema_version: 0.1.0
+result: fail
+checks:
+- host: claude
+  host_version: 2.1.291 (Claude Code)
+  os: Windows 11
+  placement: <workdir>/.claude/skills
+  space_in_path: false
+  checks:
+    discovery:
+      exit_code: 0
+      token_returned: true
+      result: pass
+    explicit:
+      exit_code: 0
+      token_returned: true
+      result: pass
+    control:
+      exit_code: 0
+      token_returned: false
+      result: pass
+  result: pass
+- host: codex
+  host_version: codex-cli 0.135.0
+  os: Windows 11
+  placement: <workdir>/.agents/skills
+  space_in_path: false
+  checks:
+    discovery:
+      exit_code: 1
+      token_returned: false
+      error: 'Error loading config.toml: invalid type: map, expected a boolean'
+      result: fail
+    explicit:
+      exit_code: 1
+      token_returned: false
+      error: 'Error loading config.toml: invalid type: map, expected a boolean'
+      result: fail
+    control:
+      exit_code: 1
+      token_returned: false
+      error: 'Error loading config.toml: invalid type: map, expected a boolean'
+      result: fail
+  result: blocked
+  reason: ホストCLIが応答を返さない（設定・認証を確認）
