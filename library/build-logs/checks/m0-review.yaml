@@ -1,0 +1,34 @@
+schema_version: 0.1.0
+result: pass
+uv: uv 0.12.7 (61291a8ca 2026-08-27 x86_64-pc-windows-msvc)
+tests:
+- python: Python 3.12.13
+  result: pass
+  tests: 91
+- python: Python 3.14.3
+  result: pass
+  tests: 91
+candidate_snapshot: temporary index; actual index unchanged
+checks:
+- check: manifest
+  result: pass
+  local_originals: run
+  status_counts:
+    bibliography_unconfirmed: 9
+    not_received: 9
+  unassigned_originals: 1
+  errors: []
+- check: fixtures
+  result: pass
+  files:
+  - epub/reflowable.epub
+  - pdf/page-labels.pdf
+  errors: []
+- check: leaks
+  result: pass
+  targets:
+  - git:index
+  files_scanned: 38
+  known_original_hashes: 10
+  violations: []
+  errors: []

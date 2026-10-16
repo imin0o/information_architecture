@@ -1,0 +1,12 @@
+# Keep hooks, YAML and source text stable across PowerShell and Git Bash.
+* text=auto eol=lf
+
+# Byte-for-byte fixtures and originals must never undergo newline conversion.
+*.pdf binary
+*.epub binary
+*.mobi binary
+*.azw binary
+*.azw3 binary
+*.djvu binary
+*.zip binary
+*.whl binary

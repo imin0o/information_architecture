@@ -1,0 +1,3 @@
+#!/bin/sh
+# stdin contains refs proposed for this push. Do not consume it before iakit.
+exec uv run --locked iakit leaks check --pre-push "$1"

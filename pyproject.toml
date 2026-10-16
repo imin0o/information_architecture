@@ -1,0 +1,25 @@
+[project]
+name = "iakit"
+version = "0.1.0"
+description = "情報設計Skill群の構築・照合・検査用ツール"
+requires-python = ">=3.12"
+dependencies = [
+    "jsonschema==4.25.1",
+    "ruamel.yaml==0.18.15",
+]
+
+[project.scripts]
+iakit = "iakit.cli:main"
+
+[dependency-groups]
+dev = ["pytest==8.4.2"]
+
+[build-system]
+requires = ["uv_build==0.12.7"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = "scripts"
+
+[tool.pytest.ini_options]
+testpaths = ["tests/checks"]

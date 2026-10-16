@@ -1,0 +1,24 @@
+schema_version: 0.1.0
+result: pass
+checks:
+- check: manifest
+  result: pass
+  local_originals: run
+  status_counts:
+    bibliography_unconfirmed: 9
+    not_received: 9
+  unassigned_originals: 1
+  errors: []
+- check: fixtures
+  result: pass
+  files:
+  - epub/reflowable.epub
+  - pdf/page-labels.pdf
+  errors: []
+- check: leaks
+  result: pass
+  targets:
+  - git:index
+  files_scanned: 3
+  known_original_hashes: 10
+  violations: []

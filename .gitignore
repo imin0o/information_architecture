@@ -1,1 +1,25 @@
-sources/originals/
+# 原典・抽出結果（NFR-05）。sources/ は manifest.yaml だけを管理する
+/sources/*
+!/sources/manifest.yaml
+
+# 実行記録・入力（原則Git管理外）
+/runs/
+
+# 原典本文を含みうる生ログ・一時出力
+/library/build-logs/raw/
+*.log
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv-*/
+.coverage
+htmlcov/
+
+# Python / Skill build outputs and local verification scratch space
+/dist/
+/build/
+*.egg-info/
+/.tmp/

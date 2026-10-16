@@ -1,0 +1,7 @@
+#!/bin/sh
+# 原典・機密データのコミットを止める。有効化: git config core.hooksPath .githooks
+if ! out=$(uv run --locked iakit leaks check 2>&1); then
+  printf '%s\n' "$out" >&2
+  printf '%s\n' "iakit leaks check が違反を検出したため、コミットを中止しました。" >&2
+  exit 1
+fi

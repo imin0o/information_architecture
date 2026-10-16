@@ -1,0 +1,112 @@
+%PDF-1.7
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R /PageLabels << /Nums [0 << /P (Cover) >> 1 << /S /r >> 3 << /S /D >>] >> >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R 6 0 R 8 0 R 10 0 R 12 0 R] /Count 5 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 5 0 R >>
+endobj
+5 0 obj
+<< /Length 112 >>
+stream
+BT
+/F1 12 Tf
+14 TL
+72 720 Td
+(Fixture Handbook) Tj T*
+(A self-written test document. Not a real book.) Tj T*
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 7 0 R >>
+endobj
+7 0 obj
+<< /Length 136 >>
+stream
+BT
+/F1 12 Tf
+14 TL
+72 720 Td
+(Preface) Tj T*
+(Front matter uses roman page numbers.) Tj T*
+(PDF page index 2 is printed as i.) Tj T*
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 9 0 R >>
+endobj
+9 0 obj
+<< /Length 111 >>
+stream
+BT
+/F1 12 Tf
+14 TL
+72 720 Td
+(Contents) Tj T*
+(1 Sorting things ... 1) Tj T*
+(2 Finding things ... 2) Tj T*
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 11 0 R >>
+endobj
+11 0 obj
+<< /Length 200 >>
+stream
+BT
+/F1 12 Tf
+14 TL
+72 720 Td
+(1 Sorting things) Tj T*
+(Arabic numbering restarts at 1 on PDF page index 4.) Tj T*
+(This paragraph continues on the next page and tests a range that spans two) Tj T*
+ET
+endstream
+endobj
+12 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >> >> /Contents 13 0 R >>
+endobj
+13 0 obj
+<< /Length 186 >>
+stream
+BT
+/F1 12 Tf
+14 TL
+72 720 Td
+(pages without a heading at the top.) Tj T*
+(2 Finding things) Tj T*
+(Hyphenated words at line ends are kept as written: classi-) Tj T*
+(fication.) Tj T*
+ET
+endstream
+endobj
+xref
+0 14
+0000000000 65535 f 
+0000000015 00000 n 
+0000000137 00000 n 
+0000000220 00000 n 
+0000000317 00000 n 
+0000000443 00000 n 
+0000000605 00000 n 
+0000000731 00000 n 
+0000000917 00000 n 
+0000001043 00000 n 
+0000001204 00000 n 
+0000001332 00000 n 
+0000001583 00000 n 
+0000001711 00000 n 
+trailer
+<< /Size 14 /Root 1 0 R >>
+startxref
+1948
+%%EOF

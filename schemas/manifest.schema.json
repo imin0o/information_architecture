@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "manifest.schema.json",
+  "title": "原典登録簿 sources/manifest.yaml（BR-01）",
+  "type": "object",
+  "required": ["schema_version", "books", "unassigned_originals"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"const": "0.1.0"},
+    "books": {"type": "array", "items": {"$ref": "#/$defs/book"}},
+    "unassigned_originals": {
+      "description": "受領したが18冊のどれにも割り当てていない原典",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["original", "candidate", "note"],
+        "additionalProperties": false,
+        "properties": {
+          "original": {"$ref": "#/$defs/original"},
+          "candidate": {"$ref": "#/$defs/candidate"},
+          "note": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nullable_string": {"type": ["string", "null"]},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "candidate": {
+      "description": "要件8章・ファイル名から推定した未確認の書誌",
+      "type": "object",
+      "required": ["title", "authors", "basis"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {"type": "string"},
+        "authors": {"type": ["array", "null"], "items": {"type": "string"}},
+        "edition": {"$ref": "#/$defs/nullable_string"},
+        "year": {"$ref": "#/$defs/nullable_string"},
+        "publisher": {"$ref": "#/$defs/nullable_string"},
+        "basis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"enum": ["requirements-8", "filename"]}
+        }
+      }
+    },
+    "bibliography": {
+      "description": "原典で確認した書誌。確認前はすべてnull",
+      "type": "object",
+      "required": ["title", "authors", "edition", "publisher", "year", "isbn", "confirmed_by", "confirmed_at"],
+      "additionalProperties": false,
+      "properties": {
+        "title": {"$ref": "#/$defs/nullable_string"},
+        "authors": {"type": ["array", "null"], "minItems": 1, "items": {"type": "string", "pattern": "\\S"}},
+        "edition": {"$ref": "#/$defs/nullable_string"},
+        "publisher": {"$ref": "#/$defs/nullable_string"},
+        "year": {"$ref": "#/$defs/nullable_string"},
+        "isbn": {"type": ["string", "null"], "pattern": "^(97[89])?[0-9]{9}[0-9X]$"},
+        "confirmed_by": {"type": ["string", "null"], "pattern": "\\S"},
+        "confirmed_at": {"type": ["string", "null"], "format": "date-time"}
+      }
+    },
+    "original": {
+      "type": "object",
+      "required": ["received", "format", "sha256", "size_bytes"],
+      "additionalProperties": false,
+      "properties": {
+        "received": {"type": "boolean"},
+        "format": {"enum": ["pdf", "epub", null]},
+        "sha256": {"oneOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}]},
+        "size_bytes": {"type": ["integer", "null"], "minimum": 1}
+      }
+    },
+    "book": {
+      "type": "object",
+      "required": ["book_id", "status", "candidate", "bibliography", "original", "license", "mvp", "skills"],
+      "additionalProperties": false,
+      "properties": {
+        "book_id": {"type": "string", "pattern": "^BOOK-[0-9]{3}$"},
+        "status": {
+          "enum": ["not_received", "bibliography_unconfirmed", "registered", "extracted", "integrated", "on_hold"]
+        },
+        "candidate": {"$ref": "#/$defs/candidate"},
+        "bibliography": {"$ref": "#/$defs/bibliography"},
+        "original": {"$ref": "#/$defs/original"},
+        "license": {
+          "type": "object",
+          "required": ["terms", "confirmed_by"],
+          "additionalProperties": false,
+          "properties": {
+            "terms": {"$ref": "#/$defs/nullable_string"},
+            "confirmed_by": {"$ref": "#/$defs/nullable_string"}
+          }
+        },
+        "mvp": {
+          "description": "selected=null は未決定",
+          "type": "object",
+          "required": ["selected", "reason"],
+          "additionalProperties": false,
+          "properties": {
+            "selected": {"type": ["boolean", "null"]},
+            "reason": {"$ref": "#/$defs/nullable_string"}
+          }
+        },
+        "skills": {"type": "array", "items": {"type": "string"}},
+        "notes": {"type": "string"}
+      }
+    }
+  }
+}

@@ -1,0 +1,214 @@
+# 原典登録簿（BR-01）。schemas/manifest.schema.json で検証する。
+# candidate は要件8章・ファイル名から推定した未確認の値、bibliography は原典で確認した値だけを書く。
+# sha256・size_bytes は受領した実ファイルから計算した値。未受領の項目は null とし、推測で埋めない。
+# 原典ファイル名はここに書かない。照合は sha256 で行う（iakit manifest check --local）。
+schema_version: "0.1.0"
+books:
+  - book_id: BOOK-001
+    status: bibliography_unconfirmed
+    candidate:
+      title: "Information Architecture: For the Web and Beyond"
+      authors: [Louis Rosenfeld, Peter Morville, Jorge Arango]
+      year: "2015"
+      publisher: O'Reilly Media
+      basis: [requirements-8, filename]
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: true, format: pdf, sha256: 1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707, size_bytes: 44574288}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [analysis, taxonomy, structure, evaluation]
+    notes: ロードマップM3の初期候補。
+  - book_id: BOOK-002
+    status: bibliography_unconfirmed
+    candidate:
+      title: How to Make Sense of Any Mess
+      authors: [Abby Covert]
+      year: "2014"
+      basis: [requirements-8, filename]
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: true, format: epub, sha256: f69a569678591787f472509a579b8e1a31e6790464318917495e90fa42e71f28, size_bytes: 1364347}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [analysis, structure]
+  - book_id: BOOK-003
+    status: bibliography_unconfirmed
+    candidate:
+      title: The Accidental Taxonomist
+      authors: [Heather Hedden]
+      edition: Second edition
+      year: "2016"
+      basis: [requirements-8, filename]
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: true, format: pdf, sha256: 3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e, size_bytes: 22221200}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [taxonomy, content-model]
+    notes: ロードマップM3の初期候補。
+  - book_id: BOOK-004
+    status: bibliography_unconfirmed
+    candidate:
+      title: Designing Connected Content
+      authors: [Carrie Hane, Mike Atherton]
+      edition: "1"
+      year: "2017"
+      publisher: Pearson Higher Education
+      basis: [requirements-8, filename]
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: true, format: pdf, sha256: c516cd436a1c3387026348a4b874e53c8c64b3c5685ab6b2879336a728bf0ce0, size_bytes: 6366646}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [content-model, presentation]
+  - book_id: BOOK-005
+    status: bibliography_unconfirmed
+    candidate:
+      title: The Discipline of Organizing
+      authors: [Robert J. Glushko]
+      edition: 4th Edition
+      year: "2016"
+      publisher: O'Reilly Media
+      basis: [requirements-8, filename]
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: true, format: epub, sha256: 660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea, size_bytes: 18561956}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [taxonomy, content-model]
+    notes: 要件8章では編者として記載。
+  - book_id: BOOK-006
+    status: not_received
+    candidate: {title: Knowledge Graphs, authors: null, basis: [requirements-8]}
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: false, format: null, sha256: null, size_bytes: null}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [taxonomy, content-model]
+    notes: 同名書が複数あり、著者未特定。
+  - book_id: BOOK-007
+    status: bibliography_unconfirmed
+    candidate:
+      title: Understanding Context
+      authors: [Andrew Hinton]
+      year: "2014"
+      publisher: O'Reilly Media
+      basis: [requirements-8, filename]
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: true, format: epub, sha256: 7297484cbabbbf4d4d5e924b0c0b7221a2fc25f82e1dc98ef5e011a93461ce84, size_bytes: 12297949}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [analysis, structure]
+  - book_id: BOOK-008
+    status: not_received
+    candidate: {title: Search Patterns, authors: [Peter Morville, Jeffery Callender], basis: [requirements-8]}
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: false, format: null, sha256: null, size_bytes: null}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [structure, evaluation]
+  - book_id: BOOK-009
+    status: not_received
+    candidate: {title: Mental Models, authors: null, basis: [requirements-8]}
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: false, format: null, sha256: null, size_bytes: null}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [analysis, evaluation]
+    notes: 著者要確認（Indi Young著が有力）。
+  - book_id: BOOK-010
+    status: not_received
+    candidate: {title: Card Sorting, authors: null, basis: [requirements-8]}
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: false, format: null, sha256: null, size_bytes: null}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [taxonomy, evaluation]
+    notes: 著者要確認（Donna Spencer著が有力）。
+  - book_id: BOOK-011
+    status: not_received
+    candidate: {title: Content Strategy for the Web, authors: [Kristina Halvorson, Melissa Rach], basis: [requirements-8]}
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: false, format: null, sha256: null, size_bytes: null}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [analysis, presentation]
+  - book_id: BOOK-012
+    status: bibliography_unconfirmed
+    candidate:
+      title: Content Design
+      authors: [Rachel Edwards, Sarah Winters]
+      edition: Second edition
+      year: "2024"
+      publisher: Content Design London
+      basis: [requirements-8, filename]
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: true, format: epub, sha256: 4541dc02c10fcbbd1d31971d34b1253170bcefeef94415b0337ad1ea817bd1e4, size_bytes: 7258181}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [presentation, evaluation]
+    notes: 要件8章の著者候補はSarah Wintersのみ。受領ファイル名は第2版・共著を示すため、対象版を要確認。
+  - book_id: BOOK-013
+    status: not_received
+    candidate: {title: The Design of Everyday Things, authors: [Don Norman], basis: [requirements-8]}
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: false, format: null, sha256: null, size_bytes: null}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [structure, evaluation]
+  - book_id: BOOK-014
+    status: not_received
+    candidate: {title: The Visual Display of Quantitative Information, authors: [Edward R. Tufte], basis: [requirements-8]}
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: false, format: null, sha256: null, size_bytes: null}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [presentation, evaluation]
+  - book_id: BOOK-015
+    status: not_received
+    candidate: {title: Visual Explanations, authors: [Edward R. Tufte], basis: [requirements-8]}
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: false, format: null, sha256: null, size_bytes: null}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [presentation]
+  - book_id: BOOK-016
+    status: bibliography_unconfirmed
+    candidate:
+      title: Information Design Workbook
+      authors: [Kim Baer, Jill Vacarra]
+      year: "2008"
+      publisher: Rockport
+      basis: [requirements-8, filename]
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: true, format: pdf, sha256: 03e17ae4f1b3917ce113b7f7d72725a7540ea44d69016630c2136ca77980a4fc, size_bytes: 34856419}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [presentation]
+  - book_id: BOOK-017
+    status: not_received
+    candidate: {title: Organising Knowledge, authors: null, basis: [requirements-8]}
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: false, format: null, sha256: null, size_bytes: null}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [taxonomy, content-model]
+    notes: 著者要確認（Patrick Lambe著が有力）。
+  - book_id: BOOK-018
+    status: bibliography_unconfirmed
+    candidate:
+      title: Semantic Web for the Working Ontologist
+      authors: [Dean Allemang, Fabien Gandon, James A. Hendler]
+      edition: Third Edition
+      publisher: ACM Books
+      basis: [requirements-8, filename]
+    bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
+    original: {received: true, format: pdf, sha256: 9faa1ea1a6b6ddcd1e8090cbe168345214e932c57afef254bae085feed3ebc35, size_bytes: 18290704}
+    license: {terms: null, confirmed_by: null}
+    mvp: {selected: null, reason: null}
+    skills: [taxonomy, content-model]
+unassigned_originals:
+  - original: {received: true, format: epub, sha256: 55f41eb45433592d2ff6d79879cb9612e8da5156b773d31f9b514f2647e1594e, size_bytes: 20091042}
+    candidate:
+      title: Strategic Content Design
+      authors: [Erica Jorgensen, Janice (Ginny) Redish]
+      year: "2023"
+      publisher: Rosenfeld Media
+      basis: [filename]
+    note: 要件8章の18冊に含まれない。登録対象に加えるか、保留・除外するかはユーザーが決める。

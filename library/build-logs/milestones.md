@@ -1,0 +1,83 @@
+# 進捗・判断記録
+
+ロードマップの各マイルストーンについて、決定事項・保留事項・検査結果への参照を記録する。原典の本文、抜粋、原典ファイル名は書かない。
+
+## M0 作業基盤とデータの扱いを整える
+
+- 実施日: 2026-10-17
+- 状態: 完了（追補の全候補ファイル検証は `checks/m0-review.yaml`。人の確認が必要な項目は保留事項のまま）
+
+### 決定事項
+
+| ID | 決定 | 理由 |
+|---|---|---|
+| D-M0-01 | 実行環境はPython 3.12以上（`.python-version`は3.14）とし、`uv`と`uv.lock`で依存を固定する | NFR-04。ロックファイルで再現でき、Windowsでも同じ手順で構築できる |
+| D-M0-02 | CLI名は`iakit`とする。処理は`scripts/iakit/`に置く | book-to-skill側のコマンドと名前が重ならない |
+| D-M0-03 | 原典の状態値は`not_received`、`bibliography_unconfirmed`、`registered`、`extracted`、`integrated`、`on_hold`とする | BR-01の6区分（未受領・書誌未確定・登録済み・抽出済み・統合済み・保留）に対応させる |
+| D-M0-04 | 登録簿には原典ファイル名を書かず、SHA-256で照合する | 受領ファイル名には書誌以外の情報も含まれ、Git管理する登録簿に残す必要がない |
+| D-M0-05 | 書誌は`candidate`（要件8章・ファイル名からの推定）と`bibliography`（原典で人が確認した値）に分ける | 推定値を確認済みの書誌として扱わないため。`bibliography`は確認者・確認日時なしでは埋められない |
+| D-M0-06 | Gitの漏えい検査はワーキングツリーではなくindexの内容を見る | 実際にコミットされる内容を検査するため |
+| D-M0-07 | `.gitignore`は`sources/*`を除外し、`sources/manifest.yaml`だけを許可する | `sources/`に新しい置き場所が増えても、既定でGit管理外になる |
+| D-M0-08 | Git検査の登録簿もindex・対象コミットから読み、自作素材登録簿を生成器と照合する | 未ステージの編集や任意の許可リスト追記による見逃しを防ぐ |
+| D-M0-09 | 区分はJSON・YAML・Markdown front matterを構造として読み、PDF・EPUBは内容でも形式判定する | 通常の表記差・改名を検出する。部分コピーは検出保証外 |
+| D-M0-10 | pre-commit全件検査と履歴を含むpre-pushを有効化し、CI全件検査の定義も追加する | 外部CIで初回送信は防げない。CI実行・必須チェック設定・外部送信は未実施 |
+| D-M0-11 | CLIはcheckout＋editable install専用とし、uv 0.12.7・uv_build 0.12.7を検証基準にする | Python 3.12・3.14で確認し、実際のパッチ版を検査記録に残す |
+| D-M0-12 | 確認者・時差付き確認日時を組にし、確認済み状態に題名・著者を要求する。非有限数も拒否する | 書誌未確認と確認済み状態、JSON互換値を正しく区別する |
+| D-M0-13 | `.gitignore`にビルド出力・一時検証領域を追加し、`.gitattributes`でLFとバイナリを指定する | Windowsの改行変換からフック・自作素材のバイト列を保護する |
+
+### 受領状況
+
+| 区分 | 件数 | 対象 |
+|---|---|---|
+| 受領済み・書誌未確認 | 9 | BOOK-001、002、003、004、005、007、012、016、018 |
+| 未受領 | 9 | BOOK-006、008、009、010、011、013、014、015、017 |
+| 18冊の一覧外 | 1 | `unassigned_originals`（Strategic Content Design） |
+
+### 保留事項
+
+| ID | 内容 | 決める人 | 必要になる時点 |
+|---|---|---|---|
+| P-M0-01 | 受領済み9冊の書誌（版・著者・出版社・ISBN）を原典で確認する | ユーザー | 状態を`registered`へ進める前（M1の実文献確認） |
+| P-M0-02 | 受領済み原典の入手経路と利用条件（`license.terms`）を確認する | ユーザー | 抽出結果の利用・引用範囲の確定前 |
+| P-M0-03 | BOOK-012は要件の著者候補がSarah Wintersのみだが、受領ファイルは第2版の共著版である。対象版をこれに確定するかを決める | ユーザー | BOOK-012の書誌確認時 |
+| P-M0-04 | 一覧外の1冊を登録対象に加えるか、保留・除外するかを決める | ユーザー | MVP対象文献の確定（M3）まで |
+| P-M0-05 | 未受領9冊の入手。BOOK-006、009、010、017は書誌の特定も必要 | ユーザー | 各文献の抽出前 |
+| P-M0-06 | MVP対象文献（`mvp.selected`）。初期候補はBOOK-001、BOOK-003 | ユーザー | M3 |
+
+### 送信・公開の許可
+
+| 送信先 | 対象データ | 用途 | 許可範囲 | 記録日 |
+|---|---|---|---|---|
+| なし | — | — | 原典・抽出テキストの外部送信は未承認（未確定事項6）。公開範囲も未決定（未確定事項7） | 2026-10-17 |
+
+M0の作業では、原典をローカルでハッシュ計算しただけであり、外部へ送信していない。
+
+### 成果物
+
+| 成果物 | 場所 |
+|---|---|
+| 実行環境の定義 | `pyproject.toml`、`uv.lock`、`.python-version` |
+| 原典登録簿とスキーマ | `sources/manifest.yaml`、`schemas/manifest.schema.json` |
+| Git除外設定とコミット前検査 | `.gitignore`、`.githooks/pre-commit`（有効化: `git config core.hooksPath .githooks`） |
+| 自作素材 | `tests/fixtures/pdf/page-labels.pdf`（PDF内のページ順と印刷番号が異なる）、`tests/fixtures/epub/reflowable.epub`（spineのhrefと要素ID、読めない図を含む）、`tests/fixtures/fixtures.yaml` |
+| 検査 | `iakit check [--local]`、`tests/checks/`（`uv run pytest`） |
+| 検査結果（本文を含まない） | 初回: `library/build-logs/checks/m0.yaml`。レビュー反映後: `library/build-logs/checks/m0-review.yaml` |
+| 再実行手順・runner・CI | `README.md`、`scripts/verify.py`、`.github/workflows/checks.yml` |
+
+### 初回検査結果（レビュー前の記録）
+
+| 検査 | 結果 | 備考 |
+|---|---|---|
+| `uv run iakit check --local` | pass | 登録簿の整合、手元の原典10ファイルとのSHA-256照合、自作素材の再生成一致、Git indexの漏えい検査 |
+| `uv run pytest` | 25 passed | 推測値の混入、原典の強制追加、改名した原典の追加、`runs/`、confidential入力、配布物への書籍ファイル混入を検出することを確認 |
+| 自作PDFの外部読込み | pass | pypdf 5.9.0のstrictモードで読込み、印刷ページ番号 Cover、i、ii、1、2 を確認（一時利用。依存には加えていない） |
+
+原典のない環境では`--local`の照合は`not_run`と表示する。
+
+### 第三者レビューの反映
+
+初回の漏えい検査passは既存indexの3ファイルだけを対象としており、未追跡のM0成果物全体の検査結果ではなかった。元の記録は書き換えず、追加検証を別記録に保存する。
+
+`scripts/verify.py`はPython両版の回帰テスト後、Git除外対象を除く全候補ファイルを一時indexへ反映して登録簿・自作素材・漏えい検査を行う。実indexは変更しない。検証環境とテスト出力は終了時に回収する。フックの実動試験は自作データだけの一時checkoutとローカルbareリポジトリで実施し、外部へpushしない。
+
+書誌・利用条件・MVP対象・原典送信の許可は変更しない。Unicode・合字・2段組の抽出回帰素材、n-gram評価、抽出IDと位置対応の実装はM1の未完了項目に追記した。Codex・Claude Code両ホストの配置確認はM1、配布物とCIの統合・必須チェック化はM5で確認する。
