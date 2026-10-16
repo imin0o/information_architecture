@@ -4,7 +4,7 @@
 
 ## 実行環境
 
-構築用CLI `iakit` はリポジトリのcheckoutからeditable installして使う。wheel単独での利用・`uv tool install`は対応対象に含めない。CodexとClaude Codeのどちらも同じcheckoutとコマンドを使う。ホストによるSkillの発見・配置の確認はM1で行う。
+構築用CLI `iakit` はリポジトリのcheckoutからeditable installして使う。wheel単独での利用・`uv tool install`は対応対象に含めない。CodexとClaude Codeのどちらも同じcheckoutとコマンドを使う。ホストによるSkillの発見・配置はM1で確認した。
 
 - Python下限は3.12。通常開発は `.python-version` の3.14を使う。
 - 検証用uvは0.12.7、ビルドバックエンドは `uv_build==0.12.7`。Pythonのパッチ版とuvの実版は検証記録に残す。
@@ -79,4 +79,4 @@ uv run --locked iakit excerpt ref --extraction sources/extracted/EXTRACT-003-001
 
 出力は抽出ID・ハッシュ・件数・位置の候補だけで、本文を含まない。上流book-to-skillとの差分と採用条件は [adapters/book-to-skill/README.md](adapters/book-to-skill/README.md) に記録する。
 
-ホストでのSkill配置は `uv run --locked iakit hosts probe --host claude --host codex` で確認する。自作の `tests/host-compat/iakit-host-probe/` を一時ディレクトリに置き、各ホストのCLIへ質問を送る。終了時に一時ディレクトリを削除する。
+ホストでのSkill配置は `uv run --locked iakit hosts probe --host claude --host codex` で確認する。PATH上と別の実行ファイルを使う場合は `IAKIT_CLAUDE_BIN`・`IAKIT_CODEX_BIN` で指定する。自作の `tests/host-compat/iakit-host-probe/` を一時ディレクトリに置き、各ホストのCLIへ質問を送る。終了時に一時ディレクトリを削除する。

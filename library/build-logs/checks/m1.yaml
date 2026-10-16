@@ -31,7 +31,7 @@ checks:
   result: pass
   targets:
   - git:index
-  files_scanned: 59
+  files_scanned: 61
   known_original_hashes: 10
   violations: []
   errors: []

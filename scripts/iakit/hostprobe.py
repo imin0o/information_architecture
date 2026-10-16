@@ -5,9 +5,11 @@
   explicit   Skill名を指定して依頼する
   control    Skillを置かずに同じ依頼をし、トークンを返さない（付属資料から読んだことの対照）
 トークンは references/ にだけ書かれているため、返答に含まれれば付属資料の参照も確認できる。
+ホストの実行ファイルは環境変数 IAKIT_CLAUDE_BIN・IAKIT_CODEX_BIN で差し替えられる。
 応答本文は保存しない。配置した一時ディレクトリは終了時に削除する。
 """
 
+import os
 import platform
 import shutil
 import subprocess
@@ -22,14 +24,14 @@ QUESTION = "What is the iakit host probe token? Answer with the PROBE-RESULT lin
 HOSTS = {
     "claude": {
         "skills_dir": ".claude/skills",
-        "version": ["claude", "--version"],
-        "command": lambda cwd, prompt: ["claude", "-p", prompt, "--output-format", "text"],
+        "version": ["--version"],
+        "command": lambda cwd, prompt: ["-p", prompt, "--output-format", "text"],
         "explicit": "/iakit-host-probe",
     },
     "codex": {
         "skills_dir": ".agents/skills",
-        "version": ["codex", "--version"],
-        "command": lambda cwd, prompt: ["codex", "exec", "--skip-git-repo-check", "--ephemeral",
+        "version": ["--version"],
+        "command": lambda cwd, prompt: ["exec", "--skip-git-repo-check", "--ephemeral",
                                         "-s", "read-only", "-C", str(cwd), prompt],
         "explicit": "Use the $iakit-host-probe skill.",
     },
@@ -52,11 +54,17 @@ def _first_error_line(output: str) -> str | None:
     return lines[0][:160] if lines else None
 
 
+def executable(host: str) -> str:
+    return os.environ.get(f"IAKIT_{host.upper()}_BIN") or HOSTS[host].get("bin") or host
+
+
 def probe(host: str, timeout: int = 300, space_in_path: bool = False) -> dict:
     spec = HOSTS[host]
-    code, version = _run(spec["version"], ROOT, 60)
+    exe = executable(host)
+    code, version = _run([exe, *spec["version"]], ROOT, 60)
     result = {"host": host, "host_version": version.strip().splitlines()[0] if code == 0 else None,
               "os": f"{platform.system()} {platform.release()}", "placement": f"<workdir>/{spec['skills_dir']}",
+              "executable": "default" if exe == host else "override",
               "space_in_path": space_in_path, "checks": {}}
     if code != 0:
         result.update(result="blocked", reason="ホストCLIを実行できない")
@@ -69,7 +77,7 @@ def probe(host: str, timeout: int = 300, space_in_path: bool = False) -> dict:
         for name, cwd, prompt in (("discovery", with_skill, QUESTION),
                                   ("explicit", with_skill, spec["explicit"]),
                                   ("control", without, QUESTION)):
-            rc, out = _run(spec["command"](cwd, prompt), cwd, timeout)
+            rc, out = _run([exe, *spec["command"](cwd, prompt)], cwd, timeout)
             found = f"PROBE-RESULT: {TOKEN}" in out
             entry = {"exit_code": rc, "token_returned": found}
             if rc != 0:

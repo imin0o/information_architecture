@@ -14,8 +14,9 @@ READS_REFERENCE = (
 def fake(monkeypatch, script, version_ok=True):
     monkeypatch.setitem(hostprobe.HOSTS, "fake", {
         "skills_dir": ".fake/skills",
-        "version": [sys.executable, "-c", "print('fake 1.0')" if version_ok else "raise SystemExit(1)"],
-        "command": lambda cwd, prompt: [sys.executable, "-c", script],
+        "bin": sys.executable,
+        "version": ["-c", "print('fake 1.0')" if version_ok else "raise SystemExit(1)"],
+        "command": lambda cwd, prompt: ["-c", script],
         "explicit": "use it",
     })
 
