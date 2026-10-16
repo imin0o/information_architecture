@@ -1,3 +1,5 @@
+import copy
+import hashlib
 import os
 from pathlib import Path
 import shutil
@@ -5,7 +7,7 @@ import subprocess
 
 import pytest
 
-from iakit import leak_history, leaks
+from iakit import fixture_pdf, fixtures, leak_history, leaks, yamlio
 from iakit.paths import ROOT
 from conftest import git
 
@@ -61,6 +63,58 @@ def test_legacy_history_without_catalogue_uses_tip_original_hashes(repo):
 @pytest.mark.parametrize("value", ["bad input", "refs/heads/main invalid refs/heads/main invalid"])
 def test_bad_push_input_fails(repo, value):
     assert leak_history.check_push(value, "origin", root=repo)["result"] == "fail"
+
+
+def test_push_accepts_approved_old_fixtures_after_generator_update(repo, monkeypatch):
+    generator = repo / "scripts/iakit/fixture_pdf.py"
+    generator.parent.mkdir(parents=True)
+    shutil.copyfile(ROOT / "scripts/iakit/fixture_pdf.py", generator)
+    git(repo, "add", "scripts")
+    old = commit(repo, "initial fixtures")
+    pages = copy.deepcopy(fixture_pdf.PAGES)
+    pages[0][1][0] = "Revised Fixture Handbook"
+    generator.write_text(generator.read_text(encoding="utf-8").replace(
+        "Fixture Handbook", "Revised Fixture Handbook"), encoding="utf-8")
+    monkeypatch.setattr(fixture_pdf, "PAGES", pages)
+    files, catalogue = fixtures.render()
+    for relative, content in files.items():
+        path = repo / "tests/fixtures" / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(content)
+    (repo / "tests/fixtures/fixtures.yaml").write_text(catalogue, encoding="utf-8")
+    git(repo, "add", "scripts", "tests/fixtures")
+    tip = commit(repo, "revise fixtures and generator")
+    assert leaks.check(root=repo)["result"] == "pass"
+    result = leak_history.check_push(updates(tip), "origin", root=repo)
+    assert result["result"] == "pass"
+    assert result["commits_scanned"] == 2
+    # 別ブランチの旧先端も、現在の生成器に依存せず検査できる。
+    assert leak_history.check_push(updates(old), "origin", root=repo)["result"] == "pass"
+    # index検査には旧版の例外を適用しない。
+    git(repo, "read-tree", old)
+    assert leaks.check(root=repo)["result"] == "fail"
+
+
+@pytest.mark.parametrize("tamper_catalogue", [False, True])
+def test_push_rejects_unapproved_historical_fixture(repo, tamper_catalogue):
+    initial = commit(repo, "initial fixtures")
+    path = repo / "tests/fixtures/pdf/page-labels.pdf"
+    payload = b"%PDF-1.7 unapproved self-written fixture"
+    path.write_bytes(payload)
+    if tamper_catalogue:
+        catalogue = repo / "tests/fixtures/fixtures.yaml"
+        data = yamlio.load(catalogue)
+        data["files"][0]["sha256"] = hashlib.sha256(payload).hexdigest()
+        catalogue.write_text(yamlio.dumps(data), encoding="utf-8")
+    git(repo, "add", "tests/fixtures")
+    unsafe = commit(repo, "unapproved historical fixture")
+    git(repo, "restore", "--source=" + initial, "--staged", "--worktree", "tests/fixtures")
+    tip = commit(repo, "restore approved fixture")
+    result = leak_history.check_push(updates(tip), "origin", root=repo)
+    assert result["result"] == "fail"
+    check = result["checks"][0]
+    findings = check["errors"] if tamper_catalogue else check["violations"]
+    assert any(f["target"].endswith(unsafe) for f in findings)
 
 
 def test_attributes_preserve_fixture_bytes_and_hook_lf_with_autocrlf(repo):

@@ -27,7 +27,7 @@ def git_paths(root: Path, staged_only: bool = False, revision: str | None = None
     return [p.decode("utf-8") for p in out.split(b"\0") if p]
 
 
-def policies(read) -> tuple[set[str], dict[str, str]]:
+def policies(read, *, historical: bool = False) -> tuple[set[str], dict[str, str]]:
     """欠落・不正な登録簿は空の許可リストとして扱わず停止する。"""
     try:
         data = yamlio.loads(read(MANIFEST_PATH).decode("utf-8"))
@@ -35,7 +35,8 @@ def policies(read) -> tuple[set[str], dict[str, str]]:
             raise ValueError("manifest validation")
         index = yamlio.loads(read(FIXTURE_PATH).decode("utf-8"))
         _, expected_index = fixtures.render()
-        if index != yamlio.loads(expected_index):
+        approved_history = historical and fixtures.catalogue_sha256(index) in fixtures.HISTORICAL_CATALOGUE_HASHES
+        if index != yamlio.loads(expected_index) and not approved_history:
             raise ValueError("fixture validation")
     except (ValueError, KeyError, TypeError, OSError, subprocess.CalledProcessError, RecursionError) as exc:
         raise yamlio.DataError("判定用登録簿が欠落・不正、または自作素材の生成器と不一致") from exc

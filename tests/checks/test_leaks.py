@@ -98,3 +98,30 @@ def test_dist_directory_check_rejects_book_files(tmp_path):
     (dist / "excerpt.pdf").write_bytes(b"%PDF-1.7")
     result = leaks.check(root=ROOT, dirs=[tmp_path / "dist"])
     assert result["result"] == "fail"
+
+
+@pytest.mark.parametrize("prefix", ["", "ia-analysis/", "bundle/ia-analysis/"])
+@pytest.mark.parametrize("private_path", [
+    "sources/extracted/EXTRACT-001/text.txt",
+    "runs/R-001/run.yaml",
+    "library/build-logs/raw/output.txt",
+])
+def test_dist_directory_rejects_nested_private_paths(tmp_path, prefix, private_path):
+    dist = tmp_path / "dist"
+    relative = prefix + private_path
+    path = dist / relative
+    path.parent.mkdir(parents=True)
+    path.write_text("Self-written test data", encoding="utf-8")
+    result = leaks.check(root=ROOT, dirs=[dist])
+    assert result["result"] == "fail"
+    assert [v["path"] for v in result["violations"]] == [relative]
+
+
+def test_dist_directory_allows_safe_nested_metadata_and_similar_names(tmp_path):
+    dist = tmp_path / "dist"
+    for relative in ("ia-analysis/sources/manifest.yaml", "ia-analysis/resources/sources-guide.md",
+                     "ia-analysis/resources/runs-guide.md", "ia-analysis/library/build-logs/checks/result.yaml"):
+        path = dist / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("result: public\n", encoding="utf-8")
+    assert leaks.check(root=ROOT, dirs=[dist])["result"] == "pass"

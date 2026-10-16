@@ -26,6 +26,11 @@ def test_structured_confidentiality(filename, payload):
 @pytest.mark.parametrize("filename,payload", [
     ("input.json", '{"confidentiality":'),
     ("input.json", '{"value": NaN}'),
+    ("input.json", '{"classification":"confidential","classification":"public"}'),
+    ("input.json", '{"classification":"public","classification":"confidential"}'),
+    ("input.json", '{"items":[{"classification":"confidential","classification":"public"}]}'),
+    ("input.json", '{"classification":"confidential","classifi\\u0063ation":"public"}'),
+    ("input.json", '{"value":1,"value":2}'),
     ("input.yaml", "a: 1\na: 2\n"),
     ("input.md", "---\nclassification: public\n"),
 ])

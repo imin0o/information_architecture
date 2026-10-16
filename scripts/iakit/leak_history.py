@@ -21,7 +21,7 @@ def check_push(updates: str, remote: str, root: Path = ROOT) -> dict:
             if set(local_oid) == {"0"}:  # リモート参照の削除には送信対象がない
                 continue
             tip = leak_sources.git(root, "rev-parse", "--verify", local_oid + "^{commit}").decode().strip()
-            baseline = leak_sources.policies(lambda path: leak_sources.read_git(root, path, tip))
+            baseline = leak_sources.policies(lambda path: leak_sources.read_git(root, path, tip), historical=True)
             if set(remote_oid) == {"0"}:
                 args = ("rev-list", tip, "--not", f"--remotes={remote}")
             else:

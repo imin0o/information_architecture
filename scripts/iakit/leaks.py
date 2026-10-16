@@ -34,7 +34,9 @@ def check(root: Path = ROOT, staged_only: bool = False, dirs: list[Path] | None 
             legacy = revision and baseline and not {
                 leak_sources.MANIFEST_PATH, leak_sources.FIXTURE_PATH
             }.intersection(paths)
-            originals, fixtures = (baseline[0], {}) if legacy else leak_sources.policies(read)
+            originals, fixtures = (baseline[0], {}) if legacy else leak_sources.policies(
+                read, historical=revision is not None,
+            )
             if baseline:
                 originals = originals | baseline[0]
             known.update(originals)
@@ -44,7 +46,7 @@ def check(root: Path = ROOT, staged_only: bool = False, dirs: list[Path] | None 
                 else:
                     rel, content = path, read(path)
                 scanned += 1
-                for reason in inspect(rel, content, originals, fixtures):
+                for reason in inspect(rel, content, originals, fixtures, distribution=directory is not None):
                     violations.append({"target": label, "path": rel, "reason": reason})
         except (yamlio.DataError, OSError, UnicodeError, subprocess.CalledProcessError) as exc:
             reason = str(exc) if isinstance(exc, yamlio.DataError) else "検査対象の読込みに失敗"

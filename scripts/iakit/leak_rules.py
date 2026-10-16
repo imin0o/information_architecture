@@ -40,6 +40,15 @@ def _contains_confidential(value) -> bool:
     return False
 
 
+def _unique_json_object(pairs: list[tuple[str, object]]) -> dict:
+    data = {}
+    for key, value in pairs:
+        if key in data:
+            raise yamlio.DataError("JSONの重複キー")
+        data[key] = value
+    return data
+
+
 def classification_reasons(path: str, content: bytes) -> list[str]:
     suffix = PurePosixPath(path).suffix.lower()
     metadata = suffix in {".yaml", ".yml", ".json"}
@@ -52,7 +61,7 @@ def classification_reasons(path: str, content: bytes) -> list[str]:
                 end = next(i for i in range(1, len(lines)) if lines[i].strip() in {"---", "..."})
                 text = "\n".join(lines[1:end])
             if suffix == ".json":
-                data = json.loads(text)
+                data = json.loads(text, object_pairs_hook=_unique_json_object)
                 yamlio.dumps(data)  # 非有限数などJSON互換でない値を拒否
             else:
                 data = yamlio.loads(text)
@@ -62,14 +71,18 @@ def classification_reasons(path: str, content: bytes) -> list[str]:
     return ["confidential 区分のデータ"] if CONFIDENTIAL.search(content) else []
 
 
-def inspect(path: str, content: bytes, originals: set[str], fixtures: dict[str, str]) -> list[str]:
+def inspect(path: str, content: bytes, originals: set[str], fixtures: dict[str, str], *,
+            distribution: bool = False) -> list[str]:
     reasons = []
     sha = hashlib.sha256(content).hexdigest()
     if sha in originals:
         reasons.append("登録済み原典と同一内容")
-    if path.startswith("sources/") and path != "sources/manifest.yaml":
+    # 配布ディレクトリではSkill名やbundle名の下にも禁止パスが入りうる。
+    parts = PurePosixPath(path).parts
+    candidates = ["/".join(parts[i:]) for i in range(len(parts))] if distribution else [path]
+    if any(p.startswith("sources/") and p != "sources/manifest.yaml" for p in candidates):
         reasons.append("sources/ は manifest.yaml 以外を管理しない")
-    if path.startswith(FORBIDDEN_DIRS):
+    if any(p.startswith(FORBIDDEN_DIRS) for p in candidates):
         reasons.append("実行記録・生ログはGit管理外")
     if (PurePosixPath(path).suffix.lower() in BOOK_SUFFIXES or book_content(content)) and fixtures.get(path) != sha:
         reasons.append("書籍形式のファイルは生成器と一致する登録済み自作素材だけ許可")
