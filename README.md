@@ -80,3 +80,5 @@ uv run --locked iakit excerpt ref --extraction sources/extracted/EXTRACT-003-001
 出力は抽出ID・ハッシュ・件数・位置の候補だけで、本文を含まない。上流book-to-skillとの差分と採用条件は [adapters/book-to-skill/README.md](adapters/book-to-skill/README.md) に記録する。
 
 ホストでのSkill配置は `uv run --locked iakit hosts probe --host claude --host codex` で確認する。PATH上と別の実行ファイルを使う場合は `IAKIT_CLAUDE_BIN`・`IAKIT_CODEX_BIN` で指定する。自作の `tests/host-compat/iakit-host-probe/` を一時ディレクトリに置き、各ホストのCLIへ質問を送る。終了時に一時ディレクトリを削除する。
+
+ホスト確認の発見・明示利用は、標準出力が期待する`PROBE-RESULT`の1行と一致した場合だけ合格する。標準エラーの診断ログは判定に使わない。結果には`response_check: stdout_exact_line`を記録する。Skillなしの対照では、標準出力にトークンが含まれたら失敗する。

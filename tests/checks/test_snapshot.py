@@ -4,7 +4,7 @@ import hashlib
 
 import pytest
 
-from iakit import cli, snapshot, snapshot_check, yamlio
+from iakit import cli, extract_cmd, snapshot, snapshot_check, yamlio
 from iakit.paths import FIXTURES
 
 PDF = FIXTURES / "pdf/page-labels.pdf"
@@ -112,3 +112,94 @@ def test_cli_output_contains_hashes_but_no_text(tmp_path, capsys):
     assert cli.main(["excerpt", "ref", "--extraction", str(tmp_path / "EXTRACT-FX-001"), "--lines", "9-12"]) == 0
     out = capsys.readouterr().out
     assert "excerpt_sha256" in out and "Sorting things" not in out and "Preface" not in out
+
+
+def rewrite_locations(directory, locations):
+    raw = yamlio.dumps(locations)
+    (directory / "locations.yaml").write_text(raw, encoding="utf-8", newline="\n")
+    meta = yamlio.load(directory / "extraction.yaml")
+    meta["locations"]["sha256"] = snapshot.sha256(raw.encode("utf-8"))
+    (directory / "extraction.yaml").write_text(yamlio.dumps(meta), encoding="utf-8", newline="\n")
+
+
+@pytest.mark.parametrize(("before", "after"), [
+    ("BOOK-001", "BOOK-002"), ("BOOK-001", "FIXTURE-page-labels"), ("FIXTURE-page-labels", "BOOK-001"),
+])
+def test_source_id_must_match_extraction_id(tmp_path, before, after):
+    d = create(tmp_path, source_id=before)
+    meta = yamlio.load(d / "extraction.yaml")
+    meta["source"]["source_id"] = after
+    (d / "extraction.yaml").write_text(yamlio.dumps(meta), encoding="utf-8", newline="\n")
+    assert any("source_id" in e for e in snapshot_check.verify(d, PDF))
+    result = extract_cmd.ref(d, "1")
+    assert result["result"] == "fail" and "source_id" not in result
+
+
+@pytest.mark.parametrize("indices", [[999, 2, 3, 4, 5], [1, 1, 3, 4, 5], [2, 1, 3, 4, 5], [1, 2, 3, 4, 6]])
+def test_pdf_indices_must_be_contiguous_even_after_rehashing(tmp_path, indices):
+    d = create(tmp_path)
+    loc = yamlio.load(d / "locations.yaml")
+    for page, index in zip(loc["pages"], indices):
+        page["pdf_page_index"] = index
+    rewrite_locations(d, loc)
+    assert any("PDF内のページ順" in e for e in snapshot_check.verify(d, PDF))
+    assert extract_cmd.ref(d, "1")["result"] == "fail"
+
+
+@pytest.mark.parametrize(("status", "start", "end"), [
+    ("text", None, 2), ("text", 1, None), ("text", None, None),
+    ("no_text", 1, 2), ("error", 1, None),
+])
+def test_invalid_status_ranges_fail_schema_without_raising(tmp_path, status, start, end):
+    d = create(tmp_path)
+    loc = yamlio.load(d / "locations.yaml")
+    loc["pages"][0].update(status=status, start_line=start, end_line=end)
+    rewrite_locations(d, loc)
+    assert yamlio.schema_errors(loc, "locations.schema.json")
+    assert snapshot_check.verify(d)
+    assert extract_cmd.ref(d, "1")["result"] == "fail"
+
+
+@pytest.mark.parametrize("source", [PDF, FIXTURES / "epub/reflowable.epub"])
+def test_empty_location_units_fail_without_raising(tmp_path, source):
+    d = create(tmp_path, source=source)
+    loc = yamlio.load(d / "locations.yaml")
+    loc["pages" if loc["format"] == "pdf" else "documents"] = []
+    rewrite_locations(d, loc)
+    assert snapshot_check.verify(d)
+
+
+def test_missing_page_is_detected_by_unit_count(tmp_path):
+    d = create(tmp_path)
+    loc = yamlio.load(d / "locations.yaml")
+    # 表紙の行を次ページへ含めても、抽出時の単位数との不一致は残る。
+    loc["pages"].pop(0)
+    loc["pages"][0]["start_line"] = 1
+    for i, page in enumerate(loc["pages"], 1):
+        page["pdf_page_index"] = i
+    rewrite_locations(d, loc)
+    assert any("単位数" in e for e in snapshot_check.verify(d))
+
+
+@pytest.mark.parametrize("target", ["extraction.yaml", "locations.yaml", "missing-extraction"])
+def test_invalid_snapshot_ref_returns_failure_report(tmp_path, capsys, target):
+    d = create(tmp_path)
+    if target == "missing-extraction":
+        (d / "extraction.yaml").unlink()
+    else:
+        (d / target).write_text("{}", encoding="utf-8")
+    report = tmp_path / "report.yaml"
+    assert cli.main(["excerpt", "ref", "--extraction", str(d), "--lines", "1", "--report", str(report)]) == 1
+    result = yamlio.load(report)
+    assert result["result"] == "fail" and result["checks"][0]["errors"]
+    assert "excerpt_sha256" not in result["checks"][0]
+    assert yamlio.loads(capsys.readouterr().out) == result
+
+
+@pytest.mark.parametrize("bad_end", [0, 999])
+def test_element_end_line_must_be_within_document(tmp_path, bad_end):
+    d = create(tmp_path, source=FIXTURES / "epub/reflowable.epub")
+    loc = yamlio.load(d / "locations.yaml")
+    loc["documents"][1]["elements"][0]["end_line"] = bad_end
+    rewrite_locations(d, loc)
+    assert snapshot_check.verify(d)

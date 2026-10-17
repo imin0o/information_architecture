@@ -38,15 +38,15 @@ HOSTS = {
 }
 
 
-def _run(cmd: list[str], cwd: Path, timeout: int) -> tuple[int, str]:
+def _run(cmd: list[str], cwd: Path, timeout: int) -> tuple[int, str, str]:
     try:
         proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8",
                               errors="replace", timeout=timeout)
-        return proc.returncode, proc.stdout + "\n" + proc.stderr
+        return proc.returncode, proc.stdout, proc.stderr
     except FileNotFoundError:
-        return 127, ""
+        return 127, "", ""
     except subprocess.TimeoutExpired:
-        return 124, ""
+        return 124, "", ""
 
 
 def _first_error_line(output: str) -> str | None:
@@ -61,11 +61,12 @@ def executable(host: str) -> str:
 def probe(host: str, timeout: int = 300, space_in_path: bool = False) -> dict:
     spec = HOSTS[host]
     exe = executable(host)
-    code, version = _run([exe, *spec["version"]], ROOT, 60)
-    result = {"host": host, "host_version": version.strip().splitlines()[0] if code == 0 else None,
+    code, version, version_err = _run([exe, *spec["version"]], ROOT, 60)
+    version = version.strip() or version_err.strip()
+    result = {"host": host, "host_version": version.splitlines()[0] if code == 0 and version else None,
               "os": f"{platform.system()} {platform.release()}", "placement": f"<workdir>/{spec['skills_dir']}",
               "executable": "default" if exe == host else "override",
-              "space_in_path": space_in_path, "checks": {}}
+              "space_in_path": space_in_path, "response_check": "stdout_exact_line", "checks": {}}
     if code != 0:
         result.update(result="blocked", reason="ホストCLIを実行できない")
         return result
@@ -77,12 +78,13 @@ def probe(host: str, timeout: int = 300, space_in_path: bool = False) -> dict:
         for name, cwd, prompt in (("discovery", with_skill, QUESTION),
                                   ("explicit", with_skill, spec["explicit"]),
                                   ("control", without, QUESTION)):
-            rc, out = _run([exe, *spec["command"](cwd, prompt)], cwd, timeout)
-            found = f"PROBE-RESULT: {TOKEN}" in out
+            rc, out, err = _run([exe, *spec["command"](cwd, prompt)], cwd, timeout)
+            found = TOKEN in out
+            exact = out.strip() == f"PROBE-RESULT: {TOKEN}"
             entry = {"exit_code": rc, "token_returned": found}
             if rc != 0:
-                entry["error"] = _first_error_line(out)
-            entry["result"] = "pass" if rc == 0 and found == (name != "control") else "fail"
+                entry["error"] = _first_error_line(err)
+            entry["result"] = "pass" if rc == 0 and (exact if name != "control" else not found) else "fail"
             result["checks"][name] = entry
     finally:
         shutil.rmtree(base, ignore_errors=True)

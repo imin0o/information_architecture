@@ -65,6 +65,24 @@ def _normalize(text: str, counts: dict) -> str:
     return text.replace("\r", "\n")
 
 
+def _element_lines(raw: str, text: str, anchors: dict, line: int) -> list[dict]:
+    """要素内に全文が収まる行だけを候補範囲にする。部分行と空要素は推測しない。"""
+    elements = []
+    for element_id, (start, end) in anchors.items():
+        start = len(_normalize(raw[:start], {"crlf": 0, "cr": 0}))
+        end = len(_normalize(raw[:end], {"crlf": 0, "cr": 0}))
+        first = text.count("\n", 0, start)
+        last = text.count("\n", 0, end - 1)
+        if text[text.rfind("\n", 0, start) + 1:start].strip():
+            first += 1
+        stop = text.find("\n", end)
+        if text[end - 1] != "\n" and text[end:stop if stop >= 0 else len(text)].strip():
+            last -= 1
+        if first <= last:
+            elements.append({"id": element_id, "line": line + first, "end_line": line + last})
+    return elements
+
+
 def assemble(extracted: dict) -> tuple[str, list[dict], dict]:
     """各単位を改行LFで連結し、単位ごとの行範囲を求める。単位の間に区切り行は入れない。"""
     counts = {"crlf": 0, "cr": 0}
@@ -78,10 +96,7 @@ def assemble(extracted: dict) -> tuple[str, list[dict], dict]:
             n = text.count("\n")
             entry.update(start_line=line, end_line=line + n - 1, status="text")
             if "anchors" in unit:
-                entry["elements"] = [
-                    {"id": i, "line": line + _normalize(unit["text"][:off], {"crlf": 0, "cr": 0}).count("\n")}
-                    for i, off in unit["anchors"].items()
-                ]
+                entry["elements"] = _element_lines(unit["text"], text, unit["anchors"], line)
             chunks.append(text)
             line += n
         else:

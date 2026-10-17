@@ -7,7 +7,7 @@
 from pathlib import Path
 
 from . import yamlio
-from .snapshot import sha256
+from .snapshot import ID_PATTERN, sha256, source_tag
 
 PREVIEW_MAX_WORDS = 25
 
@@ -54,9 +54,11 @@ def locate(locations: dict, start_line: int, end_line: int) -> dict:
             and d["start_line"] <= end_line and d["end_line"] >= start_line]
     if len(docs) != 1:
         return {"epub_href": None, "element_id_candidate": None, "note": f"{len(docs)}文書にまたがる"}
-    preceding = [e for e in docs[0]["elements"] if e["line"] <= start_line]
+    containing = [e for e in docs[0]["elements"]
+                  if "end_line" in e and e["line"] <= start_line <= end_line <= e["end_line"]]
+    element = min(reversed(containing), key=lambda e: e["end_line"] - e["line"], default=None)
     return {"epub_href": docs[0]["href"],
-            "element_id_candidate": max(preceding, key=lambda e: e["line"])["id"] if preceding else None}
+            "element_id_candidate": element["id"] if element else None}
 
 
 def _range_errors(units: list[dict], lines: int, key: str) -> list[str]:
@@ -69,7 +71,7 @@ def _range_errors(units: list[dict], lines: int, key: str) -> list[str]:
         if u["start_line"] != expected or u["end_line"] < u["start_line"]:
             errors.append(f"{u[key]}: 行範囲が連続していない（{u['start_line']}-{u['end_line']}、期待する開始{expected}）")
         for e in u.get("elements", []):
-            if not u["start_line"] <= e["line"] <= u["end_line"]:
+            if not u["start_line"] <= e["line"] <= e.get("end_line", e["line"]) <= u["end_line"]:
                 errors.append(f"{u[key]}#{e['id']}: 要素の行が文書の範囲外")
         expected = u["end_line"] + 1
     if expected - 1 != lines:
@@ -93,6 +95,8 @@ def verify(directory: Path, original: Path | None = None) -> list[str]:
         return errors
     if meta["extraction_id"] != directory.name or locations["extraction_id"] != directory.name:
         errors.append("extraction_id がディレクトリ名と一致しない")
+    if ID_PATTERN.fullmatch(meta["extraction_id"])[1] != source_tag(meta["source"]["source_id"]):
+        errors.append("source_id と extraction_id の出典が一致しない")
     if sha256(text) != meta["text"]["sha256"] or locations["text_sha256"] != meta["text"]["sha256"]:
         errors.append("text.txt のハッシュが記録と一致しない")
     if sha256(locations_raw) != meta["locations"]["sha256"]:
@@ -109,7 +113,12 @@ def verify(directory: Path, original: Path | None = None) -> list[str]:
     if meta["source"]["format"] != locations["format"]:
         errors.append("形式が extraction.yaml と locations.yaml で異なる")
     key = "pdf_page_index" if locations["format"] == "pdf" else "href"
-    errors += _range_errors(locations.get("pages") or locations.get("documents"), lines, key)
+    units = locations["pages" if locations["format"] == "pdf" else "documents"]
+    if locations["format"] == "pdf" and [p[key] for p in units] != list(range(1, len(units) + 1)):
+        errors.append("PDF内のページ順が1始まりの連番ではない")
+    if len(units) != meta["quality"]["units"]:
+        errors.append("対応表の単位数が抽出記録と一致しない")
+    errors += _range_errors(units, lines, key)
     if original is not None and sha256(original.read_bytes()) != meta["source"]["sha256"]:
         errors.append("原典の実ファイルのハッシュが記録と一致しない")
     return errors

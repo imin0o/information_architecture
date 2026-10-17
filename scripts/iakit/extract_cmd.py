@@ -73,8 +73,10 @@ def check(dirs: list[Path] | None, local: bool) -> dict:
 def ref(directory: Path, lines: str) -> dict:
     start, _, end = lines.partition("-")
     start_line, end_line = int(start), int(end or start)
-    meta = yamlio.load(directory / "extraction.yaml")
     errors = snapshot_check.verify(directory)
+    if errors:
+        return {"check": "excerpt-ref", "result": "fail", "errors": errors}
+    meta = yamlio.load(directory / "extraction.yaml")
     excerpt = snapshot_check.excerpt_bytes((directory / "text.txt").read_bytes(), start_line, end_line)
     return {
         "check": "excerpt-ref", "result": "fail" if errors else "pass",

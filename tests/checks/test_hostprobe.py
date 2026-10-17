@@ -2,12 +2,15 @@
 
 import sys
 
+import pytest
+
 from iakit import hostprobe
 
 READS_REFERENCE = (
     "import pathlib\n"
     "p = pathlib.Path('.fake/skills/iakit-host-probe/references/token.md')\n"
-    "print('PROBE-RESULT: ' + p.read_text(encoding='utf-8').split('`')[1] if p.exists() else 'no skill')\n"
+    "answer = 'PROBE-RESULT: ' + p.read_text(encoding='utf-8').split('`')[1] if p.exists() else 'no skill'\n"
+    "print(answer)\n"
 )
 
 
@@ -41,3 +44,23 @@ def test_unavailable_host_is_blocked_not_passed(monkeypatch):
 def test_token_is_only_in_the_reference_file():
     assert hostprobe.TOKEN not in (hostprobe.PROBE / "SKILL.md").read_text(encoding="utf-8")
     assert hostprobe.TOKEN in (hostprobe.PROBE / "references/token.md").read_text(encoding="utf-8")
+
+
+def test_diagnostic_token_is_not_a_final_response(monkeypatch):
+    script = "import sys\n" + READS_REFERENCE.replace("print(answer)", "print(answer, file=sys.stderr)")
+    fake(monkeypatch, script + "print('No final response token')\n")
+    result = hostprobe.probe("fake")
+    assert result["result"] == "fail"
+    for name in ("discovery", "explicit"):
+        assert result["checks"][name]["result"] == "fail"
+        assert result["checks"][name]["token_returned"] is False
+    assert result["checks"]["control"]["result"] == "pass"
+
+
+@pytest.mark.parametrize(("prefix", "suffix"), [("trace ", ""), ("", " extra"), ("", "\nMore output")])
+def test_positive_response_must_be_the_exact_line(monkeypatch, prefix, suffix):
+    script = READS_REFERENCE.replace("print(answer)", f"print({prefix!r} + answer + {suffix!r})")
+    fake(monkeypatch, script)
+    result = hostprobe.probe("fake")
+    assert result["result"] == "fail"
+    assert result["checks"]["control"]["result"] == "pass"

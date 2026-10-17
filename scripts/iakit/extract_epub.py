@@ -2,7 +2,7 @@
 
 本文化の規則は上流book-to-skillのstdlib抽出器（`_HTMLTextExtractor`）と同じにする。
 script・style・headを除き、ブロック要素の開始・終了を改行、表のセルをタブで区切る。
-これに加えて、要素IDが最初に本文を出す位置と、文字として読めない画像等を記録する。
+これに加えて、要素IDの本文範囲と、文字として読めない画像等を記録する。
 リフロー表示のページ番号は作らない。
 """
 
@@ -16,7 +16,8 @@ from urllib.parse import unquote, urlsplit
 
 METHOD = "iakit.epub_html (book-to-skill stdlib extractor rules)"
 OPTIONS = {"order": "spine, then non-spine XHTML in manifest order", "leading_whitespace": "dropped",
-           "postprocess": "none"}
+           "postprocess": "none", "encoding": "UTF-8 or UTF-16; strict; BOM removed",
+           "element_ranges": "whole lines contained in the element"}
 
 SKIP_TAGS = {"script", "style", "head"}
 BLOCK_TAGS = frozenset({
@@ -40,8 +41,7 @@ class TextExtractor(html.parser.HTMLParser):
         self.skip_depth = 0
         self.pending = ""
         self.stack: list[tuple[str, str | None]] = []
-        self.waiting: list[str] = []
-        self.anchors: dict[str, int] = {}
+        self.anchors: dict[str, tuple[int, int]] = {}
         self.unreadable: list[dict] = []
 
     def _mark(self, sep: str) -> None:
@@ -56,8 +56,6 @@ class TextExtractor(html.parser.HTMLParser):
         element_id = attrs.get("id")
         if tag in SKIP_TAGS:
             self.skip_depth += 1
-        if element_id and not self.skip_depth and element_id not in self.anchors:
-            self.waiting.append(element_id)
         if tag in UNREADABLE and not self.skip_depth:
             self.unreadable.append({"element_id": element_id or self._nearest_id(), "kind": UNREADABLE[tag],
                                     "alt_text": bool((attrs.get("alt") or "").strip())})
@@ -96,10 +94,12 @@ class TextExtractor(html.parser.HTMLParser):
             if self.parts:
                 self._append(self.pending)
             self.pending = ""
-        for element_id in self.waiting:
-            self.anchors[element_id] = self.length
-        self.waiting.clear()
+        start = self.length
         self._append(data)
+        for _, element_id in self.stack:
+            if element_id:
+                first = self.anchors.get(element_id, (start, start))[0]
+                self.anchors[element_id] = (first, self.length)
 
     def _append(self, text: str) -> None:
         self.parts.append(text)
@@ -144,6 +144,26 @@ def _documents(zf: zipfile.ZipFile, opf_path: str) -> list[dict]:
     return order
 
 
+def _decode(raw: bytes) -> str:
+    """XHTMLのUnicode符号化を判定し、BOMだけを除く。置換復号はしない。"""
+    if raw.startswith((b"\xff\xfe\x00\x00", b"\x00\x00\xfe\xff")):
+        raise ValueError("UTF-32は未対応")
+    if raw.startswith((b"\xff\xfe", b"\xfe\xff")):
+        text = raw.decode("utf-16")
+    elif raw.startswith(b"\x00<\x00?"):
+        text = raw.decode("utf-16-be")
+    elif raw.startswith(b"<\x00?\x00"):
+        text = raw.decode("utf-16-le")
+    else:
+        text = raw.decode("utf-8-sig")
+    declaration = re.match(r'<\?xml\s+[^?]*encoding\s*=\s*[\'"]([^\'"]+)[\'"]', text)
+    if declaration and declaration[1].lower() not in ("utf-8", "utf-16", "utf-16le", "utf-16be"):
+        raise ValueError("宣言された文字コードは未対応")
+    if "\x00" in text:
+        raise ValueError("XHTMLにNUL文字がある")
+    return text
+
+
 def extract(path: Path) -> dict:
     """spine順の文書ごとに本文・要素IDの位置・読めない要素を返す。"""
     warnings: list[str] = []
@@ -159,10 +179,9 @@ def extract(path: Path) -> dict:
                 units.append(unit)
                 continue
             try:
-                source = raw.decode("utf-8")
-            except UnicodeDecodeError:
-                source = raw.decode("utf-8", errors="replace")
-                warnings.append(f"{doc['href']}: UTF-8として読めないバイトを置換した")
+                source = _decode(raw)
+            except ValueError as exc:
+                raise ValueError(f"{doc['href']}: XHTMLの文字コードを復号できない") from exc
             parser = TextExtractor()
             parser.feed(source)
             parser.close()
