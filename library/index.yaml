@@ -17,13 +17,87 @@ entries:
   claims: [CLAIM-0001, CLAIM-0002, CLAIM-0003, CLAIM-0004, CLAIM-0005]
   terms: [TERM-0001, TERM-0002, TERM-0003]
   conflicts: []
+- knowledge_id: KN-003
+  kind: method
+  title: 同義語と表記揺れの統合
+  path: library/methods/synonym-control.md
+  claims: [CLAIM-0006, CLAIM-0007, CLAIM-0008, CLAIM-0009, CLAIM-0010, CLAIM-0011, CLAIM-0013]
+  terms: [TERM-0004, TERM-0005, TERM-0006]
+  conflicts: []
+- knowledge_id: KN-004
+  kind: method
+  title: 階層関係と関連関係の区別
+  path: library/methods/hierarchical-and-associative-relationships.md
+  claims: [CLAIM-0015, CLAIM-0016, CLAIM-0017, CLAIM-0018, CLAIM-0019, CLAIM-0020, CLAIM-0021, CLAIM-0030]
+  terms: [TERM-0007, TERM-0008, TERM-0009]
+  conflicts: []
+- knowledge_id: KN-005
+  kind: criterion
+  title: ラベルの命名と粒度の一貫性
+  path: library/concepts/label-consistency.md
+  claims: [CLAIM-0012, CLAIM-0013, CLAIM-0034, CLAIM-0035, CLAIM-0036, CLAIM-0037, CLAIM-0038]
+  terms: [TERM-0004, TERM-0012]
+  conflicts: []
+- knowledge_id: KN-006
+  kind: method
+  title: ファセット分類
+  path: library/methods/faceted-classification.md
+  claims: [CLAIM-0014, CLAIM-0022, CLAIM-0023, CLAIM-0024, CLAIM-0025, CLAIM-0029, CLAIM-0031]
+  terms: [TERM-0010, TERM-0011]
+  conflicts: []
+- knowledge_id: KN-007
+  kind: method
+  title: 利用者、コンテンツ、文脈による問題定義
+  path: library/methods/problem-definition.md
+  claims: [CLAIM-0026, CLAIM-0027]
+  terms: []
+  conflicts: []
+- knowledge_id: KN-008
+  kind: method
+  title: コンテンツ分析とコンテンツ一覧
+  path: library/methods/content-analysis.md
+  claims: [CLAIM-0039, CLAIM-0040, CLAIM-0041, CLAIM-0042]
+  terms: [TERM-0013, TERM-0014]
+  conflicts: []
+- knowledge_id: KN-009
+  kind: method
+  title: 組織化の構造、ナビゲーション、サイトマップ
+  path: library/methods/navigation-and-sitemap.md
+  claims: [CLAIM-0028, CLAIM-0032, CLAIM-0033, CLAIM-0048, CLAIM-0049, CLAIM-0050, CLAIM-0051]
+  terms: [TERM-0011, TERM-0015]
+  conflicts: []
+- knowledge_id: KN-010
+  kind: method
+  title: 構造とラベルの検証方法
+  path: library/methods/structure-validation.md
+  claims: [CLAIM-0043, CLAIM-0044, CLAIM-0045, CLAIM-0046, CLAIM-0047]
+  terms: [TERM-0016, TERM-0017]
+  conflicts: []
+- knowledge_id: KN-011
+  kind: book_note
+  title: BOOK-001 文献ノート
+  path: library/books/BOOK-001/notes.md
+  claims: [CLAIM-0026, CLAIM-0027, CLAIM-0028, CLAIM-0029, CLAIM-0030, CLAIM-0031, CLAIM-0032, CLAIM-0033, CLAIM-0034,
+           CLAIM-0035, CLAIM-0036, CLAIM-0037, CLAIM-0038, CLAIM-0039, CLAIM-0040, CLAIM-0041, CLAIM-0042, CLAIM-0043,
+           CLAIM-0044, CLAIM-0045, CLAIM-0046, CLAIM-0047, CLAIM-0048, CLAIM-0049, CLAIM-0050, CLAIM-0051]
+  terms: []
+  conflicts: []
+- knowledge_id: KN-012
+  kind: book_note
+  title: BOOK-003 文献ノート（優先語、関係、ファセット）
+  path: library/books/BOOK-003/notes-relationships-and-facets.md
+  claims: [CLAIM-0006, CLAIM-0007, CLAIM-0008, CLAIM-0009, CLAIM-0010, CLAIM-0011, CLAIM-0012, CLAIM-0013, CLAIM-0014,
+           CLAIM-0015, CLAIM-0016, CLAIM-0017, CLAIM-0018, CLAIM-0019, CLAIM-0020, CLAIM-0021, CLAIM-0022, CLAIM-0023,
+           CLAIM-0024, CLAIM-0025]
+  terms: []
+  conflicts: []
 needs:
 - need_id: NEED-01
   cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
   rubric_items: [R-01]
   description: 問題定義で設計対象・利用者・目的・利用環境を整理し、構造の採用理由と結び付ける方法
-  entries: []
-  gap: 未統合。候補はBOOK-001（文脈・コンテンツ・利用者の整理）、BOOK-002、BOOK-007
+  entries: [KN-007]
+  gap: null
 - need_id: NEED-02
   cases: [CASE-TAXONOMY-001]
   rubric_items: [R-02]
@@ -34,38 +108,38 @@ needs:
   cases: [CASE-TAXONOMY-001, CASE-WEBIA-001]
   rubric_items: [R-02, R-03]
   description: 同義語・表記揺れを1つの概念の優先ラベルと同義語にまとめる方法と、優先ラベルの選び方
-  entries: []
-  gap: 未統合。候補はBOOK-003（非優先語と同義語の扱い、優先語の書式）
+  entries: [KN-003]
+  gap: null
 - need_id: NEED-04
   cases: [CASE-TAXONOMY-001]
   rubric_items: [R-02]
   description: 上位・下位関係と関連関係の区別、循環の回避、複数の上位概念を持つ場合の扱い
-  entries: []
-  gap: 未統合。候補はBOOK-003（関係の種類）、BOOK-005、BOOK-018
+  entries: [KN-004]
+  gap: 上位・下位関係の循環の禁止を直接述べた根拠は未登録（KN-004では全部と一部の規則からの導出を仮説として扱う）。候補はBOOK-005、BOOK-018
 - need_id: NEED-05
   cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
   rubric_items: [R-03]
   description: 兄弟項目やファセット内の項目の観点・粒度をそろえ、利用者の語で命名する基準
-  entries: []
-  gap: 未統合。候補はBOOK-001（ラベル付けの体系）、BOOK-003（優先語の書式）、BOOK-012
+  entries: [KN-005]
+  gap: null
 - need_id: NEED-06
   cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
   rubric_items: [R-04]
   description: コンテンツ一覧を作り、各項目を配置済み・未処理・対象外に区分して追跡する方法
-  entries: []
-  gap: 未統合。候補はBOOK-001（コンテンツの調査）、BOOK-012、BOOK-004
+  entries: [KN-008]
+  gap: null
 - need_id: NEED-07
   cases: [CASE-WEBIA-001]
   rubric_items: [R-05]
   description: 独立した複数の属性で絞り込むためのファセット分類と、どの属性からも到達できる経路
-  entries: []
-  gap: 未統合。候補はBOOK-001（組織化の体系）、BOOK-003（ファセット）、BOOK-005
+  entries: [KN-006]
+  gap: null
 - need_id: NEED-08
   cases: [CASE-WEBIA-001]
   rubric_items: [R-05]
   description: ナビゲーションの構造とサイトマップを、主要タスクの到達経路から設計する方法
-  entries: []
-  gap: 未統合。候補はBOOK-001（ナビゲーションの体系）。BOOK-008は未受領
+  entries: [KN-009]
+  gap: null
 - need_id: NEED-09
   cases: [CASE-TAXONOMY-001]
   rubric_items: [R-06]
@@ -76,5 +150,5 @@ needs:
   cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
   rubric_items: [R-07]
   description: 未検証の判断に対応する検証方法（ツリーテスト、カードソート、検索ログの確認など）と検証計画
-  entries: []
-  gap: 未統合。候補はBOOK-001（調査の方法）。BOOK-010は未受領
+  entries: [KN-010]
+  gap: null

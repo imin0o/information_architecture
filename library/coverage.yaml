@@ -2,16 +2,23 @@
 # 読んだ範囲・統合済みの範囲は iakit library check が生成記録と出典登録簿から導く。ここには状態と残りの説明だけを書く。
 schema_version: "1.0"
 books:
-- {book_id: BOOK-001, status: not_started, remaining: 全体未統合, mvp_impact: NEED-01・05〜08・10の候補文献。統合するまで該当する必要知識は gap のまま}
+- book_id: BOOK-001
+  status: partial
+  remaining: >-
+    EXTRACT-001-001の2章（3領域）、6章（組織化）、7章（ラベル）、8章（ナビゲーションの種類）、11章（コンテンツ分析、カードソート、ユーザーテスト）、
+    13章（図による文書化）の一部を統合した。精読範囲内の正確な方式の各種類、ナビゲーションの設計論、インタビューの質問例は未統合。
+    9章（検索）、10章（統制語彙）、12章（戦略）ほかは全体未統合。図と画像だけのページは抽出に内容がないため統合しない（D-M3-21）
+  mvp_impact: NEED-01・05〜08・10の根拠（確認済み）
 - {book_id: BOOK-002, status: not_started, remaining: 全体未統合, mvp_impact: NEED-01の候補文献}
 - book_id: BOOK-003
   status: partial
   remaining: >-
-    EXTRACT-003-001の行4060〜4139・4250〜4319を精読し、同名異義語の限定語とスコープノートの話題だけを統合した。
-    精読範囲内の優先語の書式（語の長さ、品詞、複数形、略語、倒置）と注記の種類は未統合。精読範囲外は全体未統合
-  mvp_impact: NEED-03・04・05・07の候補文献。NEED-02の根拠は人のレビュー待ち
+    EXTRACT-003-001の3章（優先語の書式と選び方、限定語、スコープノート）、4章（等価関係、階層関係、関連関係）、8章（ファセット）の一部を統合した。
+    精読範囲内の優先語の書式（語の長さ、品詞、複数形、略語、倒置）、注記の種類、非優先語の種類（表4.1）は未統合。精読範囲外は全体未統合。
+    抽出品質の確認で表・図・コード例を復元できないと分かったため、これらは抽出テキストから統合しない（D-M3-20）
+  mvp_impact: NEED-02・03・04・05・07の根拠（確認済み）
 - {book_id: BOOK-004, status: not_started, remaining: 全体未統合, mvp_impact: NEED-06の候補文献}
-- {book_id: BOOK-005, status: not_started, remaining: 全体未統合, mvp_impact: NEED-04・07・09の候補文献}
+- {book_id: BOOK-005, status: not_started, remaining: 全体未統合, mvp_impact: NEED-04（循環の禁止の根拠）とNEED-09の候補文献。M5の文献追加試験で統合する（D-M3-22）}
 - {book_id: BOOK-006, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
 - {book_id: BOOK-007, status: not_started, remaining: 全体未統合, mvp_impact: NEED-01の候補文献}
 - {book_id: BOOK-008, status: not_received, remaining: 未受領のため未統合, mvp_impact: NEED-08の候補文献。BOOK-001で代替できるかは未確認}

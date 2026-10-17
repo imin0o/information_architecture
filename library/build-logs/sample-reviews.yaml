@@ -1,39 +1,100 @@
 # 抽出品質の代表箇所の確認（P-M1-03）。schemas/sample-review.schema.json で検証する。
 # 統合する文献だけを、統合を広げる前に確認する。BOOK-001・002は統合に着手するときに計画を追加する。
 # result は iakit review record が人の入力から書き込む。note に原典の本文を書かない。
-schema_version: "1.0"
+schema_version: '1.0'
 reviews:
 - extraction_id: EXTRACT-003-001
-  checked_by: null
-  checked_at: null
+  checked_by: Codex
+  checked_at: '2026-10-17T21:23:27+09:00'
   items:
   - kind: body
-    pdf_page_indices: [128, 129, 134, 135]
+    pdf_page_indices:
+    - 128
+    - 129
+    - 134
+    - 135
     epub_href: null
     look_for: 根拠EV-0001〜0003の本文。段落の欠落・順序の乱れ、行末ハイフン、ページの柱の混入
-    result: null
-    note: null
+    result: issue
+    note: 
+      PDF128-129/134-135を画像照合。段落の欠落・順序逆転はないが、根拠範囲にページの柱が混入し、行末ハイフンが単語内に残る。原典参照を併用する必要がある。
   - kind: text_layer
-    pdf_page_indices: [128, 129, 134, 135]
+    pdf_page_indices:
+    - 128
+    - 129
+    - 134
+    - 135
     epub_href: null
     look_for: スキャン画像に重ねた文字層の誤認識（記号の混入、引用符の化け）。PDFビューアで選択できる文字と画像の文字が一致するか
-    result: null
-    note: null
+    result: issue
+    note: 
+      PDF135の抽出行4305で、原典の文末にある上付き注番号付近が引用符様の余分な記号に誤認識される。同ページ末尾の箇条書き記号も文字に誤認識される。登録済みの根拠本文3件は画像と一致。
   - kind: table
-    pdf_page_indices: [73]
+    pdf_page_indices:
+    - 73
     epub_href: null
     look_for: 表の見出しと各セルが抽出テキストに読める順で残っているか
-    result: null
-    note: null
+    result: issue
+    note: 
+      PDF73の表1.1はキャプションと列見出しの一部だけが残り、左端の年の見出し、各年と数値セルが抽出から欠落している。セル対応を復元できない。
   - kind: figure
-    pdf_page_indices: [54]
+    pdf_page_indices:
+    - 54
     epub_href: null
     look_for: 図のキャプションと、図の中の文字が抽出されているか。図の内容が本文から失われていないか
-    result: null
-    note: null
+    result: issue
+    note: 
+      計画のPDF54には図1.5への参照文のみで、実図はPDF55にある。55も追加照合し、キャプションは残るが、図内文字は誤認識と行・列の混在が多く、画面構造を復元できない。
   - kind: layout
-    pdf_page_indices: [386]
+    pdf_page_indices:
+    - 386
     epub_href: null
     look_for: XMLの例など等幅の組版で、字下げ・記号・改行が保たれているか
-    result: null
+    result: issue
+    note: PDF386の図11.2のXML例は行の概略は残るが、階層を示す字下げが消失し、タグ名と記号に誤認識がある。コードとしての忠実性はない。
+- extraction_id: EXTRACT-001-001
+  checked_by: Codex
+  checked_at: '2026-10-17T22:37:58+09:00'
+  items:
+  - kind: body
+    pdf_page_indices:
+    - 125
+    - 126
+    - 184
+    - 185
+    epub_href: null
+    look_for: 根拠EV-0026〜0036の本文。段落の欠落・順序の乱れ、単語の区切り（タブ）による欠落、強調語や句読点だけの行の位置
+    result: ok
     note: null
+  - kind: table
+    pdf_page_indices:
+    - 43
+    epub_href: null
+    look_for: 表の見出しと各セルが抽出テキストに読める順で残っているか
+    result: ok
+    note: null
+  - kind: figure
+    pdf_page_indices:
+    - 141
+    - 206
+    epub_href: null
+    look_for: 図6-12、図8-1のキャプションと図の中の文字が抽出されているか。図の内容が本文から失われていないか
+    result: issue
+    note: 
+      PDF141の図6-12とPDF206の図8-1を画像照合。キャプションは残るが、図内ラベルと凡例の文字は抽出されず、階層の接続関係や色と配置による区別も本文から復元できない。図を使うときは原典画像の参照が必要。
+  - kind: layout
+    pdf_page_indices:
+    - 395
+    - 396
+    epub_href: null
+    look_for: カードソートの観点など、見出し付きの定義リストで見出しと説明の対応が保たれているか
+    result: ok
+    note: null
+  - kind: text_layer
+    pdf_page_indices:
+    - 24
+    epub_href: null
+    look_for: 文字層のないページ（抽出で no_text）に、本文や図の文字が含まれていないか
+    result: issue
+    note: 
+      PDF24は空白ページではなく、見出しと複数のアプリ名を含む画面画像である。抽出はno_textで、図内文字がすべて欠落する。画像ページを本文なしとして読み飛ばさないこと。

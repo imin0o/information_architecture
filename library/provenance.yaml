@@ -1,85 +1,1578 @@
 # 根拠抜粋の登録簿（BR-02、付録B.1）。schemas/provenance.schema.json で検証する。
 # 抜粋全文は複製しない。extracted_ref はローカル照合用の位置。locator は人が原典で確認した項目だけを書く。
 # 主張はエージェントの草稿（library/build-logs/knowledge-generation.yaml）で、人のレビューまで unreviewed とする。
-schema_version: "1.0"
+schema_version: '1.0'
 records:
 - evidence_id: EV-0001
   source_id: BOOK-003
-  source_sha256: 3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
-  extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
-  extracted_ref: {extraction_id: EXTRACT-003-001, start_line: 4096, end_line: 4109}
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4096
+    end_line: 4109
   locator:
     chapter: null
     section: null
-    pdf_page_indices: []
-    printed_page_labels: []
+    pdf_page_indices:
+    - 128
+    - 129
+    printed_page_labels:
+    - '94'
+    - '95'
     epub_href: null
     element_id: null
-  excerpt_sha256: 1c90e1a382199bdc49ad90e5111507125b5760b440603af05325790af4185c6f
+  excerpt_sha256: 
+    1c90e1a382199bdc49ad90e5111507125b5760b440603af05325790af4185c6f
   excerpt_preview: Parenthetical qualifiers. There are different ways to handle
   support_reviews:
   - claim_id: CLAIM-0001
     claim: 同じ綴りで意味の異なる語（同名異義語）は、括弧で囲んだ限定語をラベルに付けて区別できる
-    claim_sha256: ae3f6f6fc7aceb86dba52f8880791c877cc4293bd6ff3f8317e4471e6cc121c3
+    claim_sha256: 
+      ae3f6f6fc7aceb86dba52f8880791c877cc4293bd6ff3f8317e4471e6cc121c3
     applicability: 用語を管理するソフトウェアや表示先が、括弧を含むラベルを扱える場合
-    status: unreviewed
-    reviewed_by: null
-    reviewed_at: null
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T21:23:27+09:00'
   - claim_id: CLAIM-0002
     claim: 限定語は、分野で表すか種類で表すかのどちらかの形式に決め、タクソノミー全体でそろえる
-    claim_sha256: 072c4606b4e1628ad711138db719648aa21e44de9e9d7c0ed8200f132063d60c
+    claim_sha256: 
+      072c4606b4e1628ad711138db719648aa21e44de9e9d7c0ed8200f132063d60c
     applicability: 1つのタクソノミーで複数の同名異義語に限定語を付ける場合
-    status: unreviewed
-    reviewed_by: null
-    reviewed_at: null
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T21:23:27+09:00'
   - claim_id: CLAIM-0003
     claim: 一方の語形だけで意味が定まる場合は、同名異義語のすべてに限定語を付ける必要はない
-    claim_sha256: c06fd996dad22127ba6b1cc715fee89bd40bd6c85eec52fdbf9f7a9ee347b852
+    claim_sha256: 
+      c06fd996dad22127ba6b1cc715fee89bd40bd6c85eec52fdbf9f7a9ee347b852
     applicability: 単数形と複数形など、語形の違いで意味を判別できる言語・語彙の場合
-    status: unreviewed
-    reviewed_by: null
-    reviewed_at: null
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T21:23:27+09:00'
 - evidence_id: EV-0002
   source_id: BOOK-003
-  source_sha256: 3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
-  extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
-  extracted_ref: {extraction_id: EXTRACT-003-001, start_line: 4263, end_line: 4271}
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4263
+    end_line: 4271
   locator:
     chapter: null
     section: null
-    pdf_page_indices: []
-    printed_page_labels: []
+    pdf_page_indices:
+    - 134
+    printed_page_labels:
+    - '100'
     epub_href: null
     element_id: null
-  excerpt_sha256: 8eb31ae7de5a2dd8abb8be3a34d7784521d870a22aea8f576ed5ecffd56fefc1
-  excerpt_preview: What may be necessary, however, is a note of clarification as to
+  excerpt_sha256: 
+    8eb31ae7de5a2dd8abb8be3a34d7784521d870a22aea8f576ed5ecffd56fefc1
+  excerpt_preview: What may be necessary, however, is a note of clarification as
+    to
   support_reviews:
   - claim_id: CLAIM-0004
     claim: スコープノートは、語の適用範囲を狭める・広げる、意味の重なる語を区別する、語の使い方を助言する、のいずれかに使う
-    claim_sha256: 1b4bc760de663d4cb6ec97111b2f93cd4103b464ab80e76ac8b08b7e073856f7
+    claim_sha256: 
+      1b4bc760de663d4cb6ec97111b2f93cd4103b464ab80e76ac8b08b7e073856f7
     applicability: タクソノミー内での優先語の使い方を補う必要がある場合。自明な意味を説明する辞書的な定義には使わない
-    status: unreviewed
-    reviewed_by: null
-    reviewed_at: null
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T21:23:27+09:00'
 - evidence_id: EV-0003
   source_id: BOOK-003
-  source_sha256: 3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
-  extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
-  extracted_ref: {extraction_id: EXTRACT-003-001, start_line: 4296, end_line: 4302}
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4296
+    end_line: 4302
   locator:
     chapter: null
     section: null
-    pdf_page_indices: []
-    printed_page_labels: []
+    pdf_page_indices:
+    - 135
+    printed_page_labels:
+    - '101'
     epub_href: null
     element_id: null
-  excerpt_sha256: 548db479ae872c0248255878e3899c10e38a26007505d6868a686cbb1aab6e14
-  excerpt_preview: "A scope note ought to be viewable to all: the taxonomy editors,"
+  excerpt_sha256: 
+    548db479ae872c0248255878e3899c10e38a26007505d6868a686cbb1aab6e14
+  excerpt_preview: 'A scope note ought to be viewable to all: the taxonomy editors,'
   support_reviews:
   - claim_id: CLAIM-0005
     claim: 利用者はスコープノートを読まないか、その存在を知らないことがあるため、同名異義語の区別をスコープノートだけに頼らない
-    claim_sha256: 8b28e1a51369d9947b141a38c6fa53e901e8ce11334700bf639cb5d58aa2e5be
+    claim_sha256: 
+      8b28e1a51369d9947b141a38c6fa53e901e8ce11334700bf639cb5d58aa2e5be
     applicability: 利用者が検索結果や一覧でラベルだけを見て語を選ぶ場合
-    status: unreviewed
-    reviewed_by: null
-    reviewed_at: null
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T21:23:27+09:00'
+- evidence_id: EV-0004
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4456
+    end_line: 4462
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 140
+    printed_page_labels:
+    - '106'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    2f2aa0bf8a469460b33524ea9c3e97edeebe07a1d6b6c6c5abddcec7ba4948d8
+  excerpt_preview: An important feature of controlled vocabularies, except for 
+    those
+  support_reviews:
+  - claim_id: CLAIM-0006
+    claim: 一覧で見渡せないほどの統制語彙では、同義・同等の非優先語を優先語へ結び付け、検索する人を優先語へ導くとともに索引付けを支える
+    claim_sha256: 
+      8508b1cef0f030f13d7642a2cd111e06d943fed534203841fcfd0bd17de84490
+    applicability: 1画面で一覧できない規模の統制語彙
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0005
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4523
+    end_line: 4530
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 142
+    printed_page_labels:
+    - '108'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    02f46cb0b52672733c321e093cb1f82aa87a842dd58e9d185140e83450ce2fc3
+  excerpt_preview: The notion of equivalence does not imply that the terms have
+  support_reviews:
+  - claim_id: CLAIM-0007
+    claim: 等価関係は語が同義であることを要しない。対象コンテンツについて区別して保つと重複や混乱を招くほど近い概念を、同じものとして扱う関係である
+    claim_sha256: 
+      40ee93eaa856388bfcf6093b30e290fb9a1cb3d736d2a3e2e0248572b4a2d30d
+    applicability: 索引付けと検索の目的で、近い語を1つの概念にまとめるかを判断する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0006
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4547
+    end_line: 4560
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 143
+    printed_page_labels:
+    - '109'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    6406c327b294d399f39938d04257006022ebd9f6b6c3f4dcb7d1e079d6355478
+  excerpt_preview: Typically, multiple nonpreferred terms refer to a single 
+    preferred
+  support_reviews:
+  - claim_id: CLAIM-0008
+    claim: 1つの優先語には複数の非優先語を対応させてよいが、非優先語は通常1つの優先語だけを指す
+    claim_sha256: 
+      1910650247526c9c65e9030c6dee25ff6238dc2047fb26d6fe419346404df21e
+    applicability: 一般的なシソーラスやタクソノミー。事前結合語を分解する一対多の参照を認める体系は例外
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0007
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4604
+    end_line: 4623
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 145
+    - 146
+    printed_page_labels:
+    - '111'
+    - '112'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    66361ebadfb200750edbcdc7414465d1e87f62b86c55c5ac61e2a5df343278a0
+  excerpt_preview: of the content. In the example in the table, using middle 
+    schools
+  support_reviews:
+  - claim_id: CLAIM-0009
+    claim: 近い同義語を非優先語にできるかは対象コンテンツの範囲で決まり、その範囲で優先語をいつでもその語の意味で使えるかで判断する
+    claim_sha256: 
+      493cb76e19bea93c1209238fbc67b65104f738a73bbf0dbc48696e8a8f6fcd74
+    applicability: 範囲によって同義とみなせるかが変わる語
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0008
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4503
+    end_line: 4507
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 142
+    printed_page_labels:
+    - '108'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    d1e67ddd5b68da6b5fd7ee20c3d34c68373da5c3302886fde9a51b3ab5b7673e
+  excerpt_preview: When it comes to the style and format of nonpreferred terms
+  support_reviews:
+  - claim_id: CLAIM-0010
+    claim: 非優先語は優先語ほど書式をそろえる必要がなく、利用者が検索や入力に使いうる形を予想して幅広く入れる
+    claim_sha256: 
+      fa7910cf336b3aff9fbe4cbda4d37fad072037da01469ab890f1c440659ab46e
+    applicability: 非優先語を検索語の入口として使う場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0009
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 3844
+    end_line: 3848
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 121
+    printed_page_labels:
+    - '87'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    94fc71b9125cf9f0952b905b7ccf5f20d902a9d9a98f06c79c9790a450834a4f
+  excerpt_preview: Unless the taxonomy is of the synonym ring type, the 
+    taxonomist
+  support_reviews:
+  - claim_id: CLAIM-0011
+    claim: 同義語の集合（シノニムリング）でない限り、概念ごとに優先語を1つ選び、残りを非優先語にする。優先語には利用者の言葉を反映させる
+    claim_sha256: 
+      e4836401db2cbca4a17b2c4d0c669d378b6532e7743a49a4e5679c4d65112190
+    applicability: 優先語を表示するタクソノミー
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0010
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 3890
+    end_line: 3897
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 122
+    printed_page_labels:
+    - '88'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    93f0f0da62f5821438c487dfb4b86b25d8807750a509c70f71bb0ebdbdf6690a
+  excerpt_preview: 5. Consistency in style throughout the taxonomy. A taxonomy
+  support_reviews:
+  - claim_id: CLAIM-0012
+    claim: 語の水準（くだけた語か、正式または専門的な語か）はタクソノミー全体でそろえ、利用者が予測しやすくする
+    claim_sha256: 
+      1fea0739934885937c0c9b953ea839b68e00b85ad24850d6e1dcfc0c61244e5e
+    applicability: 職業名など、同じ種類の語を並べる場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0011
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 3907
+    end_line: 3911
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 123
+    printed_page_labels:
+    - '89'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    e059631a2608f118abf14c49f49866ea5c70c851f8a4af822611ed2b314c0183
+  excerpt_preview: The relative importance of these different criteria will 
+    vary, but
+  support_reviews:
+  - claim_id: CLAIM-0013
+    claim: 優先語を選ぶ基準のうち、想定利用者が最も引きそうな語であることを、一般にほかの基準より優先する
+    claim_sha256: 
+      edd068065e4b86506b343a035ec98d6d4e10dcc8478743039af8c43ecc82c3cb
+    applicability: 複数の同義語から優先語を選ぶ場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0012
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 3938
+    end_line: 3942
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 124
+    printed_page_labels:
+    - '90'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    87efc5e2e40f9cb572062cbfe63b7a19b1dc8c147e08f3fd7e7647081cc6c635
+  excerpt_preview: the other as nonpreferred. If the taxonomy does include terms
+  support_reviews:
+  - claim_id: CLAIM-0014
+    claim: 意味の重なる語を両方残す場合は、別のファセットに置くとうまく働きやすい
+    claim_sha256: 
+      486a9c2fe51f805f175f94bd38b854c180294ba25ecd5ff780257ad285bb2b4e
+    applicability: 専門的な内容で、重なる2つの概念を区別して残す必要がある場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0013
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4866
+    end_line: 4870
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 153
+    printed_page_labels:
+    - '119'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    8462f7efb597a51a41a82b38032947182365c0d1cf952df917183cbee83dd4cb
+  excerpt_preview: pair consists of a broader term and a narrower term. All 
+    members
+  support_reviews:
+  - claim_id: CLAIM-0015
+    claim: 階層関係では、下位語に属するものはすべて上位語に含まれ、上位語に属するものの一部だけが下位語に属する
+    claim_sha256: 
+      d7cc319f052e5f30c664019d71804cf2e46241f7154921064c68618c8294736d
+    applicability: 上位・下位関係を作る場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0014
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4996
+    end_line: 5008
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 157
+    - 158
+    printed_page_labels:
+    - '123'
+    - '124'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    20a30589c3b1d21d95fec04c2fc9826493dfd37b521865725c0926cef32d33fc
+  excerpt_preview: In summary, to decide whether the relationship between a pair
+  support_reviews:
+  - claim_id: CLAIM-0016
+    claim: 
+      2語の関係が階層か関連かは、下位語は上位語の一種である、個別例である、一部である、といった文が、ときどきではなくすべての場合に成り立つかで判断する
+    claim_sha256: 
+      d3c940114f6767c565045a5f187cc1eba647481ff15ee1948eb4b125dd09c506
+    applicability: 上位・下位関係か関連関係かの判断がつかない場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0015
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 4979
+    end_line: 4982
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 157
+    printed_page_labels:
+    - '123'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    bfec4a43e3c1616acb81dac2fcd099b845aa8c6e93f379e1855f8a50671f3b9d
+  excerpt_preview: of study. Other kinds of whole-part relations, such as 
+    “nonperma-
+  support_reviews:
+  - claim_id: CLAIM-0017
+    claim: 一時的に置かれる場所や、製品とその部品のような関係は、全体と部分の階層ではなく関連関係として扱う
+    claim_sha256: 
+      097845bbe59c0cb6df09c080dfe433fde28a21ed36868d62a906dc59a431c3e7
+    applicability: 全体と部分に見える関係を分類する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0016
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 5038
+    end_line: 5044
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 159
+    printed_page_labels:
+    - '125'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    d980caf67c4e9d462a79a1e418ce53d5109ddcd5053853629c817833e933cf81
+  excerpt_preview: When creating a polyhierarchy with two (or more) broader
+  support_reviews:
+  - claim_id: CLAIM-0018
+    claim: 複数の上位語を持たせる場合、それらの上位語どうしが直接の上位・下位関係にあってはならない（親と祖父母の両方を上位語にしない）
+    claim_sha256: 
+      612bf52cf49ba40d144bf301b9b5b674ad1023a72178330473d76820dbfe1f9b
+    applicability: 複数の上位語（ポリヒエラルキー）を作る場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0017
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 5056
+    end_line: 5060
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 160
+    printed_page_labels:
+    - '126'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    b5ce84fc083f05559c44da57e6225a008333b1648d76bc2e1ebc0c80996235fb
+  excerpt_preview: Although the published thesaurus standards provide specific
+  support_reviews:
+  - claim_id: CLAIM-0019
+    claim: 複数の上位語を作るかは、最終的には利用者インタフェースの設計と検索・閲覧ソフトウェアの機能で決まる
+    claim_sha256: 
+      3e6994abbd624efe2fc9469d209339e8cf9ad2edfc3ef4523925116ae95902b8
+    applicability: ポリヒエラルキーの採否を決める場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0018
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 5062
+    end_line: 5068
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 160
+    printed_page_labels:
+    - '126'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    4f8594ed6e024959b5e76448e2e2004d612b00830d55ce080777467ad6154240
+  excerpt_preview: Associative relationships, also known as related term 
+    relationships
+  support_reviews:
+  - claim_id: CLAIM-0020
+    claim: 関連関係は、検索語より適した語を示す、主題の広がりを示す、閲覧中の利用者が関係する話題へ進めるようにする、という目的で作る
+    claim_sha256: 
+      21eb22800f9a01f567de7795aa5b64609c8ad3acbcd84d0d47a6b34c50db1803
+    applicability: 関連語を表示できる検索・閲覧の仕組み
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0019
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 5074
+    end_line: 5076
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 160
+    printed_page_labels:
+    - '126'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    31b4c766da0d91afa84eaf7a13cc3db7cf88f9463d62e2bd64b6c8e8da59b609
+  excerpt_preview: Unlike hierarchical relationships, simple associative 
+    relations are
+  support_reviews:
+  - claim_id: CLAIM-0021
+    claim: 単純な関連関係は、既定では両方向に同じ関係として扱う
+    claim_sha256: 
+      ca13f961d42d91c90cbc95e1d502df53d92d2e2c9b42c20cf40ea309d356f249
+    applicability: 種類を区別しない関連関係
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0020
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 9979
+    end_line: 9983
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 304
+    printed_page_labels:
+    - '270'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    35abb57a259755e31e721bf868c84e60b509e3cfd580f792fe3a62ec7b8ff1a6
+  excerpt_preview: by body type). Facets in faceted classification each 
+    represent their own
+  support_reviews:
+  - claim_id: CLAIM-0022
+    claim: ファセット分類の各ファセットは独立した階層で互いに排他的であり、各ファセットから1語ずつ組み合わせて検索できるようにする
+    claim_sha256: 
+      2a7e5e06823c4b5c7295fcb1ce8a00aba07d50dbd5af13ced6ccbd3f2961bbb9
+    applicability: 複数の属性を組み合わせて絞り込む検索
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0021
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 10027
+    end_line: 10033
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 305
+    - 306
+    printed_page_labels:
+    - '271'
+    - '272'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    14cefe769b20c90faa0fe0c8ed48ed3bc9ac58da3ce5c0b16b0121641ffb9f75
+  excerpt_preview: While it may be helpful to refer back to these generic 
+    facets, the
+  support_reviews:
+  - claim_id: CLAIM-0023
+    claim: 
+      ファセットの設計は汎用のファセット例ではなく対象コンテンツの性質で決める。ファセットは共通の特徴を持つレコードで構成されたコンテンツに最も向く
+    claim_sha256: 
+      38c230418682061d6a3cc26f1d13d5d9617997069a2467ed799461be102a021b
+    applicability: ファセット分類を採用するか、どのファセットを置くかを決める場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0022
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 10077
+    end_line: 10083
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 307
+    printed_page_labels:
+    - '273'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    1271aee20e74929e8e2c17605c20c7e8945b62505a2224e8c7b5726447a4d71d
+  excerpt_preview: Facets work best with content that is of a somewhat 
+    consistent
+  support_reviews:
+  - claim_id: CLAIM-0024
+    claim: 
+      ファセットは同じ種類のコンテンツの集まりに向く。多くのコンテンツが多くのファセットで記述できればよく、すべてのファセットがすべてのコンテンツに当てはまる必要はない
+    claim_sha256: 
+      3cee9e06e25a4672a3e4a742ee6a258186a104e2e3a67ecdd810b3e09c944c6e
+    applicability: ファセットの数と適用範囲を決める場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0023
+  source_id: BOOK-003
+  source_sha256: 
+    3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 
+    1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref:
+    extraction_id: EXTRACT-003-001
+    start_line: 10103
+    end_line: 10108
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 308
+    printed_page_labels:
+    - '274'
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    ee64db108773a7caaba3122374c86ce78e3cae2740d6188eb83f8b45c78482d4
+  excerpt_preview: Developing facets also involves a slightly different analysis
+    of the
+  support_reviews:
+  - claim_id: CLAIM-0025
+    claim: ファセットは、コンテンツの共通パターンから検索の観点を先に決め、その後で語を入れるトップダウンの方法で作る
+    claim_sha256: 
+      bb9a395b68d3872c7919f3a6ddca743a3e4637d0c862b4676ec2b57db63d4c78
+    applicability: ファセット型のタクソノミーを新しく作る場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0024
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 1382
+    end_line: 1386
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 49
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    f7f3bcb9e3f3578e316a3dbec2f7b10925705b9553dedca17ed77287f272929d
+  excerpt_preview: "In\tshort,\twe\tneed\tto\tunderstand\tthe\tbusiness\tgoals\tbehind\t\
+    the\tproject\tand\tthe"
+  support_reviews:
+  - claim_id: CLAIM-0026
+    claim: 
+      情報アーキテクチャの設計では、事業の目的と使える資源（文脈）、現在のコンテンツの性質と量とその変化、主な利用者の要求と情報探索行動、の3つを理解する必要がある
+    claim_sha256: 
+      26e23683fd30c9e466691ef3bb02143a391f166d00a5cfcbcb249f9cf481b255
+    applicability: ウェブサイト、イントラネット、アプリなどの情報環境の設計を始める場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0025
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 1387
+    end_line: 1395
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 49
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    d017561af387006a747bdca8d4f0be380f3f6b793f34237ee7c1a13f2762e28c
+  excerpt_preview: "Good\tinformation\tarchitecture\tdesign\tis\tinformed\tby\tall\t\
+    three\tareas,\tand\tall\tthree"
+  support_reviews:
+  - claim_id: CLAIM-0027
+    claim: 
+      利用者、コンテンツ、文脈の3つはどれも設計に影響し、いずれも変化する。その変数の組合せは情報環境ごとに異なり、同じ環境でも時間とともに変わる
+    claim_sha256: 
+      4f1f3a07825a75588ae640e7e65f6d9c30a81aa38b48015476383a99692eed98
+    applicability: 問題定義で前提を記録する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0026
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 3141
+    end_line: 3145
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 125
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    b1c76718ae2107460fdc4be8a449dde8908053c625b9a5e05b0741b0dd595485
+  excerpt_preview: ".\tAn\torganization\tscheme\tdefines\tthe\tshared\tcharacteristics\t\
+    of\tcontent"
+  support_reviews:
+  - claim_id: CLAIM-0028
+    claim: 
+      組織化の方式（scheme）はコンテンツの共通の特徴を定めて項目のまとまり方を左右し、組織化の構造（structure）は項目やグループの間の関係の種類を定める。どちらも情報の見つけやすさと分かりやすさに影響する
+    claim_sha256: 
+      53721a48100a492cccd5666038750960d9fb42a13baa1bba73c5fcfa4437404e
+    applicability: サイトやアプリのコンテンツを分類・配置する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0027
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 3174
+    end_line: 3184
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 126
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    8c9aeaf8784f76befa1e9667d9056eab939850a6eb8c55d6534170df8d673f5a
+  excerpt_preview: "Let’s\tstart\twith\tthe\teasy\tones."
+  support_reviews:
+  - claim_id: CLAIM-0029
+    claim: 
+      正確な組織化の方式（アルファベット順など）は互いに排他的な区分に分けるため、探すものの名前を知っている利用者には使いやすいが、名前を知らない利用者には役立たない
+    claim_sha256: 
+      b72addac80b9102a4d8cf2b00f3100f6733b5ac6935f0cee08b4ce556d14a15d
+    applicability: 名前で探す項目（既知項目探索）がある場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0028
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 3488
+    end_line: 3500
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 141
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    661d62041be98dd0946c705f38e48d4f95a598e3fa2ec3dc7379bdb96e3d8599
+  excerpt_preview: "When\tdesigning\thierarchies,\tyou\tshould\tremember\ta\tfew\t\
+    rules\tof\tthumb."
+  support_reviews:
+  - claim_id: CLAIM-0030
+    claim: 
+      階層の分類は互いに排他的であるべきという考えを意識しつつ、それに縛られない。曖昧な項目は複数の分類に置いて見つけやすくしてよいが、重複して置く項目が多すぎると階層の価値が失われる
+    claim_sha256: 
+      ab0d0894dc1b9613b5f88be686ecbb6b6b420ecaf3fa88a4222c9fb8781cdafe
+    applicability: 1つの組織化の方式の中で階層を設計する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0029
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 3501
+    end_line: 3506
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 141
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    29e7495fdf292451020c9778ecfb5a859fb9caf94b4f61e1ed13eb817c6e4d7a
+  excerpt_preview: "and\tinclusivity\tdoes\tnot\texist\tacross\tdifferent\torganization\t\
+    schemes.\tYou\twould"
+  support_reviews:
+  - claim_id: CLAIM-0031
+    claim: 
+      排他性と包含性の緊張は、異なる組織化の方式の間には生じない。主題別と形式別の一覧が同じ項目を含むのは当然であり、両者は独立したファセットである
+    claim_sha256: 
+      6340aa19891b799910618fc9c4d75bda8f8cbac075e27a84a488f8b30dc324c6
+    applicability: 同じコンテンツを複数の観点で並べる場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0030
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 3511
+    end_line: 3528
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 142
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    ec83ba464637f49159335081402079a12ec55c8addb018bbc8351eca963449a9
+  excerpt_preview: "Second,\tit\tis\timportant\tto\tconsider\tthe\tbalance\tbetween\t\
+    breadth\tand\tdepth\tin"
+  support_reviews:
+  - claim_id: CLAIM-0032
+    claim: 
+      階層の幅（各階層の選択肢の数）と深さ（階層の数）を釣り合わせる。狭く深すぎると何度も選択を重ねる必要があり、広く浅すぎると最初の選択肢が多すぎて、選んだ先の内容が少なくなる
+    claim_sha256: 
+      3e56a89466c4d741d680b8da53855a90183e0aeea444c781610931d134c8ea13
+    applicability: 階層型のナビゲーションを設計する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0031
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 3454
+    end_line: 3460
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 140
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    9856eb655476e0c101a56d817a5f7328cedd45868ba8dd65af35774942747b12
+  excerpt_preview: "The\tstructure\tof\tinformation\tdefines\tthe\tprimary\tways\t\
+    in\twhich\tusers\tcan"
+  support_reviews:
+  - claim_id: CLAIM-0033
+    claim: 
+      情報の構造は利用者の主な移動方法を決める。主な構造には階層、データベース型、ハイパーテキストがあり、多くの場合は3つを補い合う形で使うのがよい
+    claim_sha256: 
+      f04d28b80572ec56c1135e6167a32892e3937a3c55a8f1f16cfb1a4e8180d624
+    applicability: 情報環境の全体構造を選ぶ場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0032
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 4486
+    end_line: 4490
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 184
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    32c0fdb54d39ba496118c57cce7da2e3268ff2ff1944b4778ad3e3076fe92823
+  excerpt_preview: "Why\tis\tconsistency\timportant?\tBecause\tconsistency\tmeans\t\
+    predictability,\tand"
+  support_reviews:
+  - claim_id: CLAIM-0034
+    claim: ラベルの一貫性は予測しやすさを生む。少数のラベルを見れば残りの見当が付くため、ラベル付けの体系が学びやすく使いやすくなる
+    claim_sha256: 
+      ef334b4d16cd6b1f0880eb80f5c7f60bc561718ea376ef56e6347bff5ab1e537
+    applicability: ラベルの集合（ナビゲーション項目など）を設計する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0033
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 4501
+    end_line: 4506
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 184
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    788d253c41dc04421f49768d9c95f20c479e09badcb782fcd9aff7cc8e3efa52
+  excerpt_preview: Syntax
+  support_reviews:
+  - claim_id: CLAIM-0035
+    claim: 1つのラベル付けの体系の中では、動詞、名詞、疑問文などの構文の形式を1つに決めてそろえる
+    claim_sha256: 
+      6279dda041a69aa2a95560157b852a4a4b8bf49d62335ca17aff5004ebb1afb5
+    applicability: 同じ体系に属するラベル
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0034
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 4507
+    end_line: 4512
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 184
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    87c708b13adb42b374e75cb77477799648c24961f30d0a2ab988bff683fa4793
+  excerpt_preview: Granularity
+  support_reviews:
+  - claim_id: CLAIM-0036
+    claim: 
+      1つのラベル付けの体系の中では、具体性（粒度）がおおむね等しいラベルを並べる。粒度の異なるラベルが混在すると利用者が混乱する。索引などは例外である
+    claim_sha256: 
+      c41270048b25eb5a64e8009f115f2c0752677edda47d424182e6c94827bce18e
+    applicability: 同じ一覧や階層に並べるラベル
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0035
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 4513
+    end_line: 4519
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 184
+    - 185
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    da6825483e8862e9ea70704a0d5d80cf866f89f0b77f393db503f8b99c1ae780
+  excerpt_preview: Comprehensiveness
+  support_reviews:
+  - claim_id: CLAIM-0037
+    claim: ラベル付けの体系に目立つ欠けがあると利用者がつまずく。網羅的な範囲は、利用者がコンテンツを素早く見渡して推測する助けになる
+    claim_sha256: 
+      f768c414ffda3551dcdbf381c3469369244289a06b76220d32c7c510b77bbe41
+    applicability: 同じ種類の項目を並べるラベル
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0036
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 4520
+    end_line: 4526
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 185
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    78ae19078d1e41efb74431537662074d7b4094e83f16b7a086f1050d4ebf9ec4
+  excerpt_preview: Audience
+  support_reviews:
+  - claim_id: CLAIM-0038
+    claim: 
+      主な利用者の言葉を考える。利用者ごとに用語が大きく異なる場合は、同じコンテンツを表すときでも利用者ごとに別のラベル付けの体系が必要になることがある
+    claim_sha256: 
+      934c5fe0ae58a7f5c0d6b6cf5685d461fa7631810da58cfb1e0afa0eaeea6bec
+    applicability: 専門家と一般利用者など、用語の異なる利用者層がある場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0037
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 9138
+    end_line: 9144
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 375
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    ce00eb4c455f4f6c1e32adca7cf98ab43be343d6a3d92b1051f5774e252fcd5f
+  excerpt_preview: "Content\tanalysis\tis\ta\tdefining\tcomponent\tof\tthe\tbottom-up\t\
+    approach\tto"
+  support_reviews:
+  - claim_id: CLAIM-0039
+    claim: 
+      コンテンツ分析は、情報環境に実際にある文書や物を詳しく見るボトムアップの方法であり、戦略側の想定と実際のコンテンツの量や質の差を見つけて扱う必要がある
+    claim_sha256: 
+      3dfef3ba9b1de1f1e057e3196f6048f4493178e96774846149b1bb22334e0149
+    applicability: 既存のコンテンツがある情報環境
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0038
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 9145
+    end_line: 9151
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 375
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    46a51348994bb3d5ff90544beb9fe36baad1960151e5de0c509c9318737b7f30
+  excerpt_preview: "Content\tanalysis\tcan\ttake\tthe\tshape\tof\tan\tinformal\tsurvey\t\
+    or\ta\tdetailed\taudit."
+  support_reviews:
+  - claim_id: CLAIM-0040
+    claim: コンテンツ分析は、初期には範囲と性質を知るための大まかな調査として行い、後にはページ単位のインベントリと監査として行う
+    claim_sha256: 
+      f954e94e42a0ea5bc22ce913b4d71404062ef982a25515994e1f50fd9a0fbe17
+    applicability: 調査から設計までの工程でコンテンツを扱う場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0039
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 9229
+    end_line: 9244
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 377
+    - 378
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    08b5be061abeef5f5861fa2c83985a28a2a31b1db48294b719e7729b9cf9f53b
+  excerpt_preview: "For\texample,\tfor\teach\tcontent\tobject,\tyou\tmight\tbegin\t\
+    by\tnoting\tthe"
+  support_reviews:
+  - claim_id: CLAIM-0041
+    claim: 
+      コンテンツ分析では、各コンテンツについて構造のメタデータ（見出しや区分）、記述のメタデータ（主題、対象者、形式など）、管理のメタデータ（作成者、所有者、作成日、削除時期）を記録することから始める
+    claim_sha256: 
+      c3a3fa5b7efa0c8c06eabcc14a91c68c011f8e210dd74f6ffda1854db687b72e
+    applicability: コンテンツ一覧に記録する項目を決める場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0040
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 9254
+    end_line: 9258
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 378
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    246479a3e3db4ccb9a68e1c4fd187123dc592da512796075d62ed20af2d3d400
+  excerpt_preview: "Moving\tbeyond\tindividual\titems,\talso\tlook\tfor\tpatterns\t\
+    and\trelationships\tthat"
+  support_reviews:
+  - claim_id: CLAIM-0042
+    claim: 個々のコンテンツを超えて、多くのコンテンツに現れるまとまり、階層関係、関連関係のパターンを探す
+    claim_sha256: 
+      737a0bbc72bd8e69e8dd22b8eb2b644f819301478f7ba5034dce5416a0a57424
+    applicability: コンテンツ分析から分類や構造の候補を見つける場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0041
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 9649
+    end_line: 9655
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 394
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    f2942e2994772c6e6f4e8d1b0dac0e1e238f6bd6f671aa568f51c9ffb5ef4205
+  excerpt_preview: "In\tdetermining\twhat\tquestions\tto\task,\tit’s\timportant\t\
+    to\trecognize\tthat\tmost"
+  support_reviews:
+  - claim_id: CLAIM-0043
+    claim: 多くの利用者は情報アーキテクチャを理解しておらず、組織化の方式の好みを直接尋ねても意味のある答えは得られないため、別の調査方法で確かめる
+    claim_sha256: 
+      14291e2ccb90bcbb3afc2d1f60fc556266b6518652c9c52ee6a821799d87ca99
+    applicability: 利用者調査で構造や分類について知りたい場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0042
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 9671
+    end_line: 9678
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 395
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    03d23543dcac8f45897ba79051b29561ccdef218a73a958a95af0e85857ca59a
+  excerpt_preview: "Card-sorting\tstudies\tcan\tprovide\tinsight\tinto\tpeople’s\t\
+    mental\tmodels"
+  support_reviews:
+  - claim_id: CLAIM-0044
+    claim: 
+      カードソートは、利用者がタスクやコンテンツを暗黙にどうまとめ、どう名付けるかというメンタルモデルを明らかにする。初期には自由なカードソート、後には定義済みのラベルを使う閉じたカードソートで試作の構造を検証する
+    claim_sha256: 
+      8eeb2cec23312e6d665463ab9ffab6bdb86499b13d921a499943dd8d2e4e6d84
+    applicability: 分類やラベルの候補を探す、または検証する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0043
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 9682
+    end_line: 9686
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 396
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    c7ec77811544e44bcbf8f6f847ef8299c3b76ec96b09570ec6c08f2b6a3775a2
+  excerpt_preview: Open/closed
+  support_reviews:
+  - claim_id: CLAIM-0045
+    claim: 
+      自由なカードソート（利用者がラベルを書く）は発見に、閉じたカードソート（定義済みのラベルとカテゴリ）は検証に使い、目的に応じて両者の間で調整する
+    claim_sha256: 
+      84661db79cc2de2e7caa14b4dabe04110bb0c1a818b9c0ae1bdf120a06a50911
+    applicability: カードソートを設計する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0044
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 9769
+    end_line: 9773
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 400
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    9554dd0258e80e45671997670f88e3f9d1eb667307e66fa6bc39e564d1cec94d
+  excerpt_preview: "In\tbasic\tuser\ttesting,\tyou\task\ta\tuser\tto\tsit\tin\tfront\t\
+    of\ta\tdevice\tand\ttry\tto\tfind"
+  support_reviews:
+  - claim_id: CLAIM-0046
+    claim: 基本的なユーザーテストでは、利用者に製品で情報を探すかタスクを完了してもらい、考えを声に出してもらいながら、発言と移動先を記録する
+    claim_sha256: 
+      361dc89ab154c1fb66f9545c420fb05b09541b8bb2713803ad2d5974e1d083cb
+    applicability: 構造やナビゲーションを利用者で確かめる場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0045
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 9779
+    end_line: 9783
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 400
+    - 401
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    9470a607b0e5ae525ba7e8dd8cd3f6664baf2818b16df00de6bda5327aa9fac6
+  excerpt_preview: "Whenever\tpossible,\tinclude\ta\trange\tof\taudience\ttypes.\t\
+    It’s\tparticularly\timportant"
+  support_reviews:
+  - claim_id: CLAIM-0047
+    claim: ユーザーテストには、サイトに慣れた人と慣れていない人など幅広い利用者を含め、課題は調査の目的に沿って明確に定める
+    claim_sha256: 
+      a74bc4e38157bb61b559f8d6529bffe09d444945cb0aa195b6f499fc86ed5a42
+    applicability: ユーザーテストの参加者と課題を決める場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0046
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 11183
+    end_line: 11186
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 447
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    5d7d3e516054d2d49e81f7f9986e5b146f510766509cdb81e56bdb8c1eb94aa3
+  excerpt_preview: "As\twe’ve\tseen\tin\tprevious\tchapters,\tthe\tmost\tfrequently\t\
+    used\tdiagrams\tare"
+  support_reviews:
+  - claim_id: CLAIM-0048
+    claim: よく使う図であるサイトマップとワイヤーフレームはコンテンツの構造を表すことに重点があり、コンテンツやラベルの意味を伝えるのには向かない
+    claim_sha256: 
+      26f327dab78d7b1cb0589a7ac75e4cf47799841643194ae5dba8d4240d195e9c
+    applicability: 情報アーキテクチャを図で文書化する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0047
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 11190
+    end_line: 11200
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 447
+    - 448
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    191d88b4f03f022b78f6cf92855abfada25b8446ac78744717e4abfcfee8ab9b
+  excerpt_preview: Diagrams
+  support_reviews:
+  - claim_id: CLAIM-0049
+    claim: 
+      情報アーキテクチャの図は、コンテンツの構成単位（何を単位とし、どうまとめ、どう並べるか）と、構成単位どうしのつながり（移動などのための結び付き）を示す
+    claim_sha256: 
+      16c79b97fcbef9e5878d63b624a6c5239b07ae94310db7b3341a2a4b3d115871
+    applicability: サイトマップなど構造の図を作る場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0048
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 5493
+    end_line: 5499
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 205
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    bd938fdec8a808ad448073af88466b5b20e06c59aac362a701f553e5e5b2397e
+  excerpt_preview: "Navigation\tsystems\tare\tcomposed\tof\tseveral\tbasic\telements,\t\
+    or\tsubsystems."
+  support_reviews:
+  - claim_id: CLAIM-0050
+    claim: ページや画面に組み込むグローバル、ローカル、文脈のナビゲーションは、利用者が今どこにいて、どこへ行けるかを理解する助けになる
+    claim_sha256: 
+      0b2d044eb1e77e5c82e8e072873909a5183465c9e18c5976afa8a4f618e5f574
+    applicability: ウェブサイトやアプリのナビゲーションを設計する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0049
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 5517
+    end_line: 5521
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 207
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    39a033b5bbd861522b7ec0e1e47228479e44368a389b962aa9d04dc87a4d6302
+  excerpt_preview: "Similar\tto\tsearch,\tthese\tsupplemental\tnavigation\tsystems\t\
+    provide\tdifferent\tways"
+  support_reviews:
+  - claim_id: CLAIM-0051
+    claim: 
+      サイトマップ、索引、ガイドなどの補助ナビゲーションは、同じ情報に別の経路で到達させる。サイトマップは全体の見取り図、索引は直接の到達、ガイドは特定の利用者、タスク、主題向けの順路を提供する
+    claim_sha256: 
+      53d15c74b0870eaa96204744857eeaabd3b020cc36f43c40d10917ed2090280e
+    applicability: 埋め込みナビゲーションを補う経路が必要な場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-17T22:32:45+09:00'

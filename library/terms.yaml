@@ -20,3 +20,87 @@ terms:
   alt_ja: [範囲注記, 適用範囲注記]
   definition: タクソノミー内での語の適用範囲や使い方を補う注記。データ項目名は scope_note
   claims: [CLAIM-0004]
+- term_id: TERM-0004
+  en: preferred term
+  ja: 優先ラベル
+  alt_ja: [優先語, 推奨語]
+  definition: 概念を表す語として1つ選び、表示や語の付与に使う語。データ項目名は pref_label
+  claims: [CLAIM-0011, CLAIM-0013]
+- term_id: TERM-0005
+  en: nonpreferred term
+  ja: 非優先ラベル
+  alt_ja: [非優先語, 同義語, 異形]
+  definition: 優先ラベルへ導く入口の語。課題ケースの「同義語」とデータ項目 alt_labels に当たる。完全な同義語でなくてもよい
+  claims: [CLAIM-0006, CLAIM-0007]
+- term_id: TERM-0006
+  en: equivalence relationship
+  ja: 等価関係
+  alt_ja: [同義関係]
+  definition: 優先ラベルと非優先ラベルを、対象コンテンツについて同じ概念として扱う関係
+  claims: [CLAIM-0007]
+- term_id: TERM-0007
+  en: hierarchical relationship
+  ja: 上位・下位関係
+  alt_ja: [階層関係, BT/NT]
+  definition: 下位語に属するものがすべて上位語に含まれる関係
+  claims: [CLAIM-0015]
+- term_id: TERM-0008
+  en: polyhierarchy
+  ja: ポリヒエラルキー
+  alt_ja: [多重階層, 複数の上位語]
+  definition: 1つの概念が複数の上位語を持つ構造
+  claims: [CLAIM-0018, CLAIM-0019]
+- term_id: TERM-0009
+  en: associative relationship
+  ja: 関連関係
+  alt_ja: [関連語, RT]
+  definition: 階層ではないが、検索や閲覧で示す価値のある概念どうしの関係
+  claims: [CLAIM-0020, CLAIM-0021]
+- term_id: TERM-0010
+  en: facet
+  ja: ファセット
+  alt_ja: [観点, 属性]
+  definition: コンテンツを記述する独立した観点。各ファセットの語を組み合わせて絞り込む
+  claims: [CLAIM-0022]
+- term_id: TERM-0011
+  en: organization scheme
+  ja: 組織化の方式
+  alt_ja: [分類方式, 組織化スキーム]
+  definition: コンテンツの共通の特徴によるまとめ方（主題別、アルファベット順など）
+  claims: [CLAIM-0028]
+- term_id: TERM-0012
+  en: labeling system
+  ja: ラベル付けの体系
+  alt_ja: [ラベリングシステム]
+  definition: 同じ一覧やナビゲーションに並ぶラベルの集まり。一貫性をそろえる単位
+  claims: [CLAIM-0034]
+- term_id: TERM-0013
+  en: content analysis
+  ja: コンテンツ分析
+  alt_ja: [コンテンツの調査]
+  definition: 情報環境に実際にあるコンテンツを調べ、分類や構造の材料にする作業
+  claims: [CLAIM-0039]
+- term_id: TERM-0014
+  en: content inventory
+  ja: コンテンツ一覧
+  alt_ja: [コンテンツインベントリ, コンテンツ棚卸し]
+  definition: コンテンツをページなどの単位で列挙し、メタデータを記録した一覧
+  claims: [CLAIM-0040]
+- term_id: TERM-0015
+  en: sitemap
+  ja: サイトマップ
+  alt_ja: [構造図]
+  definition: 情報環境の構成単位とつながりを示す図。補助ナビゲーションとしてのサイトマップも同じ語で呼ぶ
+  claims: [CLAIM-0049, CLAIM-0051]
+- term_id: TERM-0016
+  en: card sorting
+  ja: カードソート
+  alt_ja: [カードソーティング]
+  definition: 利用者にカードをまとめて名付けてもらい、まとめ方や名付け方を調べる方法
+  claims: [CLAIM-0044]
+- term_id: TERM-0017
+  en: user testing
+  ja: ユーザーテスト
+  alt_ja: [ユーザビリティテスト]
+  definition: 利用者に情報を探すかタスクを完了してもらい、行動と発言を観察する方法
+  claims: [CLAIM-0046]

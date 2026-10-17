@@ -31,3 +31,43 @@ generations:
   - {path: library/books/BOOK-003/notes.md, sha256: e556d3ab61bd4e51ea998a68cc9407a50de1702b7362a67e2429832acf6e452a}
   - {path: library/terms.yaml, sha256: accf636d7b4b2a197061d1a61ad5425f1af7cfc5f9adba99665862a90966f3d2}
   review: {reviewed_by: null, reviewed_at: null}
+- generation_id: GEN-002
+  generated_at: "2026-10-17T22:30:00+09:00"
+  host: Claude Code（VS Code拡張）
+  model: claude-opus-5-5
+  approval: milestones.md M3「送信・公開の許可」2026-10-17の記録
+  instruction:
+    path: library/build-logs/instructions/knowledge-integration-v2.md
+    sha256: 622d935d7e9ba842b43ea24fb7591c55e8c5635a47b6202b0b2eeec889b32d3c
+  inputs:
+  - {extraction_id: EXTRACT-003-001, extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978, start_line: 55, end_line: 134}
+  - {extraction_id: EXTRACT-003-001, extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978, start_line: 3843, end_line: 3952}
+  - {extraction_id: EXTRACT-003-001, extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978, start_line: 4440, end_line: 4629}
+  - {extraction_id: EXTRACT-003-001, extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978, start_line: 4847, end_line: 5076}
+  - {extraction_id: EXTRACT-003-001, extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978, start_line: 9968, end_line: 10117}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 296, end_line: 385}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 1365, end_line: 1444}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 3137, end_line: 3196}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 3445, end_line: 3534}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 4417, end_line: 4526}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 5492, end_line: 5541}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 9130, end_line: 9269}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 9606, end_line: 9735}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 9763, end_line: 9802}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 11140, end_line: 11209}
+  # 読む範囲を探す検索は行番号と件数だけを出力し、本文の断片を表示していない
+  searches: []
+  outputs:
+  - {path: library/provenance.yaml, sha256: 0090ab5973762a58f58728a31e3d2c17e01dc01553d2d09621726755a9f0975f}
+  - {path: library/methods/synonym-control.md, sha256: d159e5c5ca8783d9fde08164764f15251593551706ad5d76b401a616dbce681e}
+  - {path: library/methods/hierarchical-and-associative-relationships.md, sha256: 28ebd5051aab0a21d6fc2d256d9ee5d8736cf7ac71ca1840b3befa999a306fc1}
+  - {path: library/concepts/label-consistency.md, sha256: 3a7e9f0525278238f5cfaa6b3d98dea5cadf99231a576e8184ff4e3d20b798d6}
+  - {path: library/methods/faceted-classification.md, sha256: d47b590623985a3b0da028cec67c7fbfed2468348027d9cea414e547bed248fa}
+  - {path: library/methods/problem-definition.md, sha256: d138b1b6b3a6d9ea085024b2b678ddc679fae06abe84f93f71950ad14804cbbe}
+  - {path: library/methods/content-analysis.md, sha256: 91819c604b0c7383583eda27b34612026fbb61d9302babd10cd982b99f18d537}
+  - {path: library/methods/navigation-and-sitemap.md, sha256: 4b4cc21e16b8a07e375411f9831dfb9d648e5c310779d8b9ea35dd569b0c385a}
+  - {path: library/methods/structure-validation.md, sha256: 937bdb301a39d9549a5b005cdfe4303b3ac2723a00046c2f83a540763c440a3a}
+  - {path: library/books/BOOK-001/notes.md, sha256: 7ea77c973a9d752d71dd9fa20e1f4da52b6b8ad281b641851db9156e0b6e0116}
+  - {path: library/books/BOOK-003/notes-relationships-and-facets.md, sha256: e80371c8a435db81990c6f32600db8075158c228f59b37419e6e28f45a62051a}
+  - {path: library/terms.yaml, sha256: b6e2ec9f75bf65cc292f32bb7034eedefe3532d06966cea9780c2ab7e10b03b2}
+  review: {reviewed_by: null, reviewed_at: null}
