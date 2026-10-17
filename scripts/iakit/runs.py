@@ -3,13 +3,19 @@
 from pathlib import Path
 
 from . import manifest
-from .decisions import RANK, latest_active, max_classification
+from .decisions import RANK, artifact_inputs, latest_active, max_classification
 
 ROUTES = {
     "web_ia": ["analyze", "classify", "structure", "validate"],
     "taxonomy": ["analyze", "classify", "validate"],
 }
 MAX_REFINE_ROUNDS = 2
+EVALUATION_KINDS = {"review_findings", "ia_review", "validation_plan"}
+
+
+def evaluation_dependencies(kind: str, artifacts: list[dict]) -> set[str]:
+    """指摘の有無によらず、評価一式は評価した設計成果物の全体に依存する。"""
+    return {a["artifact_id"] for a in artifacts if a["kind"] not in EVALUATION_KINDS} if kind in EVALUATION_KINDS else set()
 
 
 def input_errors(doc: dict) -> list[str]:
@@ -57,7 +63,8 @@ def _refine_errors(run: dict) -> list[str]:
     if refine["unresolved_critical"]:
         if run["status"] == "completed":
             errors.append("refine: 未解決の重大な指摘が残るのに completed になっている")
-        if refine["rounds"] >= MAX_REFINE_ROUNDS and not (refine["reported_to_user"] and run["status"] == "unresolved"):
+        if (refine["rounds"] >= MAX_REFINE_ROUNDS and run["status"] in ("completed", "unresolved")
+                and not (refine["reported_to_user"] and run["status"] == "unresolved")):
             errors.append("refine: 2巡後に残る重大な指摘は unresolved としてユーザーへ報告する")
     return errors
 
@@ -98,7 +105,8 @@ def _transmission_errors(run: dict, inputs: dict[str, dict]) -> list[str]:
     return errors
 
 
-def _artifact_errors(run: dict, inputs: dict[str, dict], actual: dict[str, str], active: set) -> list[str]:
+def _artifact_errors(run: dict, inputs: dict[str, dict], actual: dict[str, str], active: set,
+                     decisions: list[dict], studies: list[dict]) -> list[str]:
     """actual は成果物ファイルの実ハッシュ（手元にあるものだけ）。active は現行の判断版。"""
     errors = []
     arts = {a["artifact_id"]: a for a in run["artifacts"]}
@@ -110,7 +118,11 @@ def _artifact_errors(run: dict, inputs: dict[str, dict], actual: dict[str, str],
             errors.append(f"{tag}: 成果物ファイル {a['path']} がない")
         elif actual[a["artifact_id"]] != a["sha256"]:
             errors.append(f"{tag}: ファイルのハッシュが実行記録と一致しない")
-        levels = []
+        required, levels = artifact_inputs(a["decision_refs"], decisions, studies)
+        required |= evaluation_dependencies(a["kind"], run["artifacts"])
+        if a["status"] == "current":
+            errors += [f"{tag}: 判断・評価対象の依存 {ref} が depends_on にない"
+                       for ref in sorted(required - {d["ref"] for d in a["depends_on"]})]
         for dep in a["depends_on"]:
             ref = dep["ref"]
             current = inputs.get(ref, {}).get("sha256") if ref.startswith("INPUT") else arts.get(ref, {}).get("sha256")
@@ -132,7 +144,7 @@ def _artifact_errors(run: dict, inputs: dict[str, dict], actual: dict[str, str],
 
 
 def run_errors(run: dict, inputs_doc: dict, inputs_sha256: str | None, actual: dict[str, str],
-               decisions: list[dict]) -> list[str]:
+               decisions: list[dict], studies: list[dict] = ()) -> list[str]:
     inputs ={i["input_id"]: i for i in inputs_doc["inputs"]}
     errors = []
     if inputs_doc["run_id"] != run["run_id"]:
@@ -144,7 +156,7 @@ def run_errors(run: dict, inputs_doc: dict, inputs_sha256: str | None, actual: d
         if (ref["decision_id"], ref["decision_revision"]) not in known:
             errors.append(f"decision_refs: {ref['decision_id']} r{ref['decision_revision']} が判断記録にない")
     errors += _route_errors(run) + _refine_errors(run) + _transmission_errors(run, inputs)
-    errors += _artifact_errors(run, inputs, actual, latest_active(decisions))
+    errors += _artifact_errors(run, inputs, actual, latest_active(decisions), decisions, studies)
     if run["status"] == "completed" and any(a["status"] == "stale" for a in run["artifacts"]):
         errors.append("stale の成果物が残るのに completed になっている")
     return errors

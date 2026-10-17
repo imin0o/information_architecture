@@ -5,7 +5,6 @@ Turtle等は読めない部分として記録する。PDFの印刷ページ番�
 """
 
 import io
-import re
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -15,14 +14,17 @@ W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 RDF = "{http://www.w3.org/1999/02/22-rdf-syntax-ns#}"
 SKOS = "{http://www.w3.org/2004/02/skos/core#}"
 XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
-DOCTYPE = re.compile(rb"<!DOCTYPE|<!ENTITY", re.IGNORECASE)
+
+class _NoDoctype(ET.TreeBuilder):
+    def doctype(self, name, pubid, system):
+        raise ValueError("DOCTYPE・実体宣言を含むXMLは安全のため解析しない")
 
 
 def _xml(data: bytes, name: str, locator: str):
-    if DOCTYPE.search(data):
-        return None, [unreadable(locator, "parse_error", "DOCTYPE・実体宣言を含むXMLは安全のため解析しない")]
     try:
-        return ET.fromstring(data), []
+        return ET.fromstring(data, parser=ET.XMLParser(target=_NoDoctype())), []
+    except ValueError as exc:
+        return None, [unreadable(locator, "parse_error", str(exc))]
     except ET.ParseError as exc:
         return None, [unreadable(locator, "parse_error", f"XMLとして解析できない: {exc}")]
 
@@ -141,7 +143,7 @@ def parse(data: bytes, name: str, fmt: str) -> tuple[list[dict], list[dict]]:
         return _docx(data, name)
     root, bad = _xml(data, name, f"{name}#xpath=/")
     if root is None:
-        if fmt == "skos" and not data.lstrip().startswith(b"<"):
+        if fmt == "skos" and not data.lstrip().startswith((b"<", b"\xef\xbb\xbf", b"\xff\xfe", b"\xfe\xff", b"\x00<")):
             bad = [unreadable(f"{name}#/", "parse_error", "RDF/XML以外のSKOS（Turtle等）は未対応。RDF/XMLに変換して登録する")]
         return [], bad
     return _skos(root, name) if fmt == "skos" else (_xml_units(root, name), [])

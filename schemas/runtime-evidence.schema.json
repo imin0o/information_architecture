@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "runtime-evidence.schema.json",
+  "title": "配布時に固定した主張と照合状態（原典本文・抜粋・抽出パスを含まない）",
+  "type": "object",
+  "required": ["schema_version", "provenance_sha256", "receipts_sha256", "knowledge_files", "claims"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "provenance_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+    "receipts_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+    "knowledge_files": {
+      "type": "array", "items": {
+        "type": "object", "required": ["path", "sha256"], "additionalProperties": false,
+        "properties": {
+          "path": {"type": "string", "pattern": "^library/(methods|concepts)/[^/]+\\.md$"},
+          "sha256": {"$ref": "common.schema.json#/$defs/sha256"}
+        }
+      }
+    },
+    "claims": {
+      "type": "array", "items": {
+        "type": "object",
+        "required": ["source_id", "source_sha256", "evidence_id", "claim_id", "claim", "claim_sha256",
+                     "applicability", "source_verification", "support_status"],
+        "additionalProperties": false,
+        "properties": {
+          "source_id": {"$ref": "common.schema.json#/$defs/source_id"},
+          "source_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+          "evidence_id": {"$ref": "common.schema.json#/$defs/evidence_id"},
+          "claim_id": {"$ref": "common.schema.json#/$defs/claim_id"},
+          "claim": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "claim_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+          "applicability": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "source_verification": {"enum": ["verified", "unverified"]},
+          "support_status": {"enum": ["supported", "not_supported", "unclear", "unreviewed"]}
+        }
+      }
+    }
+  }
+}

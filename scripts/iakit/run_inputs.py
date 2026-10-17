@@ -3,7 +3,7 @@
 import shutil
 from pathlib import Path
 
-from . import ingest, manifest, yamlio
+from . import ingest, manifest, runs, yamlio
 from .paths import ROOT
 from .run_cmd import load, now, refresh, save
 
@@ -100,6 +100,8 @@ def event(directory: Path, name: str, note: str, status: str | None = None) -> d
         if errors:
             raise ValueError("再開前の照合に失敗: " + " / ".join(errors))
     run = load(directory, "run.yaml")
+    if name == "refine" and run["refine"]["rounds"] >= runs.MAX_REFINE_ROUNDS:
+        raise ValueError(f"refine: 修正・再評価は{runs.MAX_REFINE_ROUNDS}巡まで")
     run["history"].append({"event": name, "at": now(), "note": note})
     if status or name in EVENTS_STATUS:
         run["status"] = status or EVENTS_STATUS[name]

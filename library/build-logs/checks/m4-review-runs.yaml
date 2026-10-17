@@ -1,0 +1,32 @@
+schema_version: 0.1.0
+result: pass
+python: 3.14.3
+scope: Copied stored runs; only missing dependency bindings supplemented; 
+  original runs and artifact bodies unchanged
+runtime_evidence: Generated states and hashes; original text, excerpts and 
+  extracted paths excluded
+results:
+- run_id: RUN-BOUNDARY-001
+  dependency_bindings_added_in_copy: 0
+  checkout_contracts: pass
+  bundled_contracts: pass
+- run_id: RUN-TAXONOMY-001
+  dependency_bindings_added_in_copy: 20
+  checkout_contracts: pass
+  bundled_contracts: pass
+  judgment_record: pass
+- run_id: RUN-TAXONOMY-002
+  dependency_bindings_added_in_copy: 9
+  checkout_contracts: pass
+  bundled_contracts: pass
+  judgment_record: pass
+- run_id: RUN-WEBIA-001
+  dependency_bindings_added_in_copy: 32
+  checkout_contracts: pass
+  bundled_contracts: pass
+  judgment_record: pass
+- run_id: RUN-WEBIA-002
+  dependency_bindings_added_in_copy: 7
+  checkout_contracts: pass
+  bundled_contracts: pass
+  judgment_record: pass

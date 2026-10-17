@@ -33,7 +33,7 @@ metadata:
 uv run --locked iakit run init runs/<run_id> --run-id <run_id> --task-type <web_ia|taxonomy|...> --host <claude-code|codex|other> --model <モデル名>
 ```
 
-コマンドは経路の段階、必要なSkillの有無と内容ハッシュを記録し、必要なSkillが欠けていれば開始を止める。
+コマンドは経路の段階、必要なSkillの有無と内容ハッシュを記録する。必要なSkillが欠けている場合、または `metadata.contract_version` が実行時処理の契約版と異なる場合は、開始前に止めて更新対象を示す。
 
 配布物（リポジトリがない環境）では、`uv run --locked iakit` の代わりに `uv run <このSkillのディレクトリ>/scripts/run_iakit.py` を使う。`run`・`input`・`contracts check`・`run judgment` を同じ引数で使える。uvがなければ、依存（jsonschema、pypdf、ruamel.yaml）を入れたPythonで `python <このSkillのディレクトリ>/scripts/run_iakit.py` を実行する。以下では両方を `iakit` と書く。
 
@@ -81,6 +81,8 @@ Validate（ia-evaluation）の指摘は `findings.yaml` に記録される。重
 1. 修正を始める前に `iakit run event runs/<run_id> refine --note <対象の指摘ID>` で巡数を進める。
 2. 担当Skillで成果物を修正し、変わった判断は `decision_id` を保ったまま `decision_revision` を上げ、旧版を `superseded` にする。撤回する判断は `withdrawn` にする。
 3. ia-evaluationで再評価し、指摘の状態（`resolved`・`open`）と `resolved_in` を更新する。
+
+2巡目の作業中も段階ごとの契約検査を実行する。巡数が2でも、作業中は終了後の未解決報告を要求しない。3巡目の開始はコマンドが拒否する。
 
 修正から再評価までを1巡とし、1課題につき2巡までとする。2巡後も重大な指摘が残る場合は、該当の指摘を `unresolved` にし、`iakit run event runs/<run_id> completed --status unresolved --note <報告内容>` で未解決として終える。完了扱いにせず、残る指摘と判断に必要な情報をユーザーに示す。`major`・`minor` の残件は、理由と影響をia-review.mdに残せば完了を妨げない。
 

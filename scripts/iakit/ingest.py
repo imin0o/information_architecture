@@ -80,6 +80,8 @@ def _csv(text: str, name: str) -> tuple[list[dict], list[dict]]:
     if not rows:
         return [], []
     header, units, bad = rows[0], [unit(f"{name}#row=1", "header", ",".join(rows[0]))], []
+    if len(header) != len(set(header)):
+        return units, [unreadable(f"{name}#row=1", "parse_error", "列名が重複している。列を一意に識別できないためデータ行は取り込んでいない")]
     for n, row in enumerate(rows[1:], 2):
         if not any(cell.strip() for cell in row):
             continue

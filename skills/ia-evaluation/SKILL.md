@@ -91,6 +91,7 @@ uv run --locked iakit run refresh runs/<run_id>
 ```
 
 `refresh` は、未解決の重大な指摘を `run.yaml` の `refine.unresolved_critical` に同期する。
+評価一式の登録時には、指摘の有無によらず、登録済みの全設計成果物への依存を自動で付ける。評価後に設計成果物を変更・追加した場合は、評価一式も `stale` になるので再評価する。
 
 ## 再評価（Refine）
 

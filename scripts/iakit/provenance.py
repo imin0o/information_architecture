@@ -14,6 +14,30 @@ from . import manifest, snapshot, snapshot_check, yamlio
 from .paths import CHECKOUT, FIXTURES_INDEX, MANIFEST, ROOT
 
 REGISTERED = "registered-sources.yaml"
+RUNTIME_EVIDENCE = "library/runtime-evidence.yaml"
+
+
+def runtime_claims(doc: dict, sources: dict) -> tuple[dict, dict, list[str]]:
+    """配布時に固定した主張と照合状態。判断からの自己申告で状態を引き上げない。"""
+    errors, claims, states = [], {}, {}
+    expected = yamlio.load(ROOT / REGISTERED)["runtime_evidence_sha256"]
+    if manifest.sha256_file(ROOT / RUNTIME_EVIDENCE) != expected:
+        errors.append("runtime-evidence.yaml: 配布時の根拠情報のハッシュと一致しない")
+    for f in doc["knowledge_files"]:
+        path = ROOT / f["path"]
+        if not path.is_file() or manifest.sha256_file(path) != f["sha256"]:
+            errors.append(f"runtime-evidence.yaml: 知識ファイル {f['path']} が配布時から変わった")
+    for c in doc["claims"]:
+        cid = c["claim_id"]
+        if cid in claims:
+            errors.append(f"runtime-evidence.yaml: {cid} が重複している")
+        if sources.get(c["source_id"]) != c["source_sha256"]:
+            errors.append(f"runtime-evidence.yaml: {cid} の原典ハッシュが登録簿と一致しない")
+        if text_sha256(c["claim"]) != c["claim_sha256"]:
+            errors.append(f"runtime-evidence.yaml: {cid} の主張が構築時と一致しない")
+        claims[cid] = c
+        states[(c["evidence_id"], cid)] = {k: c[k] for k in ("source_verification", "support_status")}
+    return claims, states, errors
 
 
 def text_sha256(text: str) -> str:

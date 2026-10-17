@@ -38,6 +38,7 @@ ia-analysis・ia-taxonomy・ia-structure・ia-evaluationで共通の規則であ
 ## 文献根拠の状態
 
 `source_verification`（抜粋の実在性）と `support_status`（主張との対応）は、出典登録簿（`provenance.yaml`）の主張レビューと照合記録（`receipts.yaml`）から写す。自分で引き上げない。`primary` は、欠ければ採用理由が成立しない根拠に付ける。`not_supported` の主張は採用理由に使わず、`counter_evidence` に挙げる。
+配布物では `ia-orchestrator/library/runtime-evidence.yaml` の主張・適用条件・照合状態を使う。この情報は構築時に導出してハッシュで固定し、同梱知識の変更や欠落も契約検査で拒否する。配布先で原典を再照合したとは記録しない。
 
 知識本文の「## 仮説・補完」節は文献の主張ではない。この節の内容を使う場合は、仮定として記録する。章・ページ番号は、出典登録簿で照合済みの場合だけ書く。
 
@@ -60,3 +61,4 @@ uv run --locked iakit run artifact runs/<run_id> <パス> --kind <kind> [--depen
 ```
 
 Markdown成果物の依存（読んだ入力・成果物）は `--depends` で渡す。本文中の `IA-nnn rN` は判断の参照として自動で記録される。登録後に `uv run --locked iakit contracts check runs/<run_id>` を実行し、失敗をすべて直す。
+参照する判断の観察元と調査記録の入力は、依存と機密区分の継承に自動で含める。評価一式は全設計成果物にも依存する。依存を省略した登録簿は契約検査で拒否し、`refresh` では `stale` にする。

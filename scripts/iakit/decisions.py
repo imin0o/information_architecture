@@ -12,6 +12,24 @@ def max_classification(values) -> str:
     return max(values, key=RANK.__getitem__, default="public")
 
 
+def artifact_inputs(refs: list[dict], decisions: list[dict], studies: list[dict]) -> tuple[set[str], list[str]]:
+    """判断を経由して使った入力と機密区分。判断の対象成果物は依存にせず、自己循環を避ける。"""
+    known = {(d["decision_id"], d["decision_revision"]): d for d in decisions}
+    research = {s["study_id"]: s for s in studies}
+    inputs, levels = set(), []
+    for ref in refs:
+        d = known.get((ref["decision_id"], ref["decision_revision"]))
+        if d is None:
+            continue  # 未知・非現行の判断は呼出側の参照検査で拒否する
+        inputs.update(o["input_id"] for o in d["input_observations"])
+        levels.append(d["classification"])
+        for sid in d["validation_record_ids"]:
+            if sid in research:
+                inputs.add(research[sid]["input_id"])
+                levels.append(research[sid]["classification"])
+    return inputs, levels
+
+
 def supersession_errors(decisions: list[dict]) -> list[str]:
     """判断IDごとに版が1から連続し、旧版だけが superseded で、supersedes が直前版を指す。"""
     errors: list[str] = []

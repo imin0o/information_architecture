@@ -36,7 +36,7 @@ def test_stale_marking_after_input_change_passes(check_bundle):
     def changed(d):
         # 更新版のページ一覧を再登録した状態。実体はこの素材に含めない
         d["inputs.yaml"]["inputs"][1].update(sha256="1" * 64, path="inputs/pages-v2.csv")
-        make_stale(d, "ART-001", "ART-002", "ART-003", "ART-004", "ART-006", "ART-007", "ART-008", "ART-009", "ART-010")
+        make_stale(d, "ART-001", "ART-002", "ART-003", "ART-004", "ART-005", "ART-006", "ART-007", "ART-008", "ART-009", "ART-010", "ART-011")
     # stale化した成果物の旧調査は、適用可否を確かめるまで tested_* の根拠にできない
     assert check_bundle(changed) == ["IA-002 r1: STUDY-001 は ART-004 v1 の調査で、現行版に適用できるか未確認"]
 
@@ -254,6 +254,14 @@ def test_missing_dependency_cannot_keep_sitemap_current_after_input_change(check
         make_stale(d, "ART-001", "ART-002", "ART-003")
         art(d, "ART-004")["depends_on"] = []
     assert has(check_bundle(stale), "ART-004: 本体が参照する依存 ART-001 が depends_on にない")
+
+
+@pytest.mark.parametrize("kind", ["review_findings", "ia_review", "validation_plan"])
+def test_evaluated_design_dependency_cannot_be_omitted(check_bundle, kind):
+    def omit(d):
+        a = next(a for a in d["run.yaml"]["artifacts"] if a["kind"] == kind)
+        a["depends_on"] = [dep for dep in a["depends_on"] if dep["ref"] != "ART-007"]
+    assert has(check_bundle(omit), "評価対象の依存 ART-007 が depends_on にない")
 
 
 @pytest.mark.parametrize("missing", ["run_directory", "empty_directory", "run.yaml", "inputs.yaml", "decisions.yaml",

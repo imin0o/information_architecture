@@ -1,4 +1,3 @@
-# 契約検査用の自作例（4.4、FR-08）。ハッシュは同じディレクトリのファイルから iakit run artifact で計算した値。
 schema_version: '1.0'
 run_id: RUN-FIXTURE-001
 task_type: web_ia
@@ -62,6 +61,8 @@ artifacts:
     sha256: 2473e72730812b5b3c91b656281b15637d6f29ba6f749d1ce4c283995f198347
   - ref: ART-002
     sha256: 592fae9b51c213bebaaef20630b6f696265782f488a16ac9bdc2849c6763f8ae
+  - ref: INPUT-002
+    sha256: b7141cc23f06aa4f79fe85b6d05aec4b8dbc49cabbe9df39c5855d94aba2bb7f
   decision_refs:
   - decision_id: IA-001
     decision_revision: 2
@@ -80,6 +81,10 @@ artifacts:
     sha256: 592fae9b51c213bebaaef20630b6f696265782f488a16ac9bdc2849c6763f8ae
   - ref: ART-003
     sha256: 0c6a94a649d8ca8355023889ac8fe2b30a1a89e00c4dda4d18ed486f8c347b0f
+  - ref: INPUT-001
+    sha256: 33db897949f4107446c84c51305fa79534d8ecdff17a5b950104241e5233b7cf
+  - ref: INPUT-003
+    sha256: 00d2ae3cf99e7169c9d6724d5d968449d05a6505cb669ad0f11e1b7b2433ba17
   decision_refs:
   - decision_id: IA-002
     decision_revision: 1
@@ -94,6 +99,8 @@ artifacts:
   depends_on:
   - ref: INPUT-001
     sha256: 33db897949f4107446c84c51305fa79534d8ecdff17a5b950104241e5233b7cf
+  - ref: INPUT-002
+    sha256: b7141cc23f06aa4f79fe85b6d05aec4b8dbc49cabbe9df39c5855d94aba2bb7f
   decision_refs:
   - decision_id: IA-001
     decision_revision: 2
@@ -124,6 +131,8 @@ artifacts:
     sha256: 592fae9b51c213bebaaef20630b6f696265782f488a16ac9bdc2849c6763f8ae
   - ref: ART-003
     sha256: 0c6a94a649d8ca8355023889ac8fe2b30a1a89e00c4dda4d18ed486f8c347b0f
+  - ref: INPUT-002
+    sha256: b7141cc23f06aa4f79fe85b6d05aec4b8dbc49cabbe9df39c5855d94aba2bb7f
   decision_refs:
   - decision_id: IA-001
     decision_revision: 2
@@ -138,6 +147,10 @@ artifacts:
   depends_on:
   - ref: ART-004
     sha256: fef64d184f4aa9f1f9950de181bf8db713e08380b0fa64d2787f028fe833ff69
+  - ref: INPUT-001
+    sha256: 33db897949f4107446c84c51305fa79534d8ecdff17a5b950104241e5233b7cf
+  - ref: INPUT-003
+    sha256: 00d2ae3cf99e7169c9d6724d5d968449d05a6505cb669ad0f11e1b7b2433ba17
   decision_refs:
   - decision_id: IA-002
     decision_revision: 1
@@ -150,8 +163,22 @@ artifacts:
   stale_reason: null
   classification: internal
   depends_on:
+  - ref: ART-001
+    sha256: 2473e72730812b5b3c91b656281b15637d6f29ba6f749d1ce4c283995f198347
+  - ref: ART-002
+    sha256: 592fae9b51c213bebaaef20630b6f696265782f488a16ac9bdc2849c6763f8ae
+  - ref: ART-003
+    sha256: 0c6a94a649d8ca8355023889ac8fe2b30a1a89e00c4dda4d18ed486f8c347b0f
   - ref: ART-004
     sha256: fef64d184f4aa9f1f9950de181bf8db713e08380b0fa64d2787f028fe833ff69
+  - ref: ART-005
+    sha256: 3fdf4dee8a02e2a01aaab6c6eefd236bc5ef94276ab2bddb2162c1ca047b298a
+  - ref: ART-006
+    sha256: 23b0925d3888fbcb0a75b4f0d4c96d549f1359a9b5c286fe097fbf266a5a51d2
+  - ref: ART-007
+    sha256: 2ca71193c0a4d6afc9c1542c2faac508be64326b80b3c31d55c7884858be43b5
+  - ref: ART-008
+    sha256: 180125e76547df40d40bbe317d666e4cd3b4ec8100786835c0a4f3ba5307505b
   decision_refs: []
 - artifact_id: ART-010
   kind: ia_review
@@ -162,6 +189,22 @@ artifacts:
   stale_reason: null
   classification: internal
   depends_on:
+  - ref: ART-001
+    sha256: 2473e72730812b5b3c91b656281b15637d6f29ba6f749d1ce4c283995f198347
+  - ref: ART-002
+    sha256: 592fae9b51c213bebaaef20630b6f696265782f488a16ac9bdc2849c6763f8ae
+  - ref: ART-003
+    sha256: 0c6a94a649d8ca8355023889ac8fe2b30a1a89e00c4dda4d18ed486f8c347b0f
+  - ref: ART-004
+    sha256: fef64d184f4aa9f1f9950de181bf8db713e08380b0fa64d2787f028fe833ff69
+  - ref: ART-005
+    sha256: 3fdf4dee8a02e2a01aaab6c6eefd236bc5ef94276ab2bddb2162c1ca047b298a
+  - ref: ART-006
+    sha256: 23b0925d3888fbcb0a75b4f0d4c96d549f1359a9b5c286fe097fbf266a5a51d2
+  - ref: ART-007
+    sha256: 2ca71193c0a4d6afc9c1542c2faac508be64326b80b3c31d55c7884858be43b5
+  - ref: ART-008
+    sha256: 180125e76547df40d40bbe317d666e4cd3b4ec8100786835c0a4f3ba5307505b
   - ref: ART-009
     sha256: a76ef3d4e2ad73a29969f331b64b2fb5a57ab522543dd4ea1e4dd4f960381261
   decision_refs: []
@@ -174,8 +217,24 @@ artifacts:
   stale_reason: null
   classification: internal
   depends_on:
+  - ref: ART-001
+    sha256: 2473e72730812b5b3c91b656281b15637d6f29ba6f749d1ce4c283995f198347
+  - ref: ART-002
+    sha256: 592fae9b51c213bebaaef20630b6f696265782f488a16ac9bdc2849c6763f8ae
+  - ref: ART-003
+    sha256: 0c6a94a649d8ca8355023889ac8fe2b30a1a89e00c4dda4d18ed486f8c347b0f
+  - ref: ART-004
+    sha256: fef64d184f4aa9f1f9950de181bf8db713e08380b0fa64d2787f028fe833ff69
   - ref: ART-005
     sha256: 3fdf4dee8a02e2a01aaab6c6eefd236bc5ef94276ab2bddb2162c1ca047b298a
+  - ref: ART-006
+    sha256: 23b0925d3888fbcb0a75b4f0d4c96d549f1359a9b5c286fe097fbf266a5a51d2
+  - ref: ART-007
+    sha256: 2ca71193c0a4d6afc9c1542c2faac508be64326b80b3c31d55c7884858be43b5
+  - ref: ART-008
+    sha256: 180125e76547df40d40bbe317d666e4cd3b4ec8100786835c0a4f3ba5307505b
+  - ref: INPUT-002
+    sha256: b7141cc23f06aa4f79fe85b6d05aec4b8dbc49cabbe9df39c5855d94aba2bb7f
   decision_refs:
   - decision_id: IA-001
     decision_revision: 2

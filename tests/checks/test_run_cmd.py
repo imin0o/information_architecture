@@ -1,6 +1,7 @@
 """実行ディレクトリの管理コマンド（4.4、FR-08、IN-02、IN-05、AC-12）。"""
 
 import shutil
+from copy import deepcopy
 
 import pytest
 
@@ -167,3 +168,123 @@ def test_superseded_decision_makes_dependents_stale(tmp_path):
     taxonomy = next(a for a in run["artifacts"] if a["kind"] == "taxonomy")
     assert taxonomy["artifact_id"] in staled and "IA-001 r2 が現行でなくなった" in taxonomy["stale_reason"]
     assert run["status"] == "in_progress"
+
+
+@pytest.mark.parametrize("contract", ['"99.0"', 'null'])
+def test_incompatible_or_missing_skill_contract_stops_before_writing(tmp_path, contract):
+    skills = tmp_path / "skills"
+    shutil.copytree(ROOT / "skills", skills)
+    path = skills / "ia-taxonomy/SKILL.md"
+    path.write_text(path.read_text(encoding="utf-8").replace('contract_version: "1.0"', f"contract_version: {contract}"),
+                    encoding="utf-8")
+    directory = tmp_path / "run"
+    with pytest.raises(ValueError, match="非互換"):
+        run_cmd.init(directory, "RUN-T", "taxonomy", "codex", "m", skills_root=skills)
+    assert not directory.exists()
+
+
+def test_decision_inherits_secret_input_and_replacement_stales_dependents(run_dir, tmp_path):
+    secret = tmp_path / "secret.txt"
+    secret.write_text("private observation", encoding="utf-8")
+    run_inputs.add(run_dir, secret, "hearing_answer", "非公開の回答", classification="confidential")
+    d = deepcopy(yamlio.load(ROOT / "tests/fixtures/contracts/webia-run/decisions.yaml")["decisions"][0])
+    d.update(run_id="RUN-T", status="active", target_ids=["ART-001"], sources=[], assumptions=[],
+             input_observations=[{"observation_id": "OBS-001", "input_id": "INPUT-003",
+                                  "locator": "secret.txt#L1", "observation": "private observation"}],
+             confidence="medium", classification="confidential")
+    run_cmd.save(run_dir, "decisions.yaml", {"schema_version": "1.0", "run_id": "RUN-T", "decisions": [d]})
+    audit(run_dir, "## 仮定に基づく箇所\n\nなし\n\n## 判断\n\nIA-001 r1\n")
+    result = run_cmd.artifact(run_dir, "information-audit.md", "information_audit", [], [])
+    assert result["classification"] == "confidential"
+    assert contracts.check_bundle(run_dir)["result"] == "pass"
+    # 登録簿の区分や間接依存を手で下げても契約検査で拒否する。
+    run = yamlio.load(run_dir / "run.yaml")
+    original = deepcopy(run)
+    run["artifacts"][0].update(classification="public", depends_on=[])
+    run_cmd.save(run_dir, "run.yaml", run)
+    errors = contracts.check_bundle(run_dir)["errors"]
+    assert any("機密区分が依存元より低い" in e for e in errors)
+    assert any("依存 INPUT-003 が depends_on にない" in e for e in errors)
+    run_cmd.save(run_dir, "run.yaml", original)
+    updated = tmp_path / "answer-v2.txt"
+    updated.write_text("changed observation", encoding="utf-8")
+    assert run_inputs.add(run_dir, updated, "hearing_answer", "回答を更新", replace="INPUT-003")["staled"] == ["ART-001"]
+
+
+def test_empty_findings_still_depend_on_all_evaluated_designs(run_dir):
+    inventory(run_dir)
+    run_cmd.artifact(run_dir, "content-inventory.yaml", "content_inventory", [], [])
+    audit(run_dir)
+    run_cmd.artifact(run_dir, "information-audit.md", "information_audit", ["ART-001"], [])
+    findings = {"schema_version": "1.0", "run_id": "RUN-T", "artifact_id": "ART-003", "version": 1,
+                "classification": "internal", "rubric_version": None, "findings": []}
+    (run_dir / "findings.yaml").write_text(yamlio.dumps(findings), encoding="utf-8")
+    assert run_cmd.artifact(run_dir, "findings.yaml", "review_findings", [], [])["classification"] == "internal"
+    for name, kind, deps in [("ia-review.md", "ia_review", ["ART-003"]),
+                             ("validation-plan.md", "validation_plan", [])]:
+        (run_dir / name).write_text("# 評価\n\n## 仮定に基づく箇所\n\nなし\n", encoding="utf-8")
+        run_cmd.artifact(run_dir, name, kind, deps, [])
+    assert contracts.check_bundle(run_dir)["result"] == "pass"
+    inventory(run_dir, version=2)
+    assert set(run_cmd.artifact(run_dir, "content-inventory.yaml", "content_inventory", [], [])["staled"]) == {
+        "ART-002", "ART-003", "ART-004", "ART-005"}
+    assert all(a["status"] == "stale" for a in yamlio.load(run_dir / "run.yaml")["artifacts"]
+               if a["kind"] in ("review_findings", "ia_review", "validation_plan"))
+
+
+def test_new_design_after_evaluation_requires_reevaluation(run_dir):
+    audit(run_dir)
+    run_cmd.artifact(run_dir, "information-audit.md", "information_audit", ["INPUT-001"], [])
+    doc = {"schema_version": "1.0", "run_id": "RUN-T", "artifact_id": "ART-002", "version": 1,
+           "classification": "internal", "rubric_version": None, "findings": []}
+    (run_dir / "findings.yaml").write_text(yamlio.dumps(doc), encoding="utf-8")
+    run_cmd.artifact(run_dir, "findings.yaml", "review_findings", [], [])
+    (run_dir / "problem-definition.md").write_text("# 問題定義\n\n## 仮定に基づく箇所\n\nなし\n", encoding="utf-8")
+    assert run_cmd.artifact(run_dir, "problem-definition.md", "problem_definition", ["INPUT-001"], [])["staled"] == ["ART-002"]
+
+
+def test_research_input_is_an_indirect_artifact_dependency(tmp_path):
+    directory = tmp_path / "run"
+    shutil.copytree(ROOT / "tests/fixtures/contracts/webia-run", directory)
+    result = run_cmd.artifact(directory, "information-architecture.md", "information_architecture", ["ART-004"], [])
+    assert result["version"] == 1
+    registered = next(a for a in yamlio.load(directory / "run.yaml")["artifacts"] if a["artifact_id"] == "ART-008")
+    assert {d["ref"] for d in registered["depends_on"]} == {"ART-004", "INPUT-001", "INPUT-003"}
+    updated = tmp_path / "study-v2.md"
+    updated.write_text("A revised research record", encoding="utf-8")
+    assert "ART-008" in run_inputs.add(directory, updated, "research_record", "調査を更新", replace="INPUT-003")["staled"]
+
+
+@pytest.mark.parametrize("resolved", [True, False])
+def test_second_refine_can_be_checked_and_finalized(tmp_path, resolved):
+    directory = tmp_path / "run"
+    shutil.copytree(ROOT / "tests/fixtures/contracts/webia-run", directory)
+    doc = yamlio.load(directory / "findings.yaml")
+    doc["version"] += 1
+    f = doc["findings"][0]
+    f.update(severity="critical", status="open", target={"artifact_id": "ART-007", "version": 1})
+    (directory / "findings.yaml").write_text(yamlio.dumps(doc), encoding="utf-8")
+    run_cmd.artifact(directory, "findings.yaml", "review_findings", [], [])
+    assert contracts.check_bundle(directory)["result"] == "pass"
+    assert run_inputs.event(directory, "refine", "2巡目の修正")["refine_rounds"] == 2
+    assert contracts.check_bundle(directory)["result"] == "pass"
+    before = (directory / "run.yaml").read_bytes()
+    with pytest.raises(ValueError, match="2巡まで"):
+        run_inputs.event(directory, "refine", "3巡目は禁止")
+    assert (directory / "run.yaml").read_bytes() == before
+    if resolved:
+        path = directory / "classification-options.md"
+        path.write_text(path.read_text(encoding="utf-8") + "\n修正を反映。\n", encoding="utf-8")
+        run_cmd.artifact(directory, path.name, "classification_options", [], [])
+    doc["version"] += 1
+    f.update(round=2, status="resolved" if resolved else "unresolved",
+             resolved_in={"artifact_id": "ART-007", "version": 2} if resolved else None)
+    (directory / "findings.yaml").write_text(yamlio.dumps(doc), encoding="utf-8")
+    run_cmd.artifact(directory, "findings.yaml", "review_findings", [], [])
+    for a in yamlio.load(directory / "run.yaml")["artifacts"]:
+        if a["status"] == "stale":
+            run_cmd.artifact(directory, a["path"], a["kind"], [d["ref"] for d in a["depends_on"]], [])
+    assert contracts.check_bundle(directory)["result"] == "pass"
+    status = "completed" if resolved else "unresolved"
+    assert cli.main(["run", "event", str(directory), "completed", "--status", status]) == 0
+    assert yamlio.load(directory / "run.yaml")["status"] == status

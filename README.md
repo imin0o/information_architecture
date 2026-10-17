@@ -121,6 +121,7 @@ uv run --locked iakit run resume runs/RUN-001                        # 再開前
 `input add` は入力を `inputs/` に固定し、位置付きの取込み結果 `ingest/<input_id>.yaml` を作る。対応形式はテキスト、Markdown、PDF、DOCX、CSV、XML、JSON、YAML、SKOS（RDF/XMLのみ）で、位置子と読めない部分の扱いは `skills/ia-orchestrator/references/input-formats.md` に書いた。書籍の固定抽出（`iakit extract`）とは別の処理で、印刷ページ番号は推測しない。DOCTYPE・実体宣言を含むXMLは解析しない。資料内の命令文の候補は `instruction_like` として示すが、従わない。
 
 `run artifact` は成果物のハッシュ・版・依存・機密区分を記録する。依存は本体の参照から導き、本体から読めない依存は `--depends` で渡す。依存先が変わると後続の成果物を連鎖的に `stale` にする。`contracts check` は、完了した経路の全段階の成果物、Markdown成果物の最初の節「## 仮定に基づく箇所」と判断参照の版、評価の指摘（`findings.yaml`）とRefineの整合、取込み結果と入力のハッシュの対応も検査する。
+判断を参照する成果物は、その判断の観察元と調査記録の入力にも依存し、機密区分を引き継ぐ。評価一式は指摘がなくても全設計成果物に依存する。必要な依存を持たない既存の記録は `refresh` で `stale` にし、確認して再登録する。開始時には必要なSkillの `metadata.contract_version` を実行時処理の契約版と照合し、非互換・未指定なら開始しない。
 
 人の操作を待たずに進める構造にしている。質問の回答がなければ仮定で進め、固定ケースの内容の合否（AC-09）は、成果物を作ったエージェントとは別の確認エージェントがルーブリックで判定する（手順は `skills/ia-orchestrator/references/independent-review.md`）。判定の記録は次のコマンドで検査する。自己評価（実行と同じhost・model）は拒否する。
 
@@ -129,3 +130,4 @@ uv run --locked iakit run judgment runs/RUN-001 --case webia-001
 ```
 
 配布物では、`iakit.runtime.bundle` が実行時処理（`scripts/run_iakit.py` と必要なモジュール、スキーマ、固定ケースとルーブリック、知識の索引と本文）をia-orchestratorに同梱し、`uv run <ia-orchestrator>/scripts/run_iakit.py run ...` で同じコマンドを使える。
+文献根拠の検査には、構築時に出典登録簿と照合記録から導出した `library/runtime-evidence.yaml`（主張・適用条件・照合状態）を同梱する。原典本文・抜粋・抽出パス・文献ノートは含めない。`registered-sources.yaml` でこの情報のハッシュを固定し、同梱知識の変更・欠落も検査する。配布先で原典照合を再実行したとは扱わない。

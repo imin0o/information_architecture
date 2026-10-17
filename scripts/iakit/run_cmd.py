@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import manifest, runs, yamlio
-from .decisions import latest_active, max_classification
+from .decisions import artifact_inputs, latest_active, max_classification
 from .paths import SKILLS
 
 STAGE_SKILLS = {"analyze": "ia-analysis", "classify": "ia-taxonomy", "structure": "ia-structure",
@@ -22,6 +22,7 @@ LATER_ROUTES = {
 }
 YAML_KINDS = {"content_inventory", "controlled_vocabulary", "taxonomy", "sitemap", "review_findings"}
 DECISION_REF = re.compile(r"\b(IA-[0-9]{3}) r([0-9]+)\b")
+CONTRACT_VERSION = "1.0"
 
 
 def now() -> str:
@@ -51,6 +52,9 @@ def skill_item(name: str, skills_root: Path = SKILLS) -> dict | None:
         return None
     text = (base / "SKILL.md").read_text(encoding="utf-8")
     front = yamlio.loads(text.split("---", 2)[1]) if text.startswith("---") else {}
+    contract = (front.get("metadata") or {}).get("contract_version")
+    if contract != CONTRACT_VERSION:
+        raise ValueError(f"{name}: 入出力契約の版 {contract!r} は非互換（必要: {CONTRACT_VERSION}）。Skillを更新してから開始する")
     digest = hashlib.sha256()
     for path in sorted(p for p in base.rglob("*") if p.is_file()):
         digest.update(path.relative_to(base).as_posix().encode() + b"\0" + manifest.sha256_file(path).encode() + b"\n")
@@ -108,6 +112,7 @@ def refresh(directory: Path) -> dict:
     current, staled, changed = _current_hashes(run, inputs), [], True
     arts = {a["artifact_id"]: a for a in run["artifacts"]}
     active = latest_active(decisions)
+    studies = yamlio.load(directory / "observations.yaml")["studies"] if (directory / "observations.yaml").is_file() else []
     for a in (a for a in run["artifacts"] if a["status"] == "current"):
         old = next((r for r in a["decision_refs"] if (r["decision_id"], r["decision_revision"]) not in active), None)
         if old:
@@ -115,6 +120,13 @@ def refresh(directory: Path) -> dict:
             a.update(status="stale", stale_reason=f"判断 {old['decision_id']} r{old['decision_revision']} が現行でなくなった。"
                                                   "現行の判断で作り直すまで使わない")
             staled.append(a["artifact_id"])
+        else:
+            required, _ = artifact_inputs(a["decision_refs"], decisions, studies)
+            required |= runs.evaluation_dependencies(a["kind"], run["artifacts"])
+            missing = sorted(required - {d["ref"] for d in a["depends_on"]})
+            if missing:
+                a.update(status="stale", stale_reason=f"判断・評価対象の依存 {missing} の記録がない。確認して再登録する")
+                staled.append(a["artifact_id"])
     while changed:
         changed = False
         for a in (a for a in run["artifacts"] if a["status"] == "current"):
@@ -175,6 +187,16 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
         version = 1
         aid = f"ART-{len(run['artifacts']) + 1:03d}"
     refs, found = _body_refs(kind, body, text)
+    explicit = [(r.split(":")[0], int(r.split(":")[1])) for r in decision_refs]
+    decision_items = [{"decision_id": d, "decision_revision": r} for d, r in sorted(set(explicit + found))]
+    decisions = load(directory, "decisions.yaml")["decisions"]
+    active = latest_active(decisions)
+    if any((r["decision_id"], r["decision_revision"]) not in active for r in decision_items):
+        raise ValueError("登録する成果物が未知または現行でない判断を参照している")
+    studies = yamlio.load(directory / "observations.yaml")["studies"] if (directory / "observations.yaml").is_file() else []
+    indirect, decision_levels = artifact_inputs(decision_items, decisions, studies)
+    refs.update(indirect)
+    refs.update(runs.evaluation_dependencies(kind, run["artifacts"]))
     if kind == "sitemap":
         refs.update(a["artifact_id"] for a in run["artifacts"] if a["kind"] == "taxonomy")
         if any(n["concept_id"] for n in body["nodes"]):
@@ -188,7 +210,7 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
         raise ValueError(f"未登録の依存 {unknown}")
     levels = {i["input_id"]: i["classification"] for i in inputs["inputs"]}
     levels.update({a["artifact_id"]: a["classification"] for a in run["artifacts"]})
-    level = max_classification(levels[r] for r in refs)
+    level = max_classification([levels[r] for r in refs] + decision_levels)
     if existing and "classification_override" in existing:
         level = existing["classification"]
     if body is not None and isinstance(body, dict) and "artifact_id" in body:
@@ -196,12 +218,11 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
         wrong = {k: v for k, v in expected.items() if body.get(k) != v}
         if wrong:
             raise ValueError(f"{rel}: 本体の {', '.join(f'{k} を {v}' for k, v in wrong.items())} にしてから登録する")
-    explicit = [(r.split(":")[0], int(r.split(":")[1])) for r in decision_refs]
     entry = {
         "artifact_id": aid, "kind": kind, "path": rel, "version": version, "sha256": sha, "status": "current",
         "stale_reason": None, "classification": level,
         "depends_on": [{"ref": r, "sha256": current[r]} for r in sorted(refs)],
-        "decision_refs": [{"decision_id": d, "decision_revision": r} for d, r in sorted(set(explicit + found))],
+        "decision_refs": decision_items,
     }
     if existing and "classification_override" in existing:
         entry["classification_override"] = existing["classification_override"]

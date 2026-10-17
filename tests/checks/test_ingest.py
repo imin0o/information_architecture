@@ -32,6 +32,12 @@ def test_csv_rows_use_file_line_numbers_and_report_broken_rows(tmp_path):
     assert bad == [{"locator": "pages.csv#row=4", "kind": "parse_error", "note": "列数が見出し行（2列）と異なる（3列）"}]
 
 
+def test_csv_duplicate_headers_do_not_silently_overwrite_columns(tmp_path):
+    units, bad = units_of(write(tmp_path, "duplicate.csv", "id,title,title\n1,keep,lost\n"))
+    assert [u["kind"] for u in units] == ["header"]
+    assert bad[0]["locator"] == "duplicate.csv#row=1" and "重複" in bad[0]["note"]
+
+
 def test_undecodable_text_is_recorded_not_guessed(tmp_path):
     path = tmp_path / "old.csv"
     path.write_bytes("見出し\n".encode("cp932"))
@@ -59,6 +65,26 @@ def test_xml_sitemap_and_doctype_rejection(tmp_path):
                                        "text": "https://example.invalid/b"}
     units, bad = units_of(write(tmp_path, "evil.xml", '<!DOCTYPE a [<!ENTITY x "y">]><a>&x;</a>'))
     assert units == [] and "DOCTYPE" in bad[0]["note"]
+
+
+@pytest.mark.parametrize("encoding", ["utf-8", "utf-8-sig", "utf-16", "utf-16-le", "utf-16-be"])
+@pytest.mark.parametrize("fmt", ["xml", "skos", "docx"])
+def test_doctype_rejected_after_xml_encoding_detection(tmp_path, encoding, fmt):
+    xml = ('<?xml version="1.0" encoding="' + ("UTF-8" if encoding.startswith("utf-8") else "UTF-16") + '"?>'
+           '<!DOCTYPE r [<!ENTITY e "EXPANDED">]><r>&e;</r>')
+    path = tmp_path / ("evil.docx" if fmt == "docx" else "evil.xml")
+    if fmt == "docx":
+        with zipfile.ZipFile(path, "w") as z:
+            z.writestr("word/document.xml", xml.encode(encoding))
+    else:
+        path.write_bytes(xml.encode(encoding))
+    units, bad = units_of(path, fmt)
+    assert units == [] and "DOCTYPE" in bad[0]["note"]
+
+
+def test_doctype_text_inside_cdata_is_plain_data(tmp_path):
+    units, bad = units_of(write(tmp_path, "plain.xml", '<r><![CDATA[<!DOCTYPE r>]]></r>'))
+    assert bad == [] and units[0]["text"] == "<!DOCTYPE r>"
 
 
 SKOS = """<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:skos="http://www.w3.org/2004/02/skos/core#">

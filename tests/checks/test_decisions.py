@@ -114,7 +114,15 @@ def test_hearing_answer_replaces_assumption(check_bundle):
         dec(d, "IA-001", 2)["input_observations"].append({
             "observation_id": "OBS-005", "input_id": "INPUT-004", "locator": "hearing-004.txt#L1",
             "observation": "利用者の多くはスマートフォンで閲覧する"})
-    assert check_bundle(answered) == []
+    assert has(check_bundle(answered), "依存 INPUT-004 が depends_on にない")
+
+    def regenerated(d):
+        answered(d)
+        ref = {"decision_id": "IA-001", "decision_revision": 2}
+        for a in d["run.yaml"]["artifacts"]:
+            if ref in a["decision_refs"]:
+                a["depends_on"].append({"ref": "INPUT-004", "sha256": "4" * 64})
+    assert check_bundle(regenerated) == []
 
 
 def test_decision_without_observation_is_low(check_bundle):
