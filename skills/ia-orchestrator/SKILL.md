@@ -33,7 +33,11 @@ metadata:
 uv run --locked iakit run init runs/<run_id> --run-id <run_id> --task-type <web_ia|taxonomy|...> --host <claude-code|codex|other> --model <モデル名>
 ```
 
-コマンドは経路の段階、必要なSkillの有無と内容ハッシュを記録し、必要なSkillが欠けていれば開始を止める。コマンドを使えない環境では、`run.yaml`・`inputs.yaml`・`decisions.yaml` を各スキーマに合わせて作り、必要なSkill（[routing.md](routing.md) の表）がすべて読めることを確かめてから進める。読めないSkillがあれば、黙って段階を省かず、不足するSkillと対応できる範囲をユーザーに示す。
+コマンドは経路の段階、必要なSkillの有無と内容ハッシュを記録し、必要なSkillが欠けていれば開始を止める。
+
+配布物（リポジトリがない環境）では、`uv run --locked iakit` の代わりに `uv run <このSkillのディレクトリ>/scripts/run_iakit.py` を使う。`run`・`input`・`contracts check`・`run judgment` を同じ引数で使える。uvがなければ、依存（jsonschema、pypdf、ruamel.yaml）を入れたPythonで `python <このSkillのディレクトリ>/scripts/run_iakit.py` を実行する。以下では両方を `iakit` と書く。
+
+どちらのコマンドも使えない環境では、`run.yaml`・`inputs.yaml`・`decisions.yaml` を各スキーマに合わせて作り、必要なSkill（[routing.md](routing.md) の表）がすべて読めることを確かめてから進める。読めないSkillがあれば、黙って段階を省かず、不足するSkillと対応できる範囲をユーザーに示す。
 
 依頼を処理するために入力をホストのモデルへ読ませる場合も、ユーザーの許可を `approvals` に記録する（`destination_kind: host_llm`）。
 
@@ -49,10 +53,13 @@ uv run --locked iakit input add runs/<run_id> <ファイル> --kind <brief|heari
 
 ### 4. 不足情報を質問し、答えがなければ仮定を置く
 
-課題の判定に要る4項目（設計対象、利用者、目的、利用環境）を入力から探す。欠けている項目があれば、一覧にしてユーザーに質問する。1回の質問は5項目以内とする。
+課題の判定に要る4項目（設計対象、利用者、目的、利用環境）を入力から探す。欠けている項目があれば、5項目以内の質問を `questions/Q-nnn.md` に書き、ユーザーに示す。回答を待って作業を止めない。
 
-- 回答があれば、ファイルに保存して入力として登録し、観察（`input_observations`）として使う。
-- 回答がない、または答えられない場合は、仮定を置いて進める。仮定は判断の `assumptions` に書き、採用理由に欠かせない仮定は `critical: true` にする。仮定に基づく箇所は、各Markdown成果物の最初の節「## 仮定に基づく箇所」に示す。
+- 同じ応答の中で回答が得られた場合は、ファイルに保存して入力として登録し、観察（`input_observations`）として使う。
+- 回答がその場で得られない場合は、ただちに仮定を置いて進める。仮定は判断の `assumptions` に書き、採用理由に欠かせない仮定は `critical: true` にする。仮定に基づく箇所は、各Markdown成果物の最初の節「## 仮定に基づく箇所」に示す。
+- 後から回答が届いた場合は、入力として登録し、その仮定を使った判断を新しい版に置き換える。依存する成果物は自動で `stale` になるので、該当段階から再実行する。
+
+仮定の置き方は、入力に最も近い解釈を選び、外れた場合の影響が小さい案を優先する。影響が大きい仮定ほど、検証計画で先に確かめる対象にする。
 
 ### 5. 段階を順に実行する
 
@@ -79,7 +86,13 @@ Validate（ia-evaluation）の指摘は `findings.yaml` に記録される。重
 
 ### 8. 終える
 
-重大な指摘がなく、契約検査に通れば `iakit run event runs/<run_id> completed` で終える。コマンドは終了前に契約検査を再実行し、失敗があれば終了させない。ユーザーへの報告には、成果物の一覧と版、仮定、未検証の判断と検証計画、残る指摘を含める。実ユーザー調査をしていない判断を検証済みとして報告しない。
+重大な指摘がなく、契約検査に通れば `iakit run event runs/<run_id> completed` で終える。コマンドは終了前に契約検査を再実行し、失敗があれば終了させない。ユーザーへの報告には、成果物の一覧と版、仮定、未検証の判断と検証計画、残る指摘、独立判定の結果を含める。実ユーザー調査をしていない判断を検証済みとして報告しない。
+
+### 9. 独立判定を受ける
+
+固定した課題ケース（`tests/cases/<case>/case.yaml`）で実行した場合は、成果物を作ったエージェントとは別の判定エージェントに、ルーブリックで内容を判定させる（AC-09）。自分で自分の成果物を合格と判定しない。依頼の文と判定の記録形式は [references/independent-review.md](references/independent-review.md) にある。
+
+判定の記録 `rubric-judgment.yaml` は `iakit run judgment runs/<run_id> --case <case>` で検査する。`fail` で重大（`critical`）な問題が挙がった場合は、その問題を `findings.yaml` の指摘として加え、Refineの上限（2巡）の範囲で修正し、再び判定を受ける。
 
 ## 中断と再開
 

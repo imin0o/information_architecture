@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 
-from . import contracts, ingest, run_cmd, run_inputs, runs, yamlio
+from . import contracts, ingest, judgment, run_cmd, run_inputs, runs, yamlio
 
 
 def add_parsers(sub) -> None:
@@ -27,6 +27,9 @@ def add_parsers(sub) -> None:
     rk.add_argument("ids", nargs="+", metavar="KN-nnn")
     for name in ("refresh", "resume"):
         rn.add_parser(name).add_argument("dir", type=Path)
+    rj = rn.add_parser("judgment", help="独立した判定エージェントによるルーブリック判定の記録を検査する")
+    rj.add_argument("dir", type=Path)
+    rj.add_argument("--case", required=True, help="tests/cases のケース名（webia-001 など）またはケースのディレクトリ")
     re_ = rn.add_parser("event")
     re_.add_argument("dir", type=Path)
     re_.add_argument("event", choices=["interrupted", "resumed", "rerun", "refine", "completed"])
@@ -63,6 +66,8 @@ def command(args) -> int:
         elif args.action == "resume":
             errors = run_inputs.resume_errors(args.dir)
             out = {"result": "fail" if errors else "pass", "errors": errors}
+        elif args.action == "judgment":
+            out = judgment.check(args.dir, args.case)
         else:
             final = args.event == "completed" or args.status in ("completed", "unresolved")
             if final:

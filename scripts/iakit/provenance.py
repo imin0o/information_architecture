@@ -11,7 +11,9 @@ import json
 from pathlib import Path
 
 from . import manifest, snapshot, snapshot_check, yamlio
-from .paths import FIXTURES_INDEX, MANIFEST
+from .paths import CHECKOUT, FIXTURES_INDEX, MANIFEST, ROOT
+
+REGISTERED = "registered-sources.yaml"
 
 
 def text_sha256(text: str) -> str:
@@ -28,7 +30,12 @@ def record_sha256(record: dict) -> str:
 
 
 def registered_sources() -> dict[str, str | None]:
-    """出典IDと登録済みの原典ハッシュ。BOOKは登録簿、FIXTUREは自作素材の登録簿から取る。"""
+    """出典IDと登録済みの原典ハッシュ。BOOKは登録簿、FIXTUREは自作素材の登録簿から取る。
+
+    配布物では登録簿の代わりに、出典IDとハッシュだけを写した registered-sources.yaml を読む（D-M4-10）。
+    """
+    if not CHECKOUT:
+        return yamlio.load(ROOT / REGISTERED)["sources"]
     books = {b["book_id"]: b["original"]["sha256"] for b in yamlio.load(MANIFEST)["books"]}
     files = yamlio.load(FIXTURES_INDEX)["files"]
     return books | {"FIXTURE-" + Path(f["path"]).stem: f["sha256"] for f in files}

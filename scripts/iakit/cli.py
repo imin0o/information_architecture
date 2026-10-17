@@ -20,6 +20,7 @@
   iakit run refresh DIR            入力登録簿のハッシュ・判断参照・未解決の重大な指摘を同期し、依存が変わった成果物をstaleにする
   iakit run event DIR EVENT [--note TEXT] [--status S]   履歴を追加する。resumed は再開前の照合に通った場合だけ
   iakit run resume DIR             再開前の照合（入力登録簿・入力の実体・取込み結果・成果物のハッシュ）
+  iakit run judgment DIR --case NAME   独立した判定エージェントのルーブリック判定（rubric-judgment.yaml）を検査する
   iakit review sheet               人の確認用シートを sources/review/ に作る（Git管理外。本文を含む）
   iakit review record --by NAME (--all-ok | --reject EV | --claim CLAIM=STATUS | --sample-issue ID:KIND:MEMO)
                                    人の判定から主張レビュー・照合記録・抽出品質の確認を書き込む

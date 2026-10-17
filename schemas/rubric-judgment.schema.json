@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rubric-judgment.schema.json",
+  "title": "ルーブリックによる内容判定 runs/<run_id>/rubric-judgment.yaml（AC-09、D-M4-09）",
+  "description": "成果物を作ったエージェントとは別の判定エージェントが、固定ケースの必須条件とルーブリック項目ごとに判定した記録。作ったエージェント自身の自己評価には使わない",
+  "type": "object",
+  "required": ["schema_version", "run_id", "case_id", "case_version", "rubric_version", "judged_at", "judge",
+               "artifacts", "conditions", "items", "human_checks", "issues", "verdict", "reason"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "run_id": {"$ref": "common.schema.json#/$defs/run_id"},
+    "case_id": {"type": "string", "pattern": "^CASE-[A-Z]+-[0-9]{3}$"},
+    "case_version": {"$ref": "common.schema.json#/$defs/version"},
+    "rubric_version": {"$ref": "common.schema.json#/$defs/version"},
+    "judged_at": {"$ref": "common.schema.json#/$defs/datetime"},
+    "judge": {
+      "description": "判定したエージェント。run.yaml の environment と同じ host・model の組は認めない",
+      "type": "object", "required": ["agent", "host", "model"], "additionalProperties": false,
+      "properties": {
+        "agent": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "host": {"enum": ["claude-code", "codex", "other"]},
+        "model": {"$ref": "common.schema.json#/$defs/nonempty"}
+      }
+    },
+    "artifacts": {
+      "description": "判定した成果物と版。判定時点の現行版をすべて含める",
+      "type": "array", "minItems": 1, "items": {"$ref": "common.schema.json#/$defs/artifact_ref"}
+    },
+    "conditions": {
+      "description": "case.yaml の required_conditions を同じ順に1件ずつ判定する",
+      "type": "array", "items": {"$ref": "#/$defs/check"}
+    },
+    "items": {
+      "description": "ルーブリックの全項目。ケースで非該当の項目は not_applicable",
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["item", "result", "basis", "note"], "additionalProperties": false,
+        "properties": {
+          "item": {"type": "string", "pattern": "^R-[0-9]{2}$"},
+          "result": {"enum": ["pass", "fail", "not_applicable"]},
+          "basis": {"$ref": "#/$defs/basis"},
+          "note": {"type": "string"}
+        }
+      }
+    },
+    "human_checks": {
+      "description": "case.yaml の scenarios のうち human_check を持つものを、scenario の文で1件ずつ判定する",
+      "type": "array", "items": {"$ref": "#/$defs/check"}
+    },
+    "issues": {
+      "description": "判定エージェントが見つけた問題。critical が1件でもあれば verdict は fail",
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["severity", "item", "problem", "basis"], "additionalProperties": false,
+        "properties": {
+          "severity": {"enum": ["critical", "major", "minor"]},
+          "item": {"type": "string", "pattern": "^R-[0-9]{2}$"},
+          "problem": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "basis": {"$ref": "#/$defs/basis"}
+        }
+      }
+    },
+    "verdict": {"enum": ["pass", "fail"]},
+    "reason": {"$ref": "common.schema.json#/$defs/nonempty"}
+  },
+  "$defs": {
+    "basis": {
+      "description": "判定の根拠にした成果物の位置（例: ART-006 v1 node=NODE-003）",
+      "type": "array", "items": {"$ref": "common.schema.json#/$defs/nonempty"}
+    },
+    "check": {
+      "type": "object", "required": ["text", "result", "basis", "note"], "additionalProperties": false,
+      "properties": {
+        "text": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "result": {"enum": ["met", "not_met"]},
+        "basis": {"$ref": "#/$defs/basis"},
+        "note": {"type": "string"}
+      }
+    }
+  }
+}

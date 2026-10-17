@@ -11,9 +11,8 @@ from pathlib import Path
 
 from . import manifest, runs, yamlio
 from .decisions import max_classification
-from .paths import ROOT
+from .paths import SKILLS
 
-SKILLS = ROOT / "skills"
 STAGE_SKILLS = {"analyze": "ia-analysis", "classify": "ia-taxonomy", "structure": "ia-structure",
                 "model": "ia-content-model", "present": "ia-presentation", "validate": "ia-evaluation"}
 LATER_ROUTES = {

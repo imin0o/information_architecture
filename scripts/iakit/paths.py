@@ -11,6 +11,9 @@ SCHEMAS = ROOT / "schemas"
 FIXTURES = ROOT / "tests" / "fixtures"
 FIXTURES_INDEX = FIXTURES / "fixtures.yaml"
 CHECK_REPORTS = ROOT / "library" / "build-logs" / "checks"
+# 配布物では実行時処理を ia-orchestrator/scripts/iakit に置き（ROOT は ia-orchestrator）、各Skillはその隣に並ぶ（D-M4-10）
+CHECKOUT = (ROOT / "pyproject.toml").is_file()
+SKILLS = ROOT / "skills" if CHECKOUT else ROOT.parent
 
 
 def require_checkout() -> None:
