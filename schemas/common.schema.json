@@ -9,7 +9,7 @@
     "datetime": {"type": "string", "format": "date-time"},
     "nonempty": {"type": "string", "pattern": "\\S"},
     "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
-    "person": {"description": "確認・承認した人。エージェントの自己申告には使わない", "type": "string", "pattern": "\\S"},
+    "person": {"description": "確認・承認した人。M3の原典照合・主張レビュー・抽出品質確認では、ユーザーが指定した確認エージェント（Codex）も含む（D-M3-18）。生成したエージェント自身の自己申告には使わない", "type": "string", "pattern": "\\S"},
     "source_id": {"type": "string", "pattern": "^(BOOK-[0-9]{3}|FIXTURE-[a-z0-9-]+)$"},
     "evidence_id": {"type": "string", "pattern": "^EV-[0-9]{4}$"},
     "claim_id": {"type": "string", "pattern": "^CLAIM-[0-9]{4}$"},
