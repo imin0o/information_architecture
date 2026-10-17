@@ -41,11 +41,19 @@ def _load(root: Path) -> tuple[dict, dict, dict]:
 
 
 def _pending(prov: dict, receipts: dict, root: Path, extracted_root: Path) -> list[dict]:
-    """原典照合済みでない、または未レビューの主張が残る根拠。"""
-    states = provenance.derive(prov, receipts, root, extracted_root)["states"]
+    """原典・主張が未確認、または現在の知識本文にレビューが結び付いていない根拠。"""
+    derived = provenance.derive(prov, receipts, root, extracted_root)
+    states = derived["states"]
+    bound = {(rc["evidence_id"], c["claim_id"], f["path"])
+             for rc in receipts["receipts"] if rc["receipt_id"] not in derived["stale_receipts"]
+             for c in rc["claims"] for f in rc["targets"]["knowledge_files"]}
+    owners = provenance.claims_index(prov)
+    unbound = {c for e in yamlio.load(root / INDEX)["entries"] for c in e["claims"]
+               if c in owners and (owners[c]["evidence_id"], c, e["path"]) not in bound}
     return [r for r in prov["records"] if any(
         states[(r["evidence_id"], rv["claim_id"])]["source_verification"] != "verified"
-        or states[(r["evidence_id"], rv["claim_id"])]["support_status"] == "unreviewed" for rv in r["support_reviews"])]
+        or states[(r["evidence_id"], rv["claim_id"])]["support_status"] == "unreviewed"
+        or rv["claim_id"] in unbound for rv in r["support_reviews"])]
 
 
 def _knowledge_files(root: Path, record: dict) -> list[dict]:
@@ -114,27 +122,67 @@ def _review_one(r: dict, by: str, now: str, all_ok: bool, rejected: bool, claims
     return True
 
 
+def _judgements(prov: dict, samples: dict, rejects, claim_args, issues) -> tuple[dict, dict, list[str]]:
+    """個別指定の対象と構文を検査し、誤記を一括合格の既定値へ落とさない。"""
+    claims, flagged, errors = {}, {}, []
+    evidence = {r["evidence_id"] for r in prov["records"]}
+    known_claims = provenance.claims_index(prov)
+    known_samples = {(rv["extraction_id"], i["kind"]) for rv in samples["reviews"] for i in rv["items"]}
+    errors += [f"--reject: 未登録の根拠 {ev}" for ev in rejects if ev not in evidence]
+    for arg in claim_args:
+        cid, sep, status = arg.partition("=")
+        if not sep or cid not in known_claims or status not in ("supported", "not_supported", "unclear"):
+            errors.append(f"--claim: 対象または判定が不正: {arg}")
+        elif cid in claims:
+            errors.append(f"--claim: {cid} の判定が重複している")
+        claims[cid] = status
+    for arg in issues:
+        parts = arg.split(":", 2)
+        key = tuple(parts[:2])
+        if len(parts) != 3 or key not in known_samples or not parts[2].strip():
+            errors.append(f"--sample-issue: 対象またはメモが不正: {arg}")
+        elif key in flagged:
+            errors.append(f"--sample-issue: {':'.join(key)} の判定が重複している")
+        else:
+            flagged[key] = parts[2]
+    return claims, flagged, errors
+
+
+def _validation_errors(prov: dict, receipts: dict, samples: dict, sources: dict) -> list[str]:
+    errors = []
+    for data, schema in ((prov, "provenance.schema.json"), (receipts, "verification-receipt.schema.json"),
+                         (samples, "sample-review.schema.json")):
+        errors += yamlio.schema_errors(data, schema)
+    return errors or provenance.reference_errors(prov, receipts, sources)
+
+
 def record(by: str, all_ok: bool = False, rejects: list[str] = (), claim_args: list[str] = (),
            issues: list[str] = (), root: Path = ROOT, extracted_root: Path = EXTRACTED) -> dict:
     result = {"check": "review-record", "result": "fail", "receipts_added": [], "sample_items": 0, "errors": []}
     errors = result["errors"]
-    claims = dict(a.partition("=")[::2] for a in claim_args)
-    bad = [s for s in claims.values() if s not in ("supported", "not_supported", "unclear")]
-    if not by.strip() or bad:
-        errors.append("--by が空、または --claim の判定が supported・not_supported・unclear でない")
+    if not by.strip():
+        errors.append("--by が空")
         return result
     prov, receipts, samples = (copy.deepcopy(d) for d in _load(root))
     now, originals, sources = _now(), extract_cmd._originals_by_hash(), provenance.registered_sources()
+    errors += _validation_errors(prov, receipts, samples, sources)
+    if errors:
+        return result
+    claims, flagged, invalid = _judgements(prov, samples, rejects, claim_args, issues)
+    errors += invalid
+    if errors:
+        return result
     next_id = max((int(rc["receipt_id"][3:]) for rc in receipts["receipts"]), default=0) + 1
     pending = {r["evidence_id"] for r in _pending(prov, receipts, root, extracted_root)}
+    pending.update(rejects)
+    pending.update(provenance.claims_index(prov)[cid]["evidence_id"] for cid in claims)
     for r in (r for r in prov["records"] if r["evidence_id"] in pending):
         ev, rejected = r["evidence_id"], r["evidence_id"] in rejects
         if not _review_one(r, by, now, all_ok, rejected, claims, extracted_root):
             continue
         local_errors, counts = provenance_local.local_results({"records": [r]}, extracted_root, originals)
-        ref_errors = [e for e in provenance.reference_errors(prov, receipts, sources) if e.startswith(ev)]
-        if local_errors or ref_errors:
-            errors += local_errors + ref_errors
+        if local_errors:
+            errors += local_errors
             continue
         ref = r["extracted_ref"]
         receipts["receipts"].append({
@@ -153,19 +201,17 @@ def record(by: str, all_ok: bool = False, rejects: list[str] = (), claim_args: l
             "tool": {"name": "iakit", "version": __version__}, "recorded_at": now})
         result["receipts_added"].append(f"VR-{next_id:04d}")
         next_id += 1
-    flagged = {tuple(i.split(":", 2)[:2]): i.split(":", 2)[2] if i.count(":") >= 2 else "" for i in issues}
     for rv in samples["reviews"]:
-        todo = [i for i in rv["items"] if i["result"] is None]
-        if not todo or not (all_ok or any(e == rv["extraction_id"] for e, _ in flagged)):
+        todo = [i for i in rv["items"] if (rv["extraction_id"], i["kind"]) in flagged
+                or (all_ok and i["result"] is None)]
+        if not todo:
             continue
         for i in todo:
             key = (rv["extraction_id"], i["kind"])
             i.update(result="issue" if key in flagged else "ok", note=flagged.get(key) or None)
             result["sample_items"] += 1
         rv.update(checked_by=by, checked_at=now)
-    for data, schema in ((prov, "provenance.schema.json"), (receipts, "verification-receipt.schema.json"),
-                         (samples, "sample-review.schema.json")):
-        errors += yamlio.schema_errors(data, schema)
+    errors += _validation_errors(prov, receipts, samples, sources)
     if errors:
         result["receipts_added"], result["sample_items"] = [], 0
         return result

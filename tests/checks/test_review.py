@@ -2,7 +2,7 @@
 
 import pytest
 
-from iakit import extract_cmd, manifest, provenance, review, snapshot, yamlio
+from iakit import extract_cmd, library, manifest, provenance, review, snapshot, yamlio
 from iakit.paths import FIXTURES
 
 RUN = FIXTURES / "contracts/webia-run"
@@ -107,3 +107,110 @@ def test_machine_check_failure_writes_nothing(root):
     r = record(root, "確認者", all_ok=True)
     assert r["result"] == "fail" and r["receipts_added"] == []
     assert path.read_bytes() == before and not (root / review.RECEIPTS).exists()
+
+
+def review_files(root):
+    return {rel: (root / rel).read_bytes() if (root / rel).exists() else None
+            for rel in (review.PROV, review.RECEIPTS, review.SAMPLES)}
+
+
+def test_individual_sample_issue_leaves_other_items_unreviewed(root):
+    r = record(root, "確認者", issues=["EXTRACT-FX-001:table:列の順序が乱れる"])
+    assert r["result"] == "pass" and r["sample_items"] == 1
+    items = yamlio.load(root / review.SAMPLES)["reviews"][0]["items"]
+    assert [(i["result"], i["note"]) for i in items] == [(None, None), ("issue", "列の順序が乱れる")]
+    assert all(s["support_status"] == "unreviewed" for s in states(root).values())
+    # 後続の一括判定は、既に記録した問題を上書きしない。
+    assert record(root, "確認者", all_ok=True)["sample_items"] == 1
+    items = yamlio.load(root / review.SAMPLES)["reviews"][0]["items"]
+    assert [i["result"] for i in items] == ["ok", "issue"]
+
+
+@pytest.mark.parametrize("judgements", [
+    {"rejects": ["EV-9999"]},
+    {"claim_args": ["CLAIM-9999=not_supported"]},
+    {"claim_args": ["CLAIM-0001=supported", "CLAIM-0001=not_supported"]},
+    {"issues": ["EXTRACT-FX-999:table:問題"]},
+    {"issues": ["EXTRACT-FX-001:typo:問題"]},
+    {"issues": ["EXTRACT-FX-001:table"]},
+    {"issues": ["EXTRACT-FX-001:table: "]},
+    {"issues": ["EXTRACT-FX-001:table:問題", "EXTRACT-FX-001:table:別の問題"]},
+])
+def test_invalid_exception_with_all_ok_writes_nothing(root, judgements):
+    before = review_files(root)
+    r = record(root, "確認者", all_ok=True, **judgements)
+    assert r["result"] == "fail" and r["errors"]
+    assert r["receipts_added"] == [] and r["sample_items"] == 0
+    assert review_files(root) == before
+
+
+@pytest.mark.parametrize("status", ["not_supported", "unclear"])
+def test_explicit_claim_corrects_reviewed_judgement_and_keeps_history(root, status):
+    assert record(root, "初回確認者", all_ok=True)["result"] == "pass"
+    original = yamlio.load(root / review.RECEIPTS)["receipts"]
+    r = record(root, "訂正者", claim_args=[f"CLAIM-0001={status}"])
+    assert r["result"] == "pass" and r["receipts_added"] == ["VR-0003"]
+    assert states(root)[("EV-0001", "CLAIM-0001")]["support_status"] == status
+    prov = yamlio.load(root / review.PROV)
+    assert prov["records"][0]["support_reviews"][0]["reviewed_by"] == "訂正者"
+    assert prov["records"][0]["support_reviews"][1]["reviewed_by"] == "初回確認者"
+    receipts = yamlio.load(root / review.RECEIPTS)["receipts"]
+    assert receipts[:2] == original
+    # 不支持・不明の判定から supported への明示的な訂正も受け付ける。
+    assert record(root, "再確認者", claim_args=["CLAIM-0001=supported"])["receipts_added"] == ["VR-0004"]
+    assert states(root)[("EV-0001", "CLAIM-0001")]["support_status"] == "supported"
+
+
+def test_reject_overrides_old_confirmation_without_deleting_history(root):
+    assert record(root, "確認者", all_ok=True)["result"] == "pass"
+    original = yamlio.load(root / review.RECEIPTS)["receipts"]
+    r = record(root, "訂正者", rejects=["EV-0002"])
+    assert r["result"] == "pass" and r["receipts_added"] == ["VR-0003"]
+    assert states(root)[("EV-0002", "CLAIM-0003")]["source_verification"] == "unverified"
+    assert states(root)[("EV-0001", "CLAIM-0001")]["source_verification"] == "verified"
+    assert yamlio.load(root / review.RECEIPTS)["receipts"][:2] == original
+    assert record(root, "再確認者", all_ok=True)["receipts_added"] == ["VR-0004"]
+    assert states(root)[("EV-0002", "CLAIM-0003")]["source_verification"] == "verified"
+
+
+def test_explicit_sample_issue_corrects_completed_item(root):
+    assert record(root, "確認者", all_ok=True)["result"] == "pass"
+    r = record(root, "訂正者", issues=["EXTRACT-FX-001:table:列:順序が乱れる"])
+    assert r["result"] == "pass" and r["sample_items"] == 1 and r["receipts_added"] == []
+    rv = yamlio.load(root / review.SAMPLES)["reviews"][0]
+    assert [(i["result"], i["note"]) for i in rv["items"]] == [("ok", None), ("issue", "列:順序が乱れる")]
+    assert rv["checked_by"] == "訂正者"
+
+
+def test_new_body_reusing_reviewed_claim_is_shown_and_can_be_adopted(root):
+    assert record(root, "確認者", all_ok=True)["result"] == "pass"
+    index = yamlio.load(root / review.INDEX)
+    index["entries"].append({"knowledge_id": "KN-002", "kind": "method", "title": "追加の方法",
+                             "path": "library/methods/b.md", "claims": ["CLAIM-0001"], "terms": [], "conflicts": []})
+    (root / review.INDEX).write_text(yamlio.dumps(index), encoding="utf-8")
+    (root / "library/methods/b.md").write_text("# 追加の方法\n\n[CLAIM-0001]\n", encoding="utf-8")
+
+    def adoption():
+        prov, receipts, _ = review._load(root)
+        derived = provenance.derive(prov, receipts, root, root / "extracted")
+        return library.adoption({"provenance": prov, "index": index}, receipts, derived)
+
+    assert adoption() == {"KN-001": "adopted", "KN-002": "hypothesis"}
+    assert review.sheet(root, root / "extracted")["evidence"] == 1
+    assert "library/methods/b.md" in (root / review.SHEET).read_text(encoding="utf-8")
+    r = record(root, "確認者", all_ok=True)
+    assert r["result"] == "pass" and r["receipts_added"] == ["VR-0003"]
+    assert adoption() == {"KN-001": "adopted", "KN-002": "adopted"}
+    assert review.sheet(root, root / "extracted")["evidence"] == 0
+
+
+def test_claim_hash_mismatch_writes_nothing(root):
+    assert record(root, "確認者", all_ok=True)["result"] == "pass"
+    prov = yamlio.load(root / review.PROV)
+    prov["records"][0]["support_reviews"][0]["claim"] += "（変更）"
+    (root / review.PROV).write_text(yamlio.dumps(prov), encoding="utf-8")
+    before = review_files(root)
+    r = record(root, "確認者", all_ok=True)
+    assert r["result"] == "fail" and any("CLAIM-0001" in e for e in r["errors"])
+    assert r["receipts_added"] == [] and r["sample_items"] == 0
+    assert review_files(root) == before

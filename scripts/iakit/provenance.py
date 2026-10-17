@@ -111,7 +111,7 @@ def _verified(receipt: dict) -> bool:
 
 
 def derive(provenance: dict, receipts: dict, base: Path | None = None, extracted_root: Path | None = None) -> dict:
-    """(evidence_id, claim_id) ごとの source_verification と support_status、無効な照合記録の理由。"""
+    """状態と無効記録の理由。原典照合は追記順の最新有効記録を使い、過去の合格で却下を打ち消さない。"""
     by_evidence: dict[str, list[dict]] = {}
     for rc in receipts["receipts"]:
         by_evidence.setdefault(rc["evidence_id"], []).append(rc)
@@ -126,7 +126,7 @@ def derive(provenance: dict, receipts: dict, base: Path | None = None, extracted
                 stale[rc["receipt_id"]] = problems
             else:
                 valid.append(rc)
-        verified = "verified" if any(_verified(rc) for rc in valid) else "unverified"
+        verified = "verified" if valid and _verified(valid[-1]) else "unverified"
         for rv in r["support_reviews"]:
             expected = {"claim_id": rv["claim_id"], "claim_sha256": rv["claim_sha256"],
                         "applicability_sha256": text_sha256(rv["applicability"]), "status": rv["status"]}

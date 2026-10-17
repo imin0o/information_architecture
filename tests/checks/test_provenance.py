@@ -112,6 +112,24 @@ def test_incomplete_receipt_does_not_verify(bundle_docs, checks):
     assert derived(d)["states"][("EV-0001", "CLAIM-0001")]["source_verification"] == "unverified"
 
 
+@pytest.mark.parametrize("checks", [
+    {"human_checks": {"source_location": {"result": "rejected", "checked_by": "Reviewer",
+                                            "checked_at": "2026-10-17T12:10:00+09:00"}}},
+    {"machine_checks": {"reference": "pass", "excerpt": "pass", "original_hash": "not_run"}},
+])
+def test_latest_valid_receipt_overrides_old_confirmation(bundle_docs, checks):
+    d = copy.deepcopy(bundle_docs)
+    newer = copy.deepcopy(d["receipts.yaml"]["receipts"][0])
+    newer.update(receipt_id="VR-0002", **checks)
+    d["receipts.yaml"]["receipts"].append(newer)
+    assert derived(d)["states"][("EV-0001", "CLAIM-0001")]["source_verification"] == "unverified"
+    # 最新でも対象ハッシュが違う記録は適用しない。
+    newer["targets"]["excerpt_sha256"] = "0" * 64
+    result = derived(d)
+    assert result["states"][("EV-0001", "CLAIM-0001")]["source_verification"] == "verified"
+    assert "VR-0002" in result["stale_receipts"]
+
+
 def test_runtime_self_declared_verified_is_rejected(check_bundle):
     def declare(d):
         d["decisions.yaml"]["decisions"][1]["sources"].append({
