@@ -42,6 +42,7 @@ def lib(tmp_path):
         "conflicts": {"schema_version": "1.0", "conflicts": []},
         "quotes": {"schema_version": "1.0", "quotes": []},
         "generations": {"schema_version": "1.0", "generations": []},
+        "samples": {"schema_version": "1.0", "reviews": []},
         "coverage": {"schema_version": "1.0", "books": [
             {"book_id": b["book_id"], "status": "not_started" if b["original"]["received"] else "not_received",
              "remaining": "全体未統合", "mvp_impact": "例"} for b in yamlio.load(MANIFEST)["books"]]},

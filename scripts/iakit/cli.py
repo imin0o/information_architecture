@@ -11,6 +11,9 @@
   iakit contracts check [--local] [DIR ...]   実行記録・判断・出典・構造のスキーマと整合性。--local は抜粋を固定テキストと照合する
   iakit cases check                課題ケースとルーブリックの固定状態（入力ハッシュ・項目の網羅・検査の実在）
   iakit library check              知識の索引・用語・矛盾・引用台帳・生成記録の整合と、主張レビューから導く採用状態
+  iakit review sheet               人の確認用シートを sources/review/ に作る（Git管理外。本文を含む）
+  iakit review record --by NAME (--all-ok | --reject EV | --claim CLAIM=STATUS | --sample-issue ID:KIND:MEMO)
+                                   人の判定から主張レビュー・照合記録・抽出品質の確認を書き込む
 
 各検査は --report PATH で本文を含まない結果をYAMLへ保存できる。終了コードは失敗時1。
 """
@@ -19,7 +22,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import cases, contracts, extract_cmd, fixtures, hostprobe, leak_history, leaks, library, manifest, paths, yamlio
+from . import (cases, contracts, extract_cmd, fixtures, hostprobe, leak_history, leaks, library, manifest, paths,
+               review, yamlio)
 
 
 def _emit(results: list[dict], report: Path | None) -> int:
@@ -78,6 +82,16 @@ def _parser() -> argparse.ArgumentParser:
 
     with_report(sub.add_parser("cases").add_subparsers(dest="action", required=True).add_parser("check"))
     with_report(sub.add_parser("library").add_subparsers(dest="action", required=True).add_parser("check"))
+    rv = sub.add_parser("review").add_subparsers(dest="action", required=True)
+    with_report(rv.add_parser("sheet"))
+    rr = with_report(rv.add_parser("record"))
+    rr.add_argument("--by", required=True, help="確認した人の名前")
+    rr.add_argument("--all-ok", action="store_true", help="指定しなかった箇所を、位置一致・supported・問題なしとして記録する")
+    rr.add_argument("--reject", action="append", default=[], metavar="EV-nnnn", help="原典の位置で抜粋が見つからない")
+    rr.add_argument("--claim", action="append", default=[], metavar="CLAIM-nnnn=STATUS",
+                    help="supported・not_supported・unclear")
+    rr.add_argument("--sample-issue", action="append", default=[], metavar="EXTRACT-ID:KIND:MEMO",
+                    help="抽出品質の問題。メモに原典の本文を書かない")
 
     with_report(sub.add_parser("check")).add_argument("--local", action="store_true")
     return parser
@@ -122,6 +136,9 @@ def main(argv: list[str] | None = None) -> int:
         results = [cases.check()]
     elif args.group == "library":
         results = [library.check()]
+    elif args.group == "review":
+        results = [review.sheet() if args.action == "sheet" else
+                   review.record(args.by, args.all_ok, args.reject, args.claim, args.sample_issue)]
     else:
         results = [manifest.check(local=args.local), fixtures.check(), leaks.check(), cases.check()]
         results += [contracts.check_bundle(d) for d in contracts.default_targets()]

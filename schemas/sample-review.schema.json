@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sample-review.schema.json",
+  "title": "抽出品質の代表箇所の確認 library/build-logs/sample-reviews.yaml（BR-01、P-M1-03）",
+  "description": "確認する箇所は事前に計画し、人が原典と見比べた結果だけを result に記録する。note に原典の本文を書かない",
+  "type": "object",
+  "required": ["schema_version", "reviews"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "reviews": {"type": "array", "items": {"$ref": "#/$defs/review"}}
+  },
+  "$defs": {
+    "review": {
+      "type": "object",
+      "required": ["extraction_id", "checked_by", "checked_at", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "extraction_id": {"$ref": "common.schema.json#/$defs/extraction_id"},
+        "checked_by": {"oneOf": [{"$ref": "common.schema.json#/$defs/person"}, {"type": "null"}]},
+        "checked_at": {"oneOf": [{"$ref": "common.schema.json#/$defs/datetime"}, {"type": "null"}]},
+        "items": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/item"}}
+      }
+    },
+    "item": {
+      "type": "object",
+      "required": ["kind", "pdf_page_indices", "epub_href", "look_for", "result", "note"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"enum": ["body", "table", "figure", "layout", "text_layer"]},
+        "pdf_page_indices": {"type": "array", "items": {"type": "integer", "minimum": 1}, "uniqueItems": true},
+        "epub_href": {"type": ["string", "null"]},
+        "look_for": {"description": "確認する観点", "$ref": "common.schema.json#/$defs/nonempty"},
+        "result": {"description": "null は未確認。issue は読めない内容・欠落がある", "enum": [null, "ok", "issue"]},
+        "note": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

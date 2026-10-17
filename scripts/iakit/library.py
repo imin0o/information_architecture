@@ -9,11 +9,12 @@ adopted は、本文が引く全主張が原典照合済みかつ supported で�
 import re
 from pathlib import Path
 
-from . import library_coverage, manifest, provenance, snapshot, yamlio
+from . import library_coverage, library_ledger, manifest, provenance, snapshot, yamlio
 from .paths import EXTRACTED, ROOT
 
 FILES = {
     "coverage": ("library/coverage.yaml", "book-coverage.schema.json"),
+    "samples": ("library/build-logs/sample-reviews.yaml", "sample-review.schema.json"),
     "index": ("library/index.yaml", "knowledge-index.schema.json"),
     "terms": ("library/terms.yaml", "terms.schema.json"),
     "conflicts": ("library/conflicts.yaml", "conflict.schema.json"),
@@ -145,32 +146,6 @@ def reference_errors(docs: dict, root: Path, sources: dict) -> list[str]:
     return errors
 
 
-def ledger(docs: dict) -> dict:
-    """文献ごとの件数・延べ語数・同一範囲の重複を除いた語数。部分的に重なる範囲は未判定として数える。"""
-    rows: dict[str, list[tuple[str, tuple, int]]] = {}
-    for r in docs["provenance"]["records"]:
-        ref = r["extracted_ref"]
-        rows.setdefault(r["source_id"], []).append(
-            ("preview", (ref["extraction_id"], ref["start_line"], ref["end_line"]), len(r["excerpt_preview"].split())))
-    for q in docs["quotes"]["quotes"]:
-        ref = q["extracted_ref"]
-        rows.setdefault(q["source_id"], []).append(
-            (q["use"], (ref["extraction_id"], ref["start_line"], ref["end_line"]), len(q["text"].split())))
-    out = {}
-    for source, items in sorted(rows.items()):
-        unique = {(kind == "preview", span): words for kind, span, words in items}
-        spans = sorted({span for _, span, _ in items})
-        overlaps = sum(1 for a, b in zip(spans, spans[1:]) if a[0] == b[0] and b[1] <= a[2])
-        out[source] = {
-            "previews": sum(1 for k, _, _ in items if k == "preview"),
-            "quotes": sum(1 for k, _, _ in items if k != "preview"),
-            "words_total": sum(w for _, _, w in items),
-            "words_unique_spans": sum(unique.values()),
-            "overlap_undetermined": overlaps,
-        }
-    return out
-
-
 def adoption(docs: dict, receipts: dict, derived: dict) -> dict:
     """知識ごとの採用状態。not_supported の主張を引く本文は、採用理由に使えないことを示すため別に数える。"""
     owner = {cid: v["evidence_id"] for cid, v in provenance.claims_index(docs["provenance"]).items()}
@@ -204,7 +179,8 @@ def check(root: Path = ROOT, extracted_root: Path = EXTRACTED) -> dict:
     derived = provenance.derive(docs["provenance"], receipts, root, extracted_root)
     states = adoption(docs, receipts, derived)
     coverage_errors, coverage = library_coverage.errors_and_report(docs)
-    errors += coverage_errors
+    sample_errors, samples = library_ledger.sample_status(docs)
+    errors += coverage_errors + sample_errors
     edited = sorted({o["path"] for g in docs["generations"]["generations"] for o in g["outputs"]
                      if not (root / o["path"]).is_file() or manifest.sha256_file(root / o["path"]) != o["sha256"]})
     needs = {n["need_id"]: ("gap" if not n["entries"] else
@@ -216,7 +192,8 @@ def check(root: Path = ROOT, extracted_root: Path = EXTRACTED) -> dict:
                       for s in ("adopted", "hypothesis", "not_supported")},
         "needs": needs,
         "coverage": coverage,
-        "quote_ledger": ledger(docs),
+        "sample_reviews": samples,
+        "quote_ledger": library_ledger.ledger(docs),
         "edited_after_generation": edited,
         # 人による原典・主張の確認はこの検査で代替しない
         "human_review": "not_run",
