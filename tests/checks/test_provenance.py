@@ -2,11 +2,12 @@
 
 import copy
 import json
+import shutil
 
 import pytest
 from jsonschema import Draft202012Validator
 
-from iakit import provenance, provenance_local, snapshot, yamlio
+from iakit import contracts, provenance, provenance_local, snapshot, yamlio
 from iakit.paths import FIXTURES, SCHEMAS
 
 PDF = FIXTURES / "pdf/page-labels.pdf"
@@ -199,3 +200,18 @@ def test_review_status_and_reviewer_must_agree(bundle_docs, status, by, at):
     d = copy.deepcopy(bundle_docs["provenance.yaml"])
     d["records"][1]["support_reviews"][0].update(status=status, reviewed_by=by, reviewed_at=at)
     assert yamlio.schema_errors(d, "provenance.schema.json")
+
+
+def test_receipt_locations_hash_is_checked_with_local_snapshot(bundle_docs, snap, tmp_path):
+    base = tmp_path / "run"
+    shutil.copytree(FIXTURES / "contracts/webia-run", base)
+    assert contracts.check_bundle(base, local=True, extracted_root=snap)["result"] == "pass"
+    receipt = copy.deepcopy(bundle_docs["receipts.yaml"])
+    receipt["receipts"][0]["targets"]["locations_sha256"] = "0" * 64
+    (base / "receipts.yaml").write_text(yamlio.dumps(receipt), encoding="utf-8")
+    result = contracts.check_bundle(base, local=True, extracted_root=snap)
+    assert result["result"] == "fail"
+    assert result["existing_receipts"] == {"valid": 0, "stale": ["VR-0001"]}
+    derived = provenance.derive(bundle_docs["provenance.yaml"], receipt, extracted_root=snap)
+    assert derived["states"][("EV-0001", "CLAIM-0001")]["source_verification"] == "unverified"
+    assert derived["stale_receipts"]["VR-0001"] == ["locations_sha256 が位置対応表と一致しない"]

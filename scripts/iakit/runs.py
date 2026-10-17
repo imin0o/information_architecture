@@ -65,6 +65,12 @@ def _refine_errors(run: dict) -> list[str]:
 def _transmission_errors(run: dict, inputs: dict[str, dict]) -> list[str]:
     errors = []
     approvals = {a["approval_id"]: a for a in run["approvals"]}
+    if len(approvals) != len(run["approvals"]):
+        errors.append("approvals: approval_id が重複している")
+    for a in run["approvals"]:
+        missing = sorted(set(a["input_ids"]) - inputs.keys())
+        if missing:
+            errors.append(f"許可 {a['approval_id']}: 未登録の入力 {missing}")
     for n, t in enumerate(run["transmissions"]):
         tag = f"transmissions[{n}] {t['destination']}"
         missing = [i for i in t["input_ids"] if i not in inputs]
@@ -84,6 +90,9 @@ def _transmission_errors(run: dict, inputs: dict[str, dict]) -> list[str]:
             errors.append(f"{tag}: 許可 {a['approval_id']} の送信先と一致しない")
         if t["data_kind"] not in a["data_kinds"]:
             errors.append(f"{tag}: {t['data_kind']} は許可 {a['approval_id']} の対象外")
+        outside = sorted(set(t["input_ids"]) - set(a["input_ids"]))
+        if outside:
+            errors.append(f"{tag}: 入力 {outside} は許可 {a['approval_id']} の対象外")
         if RANK[level] > RANK[a["max_classification"]]:
             errors.append(f"{tag}: 区分 {level} が許可 {a['approval_id']} の上限 {a['max_classification']} を超える")
     return errors
@@ -97,7 +106,9 @@ def _artifact_errors(run: dict, inputs: dict[str, dict], actual: dict[str, str],
         errors.append("artifacts: artifact_id が重複している")
     for a in run["artifacts"]:
         tag = f"{a['artifact_id']} v{a['version']}"
-        if a["artifact_id"] in actual and actual[a["artifact_id"]] != a["sha256"]:
+        if a["artifact_id"] not in actual:
+            errors.append(f"{tag}: 成果物ファイル {a['path']} がない")
+        elif actual[a["artifact_id"]] != a["sha256"]:
             errors.append(f"{tag}: ファイルのハッシュが実行記録と一致しない")
         levels = []
         for dep in a["depends_on"]:

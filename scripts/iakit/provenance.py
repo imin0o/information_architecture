@@ -87,7 +87,7 @@ def reference_errors(provenance: dict, receipts: dict, sources: dict[str, str | 
     return errors
 
 
-def receipt_problems(receipt: dict, record: dict, base: Path | None) -> list[str]:
+def receipt_problems(receipt: dict, record: dict, base: Path | None, locations_sha256: str | None = None) -> list[str]:
     """照合記録が現在の登録レコード・知識ファイルに対応しない理由。空なら有効。"""
     t, problems = receipt["targets"], []
     if t["record_sha256"] != record_sha256(record):
@@ -95,6 +95,8 @@ def receipt_problems(receipt: dict, record: dict, base: Path | None) -> list[str
     for key in ("source_sha256", "extracted_sha256", "excerpt_sha256"):
         if t[key] != record[key]:
             problems.append(f"{key} が登録レコードと一致しない")
+    if locations_sha256 is not None and t["locations_sha256"] != locations_sha256:
+        problems.append("locations_sha256 が位置対応表と一致しない")
     for f in t["knowledge_files"] if base else []:
         path = base / f["path"]
         if not path.is_file() or manifest.sha256_file(path) != f["sha256"]:
@@ -108,7 +110,7 @@ def _verified(receipt: dict) -> bool:
             and receipt["human_checks"]["source_location"]["result"] == "confirmed")
 
 
-def derive(provenance: dict, receipts: dict, base: Path | None = None) -> dict:
+def derive(provenance: dict, receipts: dict, base: Path | None = None, extracted_root: Path | None = None) -> dict:
     """(evidence_id, claim_id) ごとの source_verification と support_status、無効な照合記録の理由。"""
     by_evidence: dict[str, list[dict]] = {}
     for rc in receipts["receipts"]:
@@ -116,8 +118,10 @@ def derive(provenance: dict, receipts: dict, base: Path | None = None) -> dict:
     states, stale = {}, {}
     for r in provenance["records"]:
         valid = []
+        locations = extracted_root / r["extracted_ref"]["extraction_id"] / "locations.yaml" if extracted_root else None
+        locations_sha = manifest.sha256_file(locations) if locations and locations.is_file() else None
         for rc in by_evidence.get(r["evidence_id"], []):
-            problems = receipt_problems(rc, r, base)
+            problems = receipt_problems(rc, r, base, locations_sha)
             if problems:
                 stale[rc["receipt_id"]] = problems
             else:

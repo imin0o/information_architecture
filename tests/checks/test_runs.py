@@ -5,7 +5,7 @@ import shutil
 
 import pytest
 
-from iakit import contracts, yamlio
+from iakit import cli, contracts, manifest, yamlio
 from iakit.paths import FIXTURES
 
 BUNDLE = FIXTURES / "contracts" / "webia-run"
@@ -180,3 +180,135 @@ def test_source_text_needs_explicit_approval_kind(check_bundle):
     def source_text(d):
         d["run.yaml"]["transmissions"][0]["data_kind"] = "source_text"
     assert has(check_bundle(source_text), "source_text は許可 APPROVAL-001 の対象外")
+
+
+def test_transmission_must_use_approved_input_ids(check_bundle):
+    def wrong_input(d):
+        a = copy.deepcopy(d["run.yaml"]["approvals"][0])
+        a.update(approval_id="APPROVAL-002", destination="web-search", destination_kind="external_service",
+                 input_ids=["INPUT-001"], purpose="INPUT-001だけの検索")
+        d["run.yaml"]["approvals"].append(a)
+        d["run.yaml"]["transmissions"][1].update(approval_id="APPROVAL-002", outcome="sent")
+    assert has(check_bundle(wrong_input), "入力 ['INPUT-002'] は許可 APPROVAL-002 の対象外")
+
+
+def test_transmission_with_scoped_approval_passes(check_bundle):
+    def approved(d):
+        a = copy.deepcopy(d["run.yaml"]["approvals"][0])
+        a.update(approval_id="APPROVAL-002", destination="web-search", destination_kind="external_service",
+                 input_ids=["INPUT-002"])
+        d["run.yaml"]["approvals"].append(a)
+        d["run.yaml"]["transmissions"][1].update(approval_id="APPROVAL-002", outcome="sent")
+    assert check_bundle(approved) == []
+
+
+@pytest.mark.parametrize("change", [lambda d: d["approvals"][0].pop("input_ids"),
+                                  lambda d: d["approvals"][0].update(input_ids=[]),
+                                  lambda d: d["transmissions"][0].update(input_ids=[])])
+def test_approval_and_transmission_require_input_scope(bundle_docs, change):
+    run = copy.deepcopy(bundle_docs["run.yaml"])
+    change(run)
+    assert yamlio.schema_errors(run, "run.schema.json")
+
+
+def test_unknown_approval_input_is_rejected(check_bundle):
+    errors = check_bundle(lambda d: d["run.yaml"]["approvals"][0]["input_ids"].append("INPUT-999"))
+    assert has(errors, "許可 APPROVAL-001: 未登録の入力 ['INPUT-999']")
+
+
+def test_duplicate_approval_id_is_rejected(check_bundle):
+    def duplicate(d):
+        a = copy.deepcopy(d["run.yaml"]["approvals"][0])
+        a["input_ids"].append("INPUT-003")
+        d["run.yaml"]["approvals"].append(a)
+    assert has(check_bundle(duplicate), "approval_id が重複している")
+
+
+def test_artifact_document_classification_must_match_run(run_copy):
+    site = yamlio.load(run_copy / "sitemap.yaml")
+    site["classification"] = "public"
+    (run_copy / "sitemap.yaml").write_text(yamlio.dumps(site), encoding="utf-8")
+    run = yamlio.load(run_copy / "run.yaml")
+    run["artifacts"][3]["sha256"] = manifest.sha256_file(run_copy / "sitemap.yaml")
+    (run_copy / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+    result = contracts.check_bundle(run_copy)
+    assert result["result"] == "fail"
+    assert result["errors"] == ["sitemap.yaml: 機密区分が実行記録の ART-004 と一致しない"]
+
+
+@pytest.mark.parametrize(("name", "missing"), [("content-inventory.yaml", "INPUT-002"),
+                                              ("controlled-vocabulary.yaml", "INPUT-001"),
+                                              ("taxonomy.yaml", "ART-002"),
+                                              ("sitemap.yaml", "ART-001")])
+def test_artifact_body_dependencies_cannot_be_omitted(check_bundle, name, missing):
+    def omit(d):
+        a = art(d, d[name]["artifact_id"])
+        a["depends_on"] = [dep for dep in a["depends_on"] if dep["ref"] != missing]
+    assert has(check_bundle(omit), f"本体が参照する依存 {missing} が depends_on にない")
+
+
+def test_missing_dependency_cannot_keep_sitemap_current_after_input_change(check_bundle):
+    def stale(d):
+        d["inputs.yaml"]["inputs"][1].update(sha256="1" * 64, path="inputs/pages-v2.csv")
+        make_stale(d, "ART-001", "ART-002", "ART-003")
+        art(d, "ART-004")["depends_on"] = []
+    assert has(check_bundle(stale), "ART-004: 本体が参照する依存 ART-001 が depends_on にない")
+
+
+@pytest.mark.parametrize("missing", ["run_directory", "empty_directory", "run.yaml", "inputs.yaml", "decisions.yaml",
+                                   "sitemap.yaml", "artifact_path"])
+def test_missing_bundle_or_required_files_fail(run_copy, missing, capsys):
+    if missing == "run_directory":
+        target = run_copy / "missing"
+    elif missing == "empty_directory":
+        target = run_copy / "empty"
+        target.mkdir()
+    else:
+        target = run_copy
+        if missing == "artifact_path":
+            run = yamlio.load(run_copy / "run.yaml")
+            run["artifacts"][3]["path"] = "missing-sitemap.yaml"
+            (run_copy / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+        else:
+            (run_copy / missing).unlink()
+    assert cli.main(["contracts", "check", str(target)]) == 1
+    result = yamlio.loads(capsys.readouterr().out)["checks"][0]
+    assert result["result"] == "fail"
+    assert has(result["errors"], "ない")
+
+
+def test_completed_run_cannot_drop_required_artifacts(check_bundle):
+    errors = check_bundle(lambda d: d["run.yaml"].update(artifacts=[]))
+    assert has(errors, "完了した経路の必須成果物 sitemap がない")
+
+
+def test_registered_structured_artifact_in_subdirectory_is_validated(run_copy):
+    outputs = run_copy / "outputs"
+    outputs.mkdir()
+    (run_copy / "sitemap.yaml").rename(outputs / "site.yaml")
+    run = yamlio.load(run_copy / "run.yaml")
+    run["artifacts"][3]["path"] = "outputs/site.yaml"
+    (run_copy / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+    assert contracts.check_bundle(run_copy)["result"] == "pass"
+    (outputs / "site.yaml").write_text("schema_version: broken\n", encoding="utf-8")
+    result = contracts.check_bundle(run_copy)
+    assert result["result"] == "fail"
+    assert has(result["errors"], "sitemap.yaml")
+
+
+def test_standalone_provenance_bundle_does_not_require_run(tmp_path, bundle_docs):
+    for name in ("provenance.yaml", "receipts.yaml"):
+        (tmp_path / name).write_text(yamlio.dumps(bundle_docs[name]), encoding="utf-8")
+    assert contracts.check_bundle(tmp_path)["result"] == "pass"
+
+
+def test_matching_artifact_classification_with_user_override_passes(run_copy):
+    site = yamlio.load(run_copy / "sitemap.yaml")
+    site["classification"] = "public"
+    (run_copy / "sitemap.yaml").write_text(yamlio.dumps(site), encoding="utf-8")
+    run = yamlio.load(run_copy / "run.yaml")
+    run["artifacts"][3].update(classification="public", sha256=manifest.sha256_file(run_copy / "sitemap.yaml"),
+                                classification_override={"by": "user", "at": "2026-10-17T16:00:00+09:00",
+                                                         "reason": "公開部分のみ使う指定"})
+    (run_copy / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+    assert contracts.check_bundle(run_copy)["result"] == "pass"

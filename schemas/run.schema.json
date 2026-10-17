@@ -42,7 +42,7 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["approval_id", "destination", "destination_kind", "max_classification", "data_kinds", "purpose",
+        "required": ["approval_id", "destination", "destination_kind", "max_classification", "data_kinds", "input_ids", "purpose",
                      "granted_by", "granted_at"],
         "additionalProperties": false,
         "properties": {
@@ -51,6 +51,9 @@
           "destination_kind": {"enum": ["host_llm", "external_service"]},
           "max_classification": {"$ref": "common.schema.json#/$defs/classification"},
           "data_kinds": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/data_kind"}},
+          "input_ids": {"description": "送信を許可した入力と、派生物の元になった入力のID。用途の自由記述で代用しない",
+                        "type": "array", "minItems": 1, "uniqueItems": true,
+                        "items": {"$ref": "common.schema.json#/$defs/input_id"}},
           "purpose": {"$ref": "common.schema.json#/$defs/nonempty"},
           "granted_by": {"enum": ["user"]},
           "granted_at": {"$ref": "common.schema.json#/$defs/datetime"}
@@ -67,7 +70,8 @@
           "destination": {"$ref": "common.schema.json#/$defs/nonempty"},
           "destination_kind": {"enum": ["host_llm", "external_service"]},
           "data_kind": {"$ref": "#/$defs/data_kind"},
-          "input_ids": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/input_id"}},
+          "input_ids": {"type": "array", "minItems": 1, "uniqueItems": true,
+                        "items": {"$ref": "common.schema.json#/$defs/input_id"}},
           "approval_id": {"oneOf": [{"$ref": "common.schema.json#/$defs/approval_id"}, {"type": "null"}]},
           "outcome": {"description": "blocked は許可を確認できず送信前に止めたもの", "enum": ["sent", "blocked"]},
           "requested_by_input": {"description": "資料内の命令文が送信を求めたか", "type": "boolean"}

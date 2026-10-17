@@ -59,6 +59,28 @@ def derive_confidence(d: dict, states: dict) -> str:
     return "high" if d["validation_status"] == "tested_supported" else "medium"
 
 
+def study_index(studies: list[dict], inputs: dict[str, dict]) -> tuple[dict, list[str]]:
+    """登録元と機密区分を検査し、無効・重複した調査を状態導出から除く。"""
+    indexed, errors, invalid = {}, [], set()
+    for study in studies:
+        sid = study["study_id"]
+        if sid in indexed:
+            errors.append(f"{sid}: study_id が重複している")
+            invalid.add(sid)
+        indexed[sid] = study
+        source = inputs.get(study["input_id"])
+        if source is None:
+            errors.append(f"{sid}: 調査の入力 {study['input_id']} が登録されていない")
+            invalid.add(sid)
+        elif source["kind"] != "research_record":
+            errors.append(f"{sid}: 入力 {study['input_id']} は research_record ではない")
+            invalid.add(sid)
+        elif RANK[study["classification"]] < RANK[source["classification"]]:
+            errors.append(f"{sid}: 調査の機密区分が入力 {study['input_id']} より低い")
+            invalid.add(sid)
+    return {sid: study for sid, study in indexed.items() if sid not in invalid}, errors
+
+
 def _source_errors(tag: str, d: dict, claims: dict, states: dict) -> list[str]:
     errors = []
     counter = {c["ref"] for c in d["counter_evidence"]}
@@ -82,12 +104,16 @@ def _source_errors(tag: str, d: dict, claims: dict, states: dict) -> list[str]:
 
 
 def decision_errors(doc: dict, claims: dict, states: dict, inputs: dict[str, dict], studies: dict[str, dict],
-                    artifact_versions: dict[str, int]) -> list[str]:
+                    artifact_versions: dict[str, int], target_ids: set[str]) -> list[str]:
     """claims は登録簿の主張索引、states は provenance.derive の導出値、artifact_versions は現行版。"""
     errors = supersession_errors(doc["decisions"])
+    for d in doc["decisions"]:
+        if d["run_id"] != doc["run_id"]:
+            errors.append(f"{d['decision_id']} r{d['decision_revision']}: run_id が判断記録のファイルと一致しない")
     # 旧版は記録時点の状態を残すため、現在の登録簿・成果物の版とは照合しない
     for d in (d for d in doc["decisions"] if d["status"] != "superseded"):
         tag = f"{d['decision_id']} r{d['decision_revision']}"
+        errors += [f"{tag}: 対象 {target} が登録されていない" for target in d["target_ids"] if target not in target_ids]
         errors += _source_errors(tag, d, claims, states)
         used = []
         for o in d["input_observations"]:

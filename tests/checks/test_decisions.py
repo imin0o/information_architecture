@@ -193,3 +193,63 @@ def test_decision_inherits_input_classification(check_bundle):
     errors = check_bundle(lambda d: d["inputs.yaml"]["inputs"][1].update(
         classification="confidential", classification_source="user"))
     assert has(errors, "IA-001 r2: 機密区分 internal が使用した入力")
+
+
+@pytest.mark.parametrize(("input_id", "message"), [("INPUT-999", "登録されていない"),
+                                                  ("INPUT-001", "research_record ではない")])
+def test_study_requires_registered_research_input(check_bundle, input_id, message):
+    errors = check_bundle(lambda d: study(d).update(input_id=input_id))
+    assert has(errors, message)
+    assert has(errors, "IA-002 r1: 調査記録 STUDY-001 がない")
+
+
+def test_study_cannot_lower_source_classification(check_bundle):
+    def confidential_research(d):
+        d["inputs.yaml"]["inputs"][2].update(classification="confidential", classification_source="user")
+    errors = check_bundle(confidential_research)
+    assert has(errors, "STUDY-001: 調査の機密区分が入力 INPUT-003 より低い")
+    assert has(errors, "IA-002 r1: 調査記録 STUDY-001 がない")
+
+
+def test_decision_inherits_valid_study_classification(check_bundle):
+    errors = check_bundle(lambda d: study(d).update(classification="confidential"))
+    assert has(errors, "IA-002 r1: 機密区分 internal が使用した入力・調査記録の区分より低い")
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_duplicate_study_id_cannot_hide_refutation(check_bundle, reverse):
+    def duplicate(d):
+        refuted = copy.deepcopy(study(d))
+        refuted["result"] = "refuted"
+        d["observations.yaml"]["studies"].insert(1 if reverse else 0, refuted)
+    errors = check_bundle(duplicate)
+    assert has(errors, "STUDY-001: study_id が重複している")
+    assert has(errors, "IA-002 r1: 調査記録 STUDY-001 がない")
+
+
+def test_unreferenced_study_is_also_checked(check_bundle):
+    def invalid(d):
+        add_study(d, "STUDY-002", "supported")
+        d["observations.yaml"]["studies"][1]["input_id"] = "INPUT-999"
+    assert has(check_bundle(invalid), "STUDY-002: 調査の入力 INPUT-999 が登録されていない")
+
+
+@pytest.mark.parametrize("target", ["CONTENT-999", "CONCEPT-999", "NODE-999", "SCHEME-999", "ART-999"])
+def test_decision_target_must_exist(check_bundle, target):
+    errors = check_bundle(lambda d: dec(d, "IA-003").update(target_ids=[target]))
+    assert has(errors, f"対象 {target} が登録されていない")
+
+
+@pytest.mark.parametrize("revision", [1, 2])
+def test_decision_run_id_must_match_file_including_history(check_bundle, revision):
+    errors = check_bundle(lambda d: dec(d, "IA-001", revision).update(run_id="RUN-OTHER"))
+    assert has(errors, f"IA-001 r{revision}: run_id が判断記録のファイルと一致しない")
+
+
+def test_superseded_target_is_not_checked_against_current_artifacts(check_bundle):
+    assert check_bundle(lambda d: dec(d, "IA-001", 1).update(target_ids=["SCHEME-999"])) == []
+
+
+@pytest.mark.parametrize("target", ["CONTENT-011", "CONCEPT-001", "NODE-002", "SCHEME-001", "ART-004"])
+def test_existing_decision_target_types_are_supported(check_bundle, target):
+    assert check_bundle(lambda d: dec(d, "IA-003").update(target_ids=[target])) == []
