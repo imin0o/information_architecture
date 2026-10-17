@@ -1,0 +1,22 @@
+# 英日用語対応（BR-02、NFR-08）。schemas/terms.schema.json で検証する。
+# 成果物では ja を使い、alt_ja は使わない。課題ケース・ルーブリックで使っている訳語を優先する。
+schema_version: "1.0"
+terms:
+- term_id: TERM-0001
+  en: homograph
+  ja: 同名異義語
+  alt_ja: [同形異義語, 同綴異義語]
+  definition: 綴りが同じで意味の異なる語。タクソノミーでは別の概念として扱う
+  claims: [CLAIM-0001]
+- term_id: TERM-0002
+  en: parenthetical qualifier
+  ja: 括弧の限定語
+  alt_ja: [限定詞, 括弧付き修飾語]
+  definition: 同名異義語を区別するため、ラベルの後ろに括弧で付ける語
+  claims: [CLAIM-0001, CLAIM-0002]
+- term_id: TERM-0003
+  en: scope note
+  ja: スコープノート
+  alt_ja: [範囲注記, 適用範囲注記]
+  definition: タクソノミー内での語の適用範囲や使い方を補う注記。データ項目名は scope_note
+  claims: [CLAIM-0004]

@@ -1,0 +1,80 @@
+# 知識の横断索引と代表ケースの必要知識（BR-02）。schemas/knowledge-index.schema.json で検証する。
+# 採用状態は記録しない。iakit library check が主張レビューと照合記録から adopted / hypothesis を導く。
+# needs の gap は不足している内容と候補文献。候補文献は統合の優先順を決めるためのもので、内容を確認した結果ではない。
+schema_version: "1.0"
+entries:
+- knowledge_id: KN-001
+  kind: book_note
+  title: BOOK-003 文献ノート
+  path: library/books/BOOK-003/notes.md
+  claims: [CLAIM-0001, CLAIM-0002, CLAIM-0003, CLAIM-0004, CLAIM-0005]
+  terms: [TERM-0001, TERM-0002, TERM-0003]
+  conflicts: []
+- knowledge_id: KN-002
+  kind: method
+  title: 同名異義語の区別
+  path: library/methods/homograph-disambiguation.md
+  claims: [CLAIM-0001, CLAIM-0002, CLAIM-0003, CLAIM-0004, CLAIM-0005]
+  terms: [TERM-0001, TERM-0002, TERM-0003]
+  conflicts: []
+needs:
+- need_id: NEED-01
+  cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
+  rubric_items: [R-01]
+  description: 問題定義で設計対象・利用者・目的・利用環境を整理し、構造の採用理由と結び付ける方法
+  entries: []
+  gap: 未統合。候補はBOOK-001（文脈・コンテンツ・利用者の整理）、BOOK-002、BOOK-007
+- need_id: NEED-02
+  cases: [CASE-TAXONOMY-001]
+  rubric_items: [R-02]
+  description: 同名異義語を別の概念に分け、ラベルと注記で区別する方法
+  entries: [KN-002]
+  gap: null
+- need_id: NEED-03
+  cases: [CASE-TAXONOMY-001, CASE-WEBIA-001]
+  rubric_items: [R-02, R-03]
+  description: 同義語・表記揺れを1つの概念の優先ラベルと同義語にまとめる方法と、優先ラベルの選び方
+  entries: []
+  gap: 未統合。候補はBOOK-003（非優先語と同義語の扱い、優先語の書式）
+- need_id: NEED-04
+  cases: [CASE-TAXONOMY-001]
+  rubric_items: [R-02]
+  description: 上位・下位関係と関連関係の区別、循環の回避、複数の上位概念を持つ場合の扱い
+  entries: []
+  gap: 未統合。候補はBOOK-003（関係の種類）、BOOK-005、BOOK-018
+- need_id: NEED-05
+  cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
+  rubric_items: [R-03]
+  description: 兄弟項目やファセット内の項目の観点・粒度をそろえ、利用者の語で命名する基準
+  entries: []
+  gap: 未統合。候補はBOOK-001（ラベル付けの体系）、BOOK-003（優先語の書式）、BOOK-012
+- need_id: NEED-06
+  cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
+  rubric_items: [R-04]
+  description: コンテンツ一覧を作り、各項目を配置済み・未処理・対象外に区分して追跡する方法
+  entries: []
+  gap: 未統合。候補はBOOK-001（コンテンツの調査）、BOOK-012、BOOK-004
+- need_id: NEED-07
+  cases: [CASE-WEBIA-001]
+  rubric_items: [R-05]
+  description: 独立した複数の属性で絞り込むためのファセット分類と、どの属性からも到達できる経路
+  entries: []
+  gap: 未統合。候補はBOOK-001（組織化の体系）、BOOK-003（ファセット）、BOOK-005
+- need_id: NEED-08
+  cases: [CASE-WEBIA-001]
+  rubric_items: [R-05]
+  description: ナビゲーションの構造とサイトマップを、主要タスクの到達経路から設計する方法
+  entries: []
+  gap: 未統合。候補はBOOK-001（ナビゲーションの体系）。BOOK-008は未受領
+- need_id: NEED-09
+  cases: [CASE-TAXONOMY-001]
+  rubric_items: [R-06]
+  description: 入力資料どうしの矛盾や、文献の適用条件と案件の条件の違いを記録して判断する方法
+  entries: []
+  gap: 判断記録の契約（M2）で手順は扱う。文献の根拠は未調査。候補はBOOK-005
+- need_id: NEED-10
+  cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
+  rubric_items: [R-07]
+  description: 未検証の判断に対応する検証方法（ツリーテスト、カードソート、検索ログの確認など）と検証計画
+  entries: []
+  gap: 未統合。候補はBOOK-001（調査の方法）。BOOK-010は未受領

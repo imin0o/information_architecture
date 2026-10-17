@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "conflict.schema.json",
+  "title": "文献間の矛盾と適用条件 library/conflicts.yaml（BR-02）",
+  "description": "各立場は文献主張（claim_id）で表し、出典は provenance.yaml から導く。一方だけを残して他方を消さない",
+  "type": "object",
+  "required": ["schema_version", "conflicts"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "conflicts": {"type": "array", "items": {"$ref": "#/$defs/conflict"}}
+  },
+  "$defs": {
+    "conflict": {
+      "type": "object",
+      "required": ["conflict_id", "topic", "positions", "resolution"],
+      "additionalProperties": false,
+      "properties": {
+        "conflict_id": {"$ref": "common.schema.json#/$defs/conflict_id"},
+        "topic": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "positions": {
+          "type": "array", "minItems": 2,
+          "items": {
+            "type": "object", "required": ["claim_id", "applicability"], "additionalProperties": false,
+            "properties": {
+              "claim_id": {"$ref": "common.schema.json#/$defs/claim_id"},
+              "applicability": {"description": "この立場が成り立つ条件", "$ref": "common.schema.json#/$defs/nonempty"}
+            }
+          }
+        },
+        "resolution": {"description": "条件による使い分け。未整理ならnull", "oneOf": [{"$ref": "common.schema.json#/$defs/nonempty"}, {"type": "null"}]}
+      }
+    }
+  }
+}

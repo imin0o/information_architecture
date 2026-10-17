@@ -15,7 +15,7 @@ books:
     bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
     original: {received: true, format: pdf, sha256: 1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707, size_bytes: 44574288}
     license: {terms: null, confirmed_by: null}
-    mvp: {selected: null, reason: null}
+    mvp: {selected: true, reason: 受領済みの全文献をMVP対象とするユーザー指示（2026-10-17）。統合する章は library/index.yaml の必要知識から選ぶ}
     skills: [analysis, taxonomy, structure, evaluation]
     notes: ロードマップM3の初期候補。
   - book_id: BOOK-002
@@ -28,7 +28,7 @@ books:
     bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
     original: {received: true, format: epub, sha256: f69a569678591787f472509a579b8e1a31e6790464318917495e90fa42e71f28, size_bytes: 1364347}
     license: {terms: null, confirmed_by: null}
-    mvp: {selected: null, reason: null}
+    mvp: {selected: true, reason: 受領済みの全文献をMVP対象とするユーザー指示（2026-10-17）。統合する章は library/index.yaml の必要知識から選ぶ}
     skills: [analysis, structure]
   - book_id: BOOK-003
     status: bibliography_unconfirmed
@@ -41,7 +41,7 @@ books:
     bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
     original: {received: true, format: pdf, sha256: 3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e, size_bytes: 22221200}
     license: {terms: null, confirmed_by: null}
-    mvp: {selected: null, reason: null}
+    mvp: {selected: true, reason: 受領済みの全文献をMVP対象とするユーザー指示（2026-10-17）。統合する章は library/index.yaml の必要知識から選ぶ}
     skills: [taxonomy, content-model]
     notes: ロードマップM3の初期候補。
   - book_id: BOOK-004
@@ -56,7 +56,7 @@ books:
     bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
     original: {received: true, format: pdf, sha256: c516cd436a1c3387026348a4b874e53c8c64b3c5685ab6b2879336a728bf0ce0, size_bytes: 6366646}
     license: {terms: null, confirmed_by: null}
-    mvp: {selected: null, reason: null}
+    mvp: {selected: true, reason: 受領済みの全文献をMVP対象とするユーザー指示（2026-10-17）。統合する章は library/index.yaml の必要知識から選ぶ}
     skills: [content-model, presentation]
   - book_id: BOOK-005
     status: bibliography_unconfirmed
@@ -70,7 +70,7 @@ books:
     bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
     original: {received: true, format: epub, sha256: 660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea, size_bytes: 18561956}
     license: {terms: null, confirmed_by: null}
-    mvp: {selected: null, reason: null}
+    mvp: {selected: true, reason: 受領済みの全文献をMVP対象とするユーザー指示（2026-10-17）。統合する章は library/index.yaml の必要知識から選ぶ}
     skills: [taxonomy, content-model]
     notes: 要件8章では編者として記載。
   - book_id: BOOK-006
@@ -93,7 +93,7 @@ books:
     bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
     original: {received: true, format: epub, sha256: 7297484cbabbbf4d4d5e924b0c0b7221a2fc25f82e1dc98ef5e011a93461ce84, size_bytes: 12297949}
     license: {terms: null, confirmed_by: null}
-    mvp: {selected: null, reason: null}
+    mvp: {selected: true, reason: 受領済みの全文献をMVP対象とするユーザー指示（2026-10-17）。統合する章は library/index.yaml の必要知識から選ぶ}
     skills: [analysis, structure]
   - book_id: BOOK-008
     status: not_received
@@ -141,7 +141,7 @@ books:
     bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
     original: {received: true, format: epub, sha256: 4541dc02c10fcbbd1d31971d34b1253170bcefeef94415b0337ad1ea817bd1e4, size_bytes: 7258181}
     license: {terms: null, confirmed_by: null}
-    mvp: {selected: null, reason: null}
+    mvp: {selected: true, reason: 受領済みの全文献をMVP対象とするユーザー指示（2026-10-17）。統合する章は library/index.yaml の必要知識から選ぶ}
     skills: [presentation, evaluation]
     notes: 要件8章の著者候補はSarah Wintersのみ。受領ファイル名は第2版・共著を示すため、対象版を要確認。
   - book_id: BOOK-013
@@ -179,7 +179,7 @@ books:
     bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
     original: {received: true, format: pdf, sha256: 03e17ae4f1b3917ce113b7f7d72725a7540ea44d69016630c2136ca77980a4fc, size_bytes: 34856419}
     license: {terms: null, confirmed_by: null}
-    mvp: {selected: null, reason: null}
+    mvp: {selected: true, reason: 受領済みの全文献をMVP対象とするユーザー指示（2026-10-17）。統合する章は library/index.yaml の必要知識から選ぶ}
     skills: [presentation]
   - book_id: BOOK-017
     status: not_received
@@ -201,7 +201,7 @@ books:
     bibliography: {title: null, authors: null, edition: null, publisher: null, year: null, isbn: null, confirmed_by: null, confirmed_at: null}
     original: {received: true, format: pdf, sha256: 9faa1ea1a6b6ddcd1e8090cbe168345214e932c57afef254bae085feed3ebc35, size_bytes: 18290704}
     license: {terms: null, confirmed_by: null}
-    mvp: {selected: null, reason: null}
+    mvp: {selected: true, reason: 受領済みの全文献をMVP対象とするユーザー指示（2026-10-17）。統合する章は library/index.yaml の必要知識から選ぶ}
     skills: [taxonomy, content-model]
 unassigned_originals:
   - original: {received: true, format: epub, sha256: 55f41eb45433592d2ff6d79879cb9612e8da5156b773d31f9b514f2647e1594e, size_bytes: 20091042}

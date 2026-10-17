@@ -1,0 +1,27 @@
+# 18冊の統合状況（M3の完了条件）。schemas/book-coverage.schema.json で検証する。
+# 読んだ範囲・統合済みの範囲は iakit library check が生成記録と出典登録簿から導く。ここには状態と残りの説明だけを書く。
+schema_version: "1.0"
+books:
+- {book_id: BOOK-001, status: not_started, remaining: 全体未統合, mvp_impact: NEED-01・05〜08・10の候補文献。統合するまで該当する必要知識は gap のまま}
+- {book_id: BOOK-002, status: not_started, remaining: 全体未統合, mvp_impact: NEED-01の候補文献}
+- book_id: BOOK-003
+  status: partial
+  remaining: >-
+    EXTRACT-003-001の行4060〜4139・4250〜4319を精読し、同名異義語の限定語とスコープノートの話題だけを統合した。
+    精読範囲内の優先語の書式（語の長さ、品詞、複数形、略語、倒置）と注記の種類は未統合。精読範囲外は全体未統合
+  mvp_impact: NEED-03・04・05・07の候補文献。NEED-02の根拠は人のレビュー待ち
+- {book_id: BOOK-004, status: not_started, remaining: 全体未統合, mvp_impact: NEED-06の候補文献}
+- {book_id: BOOK-005, status: not_started, remaining: 全体未統合, mvp_impact: NEED-04・07・09の候補文献}
+- {book_id: BOOK-006, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
+- {book_id: BOOK-007, status: not_started, remaining: 全体未統合, mvp_impact: NEED-01の候補文献}
+- {book_id: BOOK-008, status: not_received, remaining: 未受領のため未統合, mvp_impact: NEED-08の候補文献。BOOK-001で代替できるかは未確認}
+- {book_id: BOOK-009, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
+- {book_id: BOOK-010, status: not_received, remaining: 未受領のため未統合, mvp_impact: NEED-10の候補文献。BOOK-001で代替できるかは未確認}
+- {book_id: BOOK-011, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
+- {book_id: BOOK-012, status: not_started, remaining: 全体未統合, mvp_impact: NEED-05・06の候補文献}
+- {book_id: BOOK-013, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
+- {book_id: BOOK-014, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
+- {book_id: BOOK-015, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
+- {book_id: BOOK-016, status: not_started, remaining: 全体未統合, mvp_impact: 必要知識の候補文献に挙げていない}
+- {book_id: BOOK-017, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
+- {book_id: BOOK-018, status: not_started, remaining: 全体未統合, mvp_impact: NEED-04の候補文献}

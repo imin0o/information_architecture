@@ -1,0 +1,4 @@
+# 文献間の矛盾と適用条件（BR-02）。schemas/conflict.schema.json で検証する。
+# 対立する主張は両方を残し、それぞれの適用条件を書く。統合済みの文献が1冊のため、現時点の記録はない。
+schema_version: "1.0"
+conflicts: []

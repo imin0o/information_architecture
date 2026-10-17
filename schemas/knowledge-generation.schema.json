@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "knowledge-generation.schema.json",
+  "title": "知識統合にエージェントを使った記録 library/build-logs/knowledge-generation.yaml（BR-02）",
+  "description": "本文を含めない。入力は抽出範囲とハッシュ、指示は版とハッシュで記録する。生成物のハッシュは生成時点の値であり、その後の人の修正で変わってよい",
+  "type": "object",
+  "required": ["schema_version", "generations"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "generations": {"type": "array", "items": {"$ref": "#/$defs/generation"}}
+  },
+  "$defs": {
+    "generation": {
+      "type": "object",
+      "required": ["generation_id", "generated_at", "host", "model", "approval", "instruction", "inputs", "searches",
+                   "outputs", "review"],
+      "additionalProperties": false,
+      "properties": {
+        "generation_id": {"$ref": "common.schema.json#/$defs/generation_id"},
+        "generated_at": {"$ref": "common.schema.json#/$defs/datetime"},
+        "host": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "model": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "approval": {"description": "milestones.md の送信許可の記録", "$ref": "common.schema.json#/$defs/nonempty"},
+        "instruction": {
+          "type": "object", "required": ["path", "sha256"], "additionalProperties": false,
+          "properties": {"path": {"$ref": "common.schema.json#/$defs/library_path"}, "sha256": {"$ref": "common.schema.json#/$defs/sha256"}}
+        },
+        "inputs": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["extraction_id", "extracted_sha256", "start_line", "end_line"], "additionalProperties": false,
+            "properties": {
+              "extraction_id": {"$ref": "common.schema.json#/$defs/extraction_id"},
+              "extracted_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+              "start_line": {"type": "integer", "minimum": 1},
+              "end_line": {"type": "integer", "minimum": 1}
+            }
+          }
+        },
+        "searches": {
+          "description": "精読ではなく、検索で該当行の一部を表示した記録。表示した行は送信済みの入力として扱う",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["extraction_id", "extracted_sha256", "pattern", "lines", "max_chars", "detail", "recovered_from"],
+            "additionalProperties": false,
+            "properties": {
+              "extraction_id": {"$ref": "common.schema.json#/$defs/extraction_id"},
+              "extracted_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+              "pattern": {"description": "検索語。本文ではない", "$ref": "common.schema.json#/$defs/nonempty"},
+              "lines": {"description": "表示した行番号", "type": "array", "items": {"type": "integer", "minimum": 1}, "uniqueItems": true},
+              "max_chars": {"description": "1行あたりの表示上限。行全文ならnull", "type": ["integer", "null"], "minimum": 1},
+              "detail": {"description": "complete は表示した行をすべて記録した。unknown は範囲の詳細を復元できない",
+                         "enum": ["complete", "unknown"]},
+              "recovered_from": {"description": "記録の出典（例: 作業時の出力、会話ログからの復元）", "$ref": "common.schema.json#/$defs/nonempty"}
+            }
+          }
+        },
+        "outputs": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["path", "sha256"], "additionalProperties": false,
+            "properties": {"path": {"$ref": "common.schema.json#/$defs/library_path"}, "sha256": {"$ref": "common.schema.json#/$defs/sha256"}}
+          }
+        },
+        "review": {
+          "description": "生成物全体の人によるレビュー。主張ごとの判定は provenance.yaml に記録する",
+          "type": "object", "required": ["reviewed_by", "reviewed_at"], "additionalProperties": false,
+          "properties": {
+            "reviewed_by": {"oneOf": [{"$ref": "common.schema.json#/$defs/person"}, {"type": "null"}]},
+            "reviewed_at": {"oneOf": [{"$ref": "common.schema.json#/$defs/datetime"}, {"type": "null"}]}
+          }
+        }
+      }
+    }
+  }
+}

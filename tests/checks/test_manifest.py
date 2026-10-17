@@ -58,7 +58,7 @@ def test_registered_status_requires_confirmed_bibliography(data):
 
 
 def test_mvp_selection_requires_reason(data):
-    assert mutate(data, lambda d: book(d, "BOOK-001")["mvp"].update(selected=True))
+    assert mutate(data, lambda d: book(d, "BOOK-001")["mvp"].update(selected=True, reason=None))
 
 
 def test_local_check_reports_not_run_without_originals(data, tmp_path):

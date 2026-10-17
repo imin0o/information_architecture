@@ -1,0 +1,5 @@
+# 引用台帳（BR-04）。schemas/quote-ledger.schema.json で検証する。
+# provenance.yaml の抜粋プレビューは iakit library check が自動で集計するため、ここには書かない。
+# 直接引用は1件あたり英語50語以内（暫定）。公開範囲の決定（未確定事項7）までは private とする。
+schema_version: "1.0"
+quotes: []

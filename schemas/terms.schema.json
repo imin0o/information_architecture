@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "terms.schema.json",
+  "title": "英日用語対応 library/terms.yaml（BR-02、NFR-08）",
+  "description": "成果物で使う訳語を1つに決める。異なる意味の同綴語は別の用語IDにする",
+  "type": "object",
+  "required": ["schema_version", "terms"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "terms": {"type": "array", "items": {"$ref": "#/$defs/term"}}
+  },
+  "$defs": {
+    "term": {
+      "type": "object",
+      "required": ["term_id", "en", "ja", "alt_ja", "definition", "claims"],
+      "additionalProperties": false,
+      "properties": {
+        "term_id": {"$ref": "common.schema.json#/$defs/term_id"},
+        "en": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "ja": {"description": "成果物で使う訳語", "$ref": "common.schema.json#/$defs/nonempty"},
+        "alt_ja": {"description": "訳語の揺れ。成果物では使わず ja に寄せる", "type": "array",
+                   "items": {"$ref": "common.schema.json#/$defs/nonempty"}, "uniqueItems": true},
+        "definition": {"description": "自分の言葉で書いた説明。原典の定義を複製しない", "$ref": "common.schema.json#/$defs/nonempty"},
+        "claims": {"description": "説明の根拠となる文献主張。根拠がなければ空配列", "type": "array",
+                   "items": {"$ref": "common.schema.json#/$defs/claim_id"}, "uniqueItems": true}
+      }
+    }
+  }
+}

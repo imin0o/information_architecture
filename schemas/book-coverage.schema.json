@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "book-coverage.schema.json",
+  "title": "18冊の統合状況 library/coverage.yaml（M3の完了条件）",
+  "description": "登録簿の全文献を1件ずつ持つ。読んだ範囲は生成記録、統合済みの範囲は出典登録簿から導くため、ここには書かない",
+  "type": "object",
+  "required": ["schema_version", "books"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "books": {"type": "array", "items": {"$ref": "#/$defs/book"}}
+  },
+  "$defs": {
+    "book": {
+      "type": "object",
+      "required": ["book_id", "status", "remaining", "mvp_impact"],
+      "additionalProperties": false,
+      "properties": {
+        "book_id": {"type": "string", "pattern": "^BOOK-[0-9]{3}$"},
+        "status": {"description": "not_received は未受領、not_started は全体未統合、partial は一部統合、on_hold は保留",
+                   "enum": ["not_received", "not_started", "partial", "on_hold"]},
+        "remaining": {"description": "未統合の範囲と、保留する場合の理由", "$ref": "common.schema.json#/$defs/nonempty"},
+        "mvp_impact": {"description": "未統合であることのMVPへの影響（関係する NEED-nn など）", "$ref": "common.schema.json#/$defs/nonempty"}
+      }
+    }
+  }
+}

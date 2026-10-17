@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "quote-ledger.schema.json",
+  "title": "引用台帳 library/quotes.yaml（BR-04）",
+  "description": "直接引用・テンプレート内の例など、provenance.yaml のプレビュー以外で原典の文言を使う箇所。プレビューは登録簿から自動で集計する。語数は空白区切りで数える",
+  "type": "object",
+  "required": ["schema_version", "quotes"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "quotes": {"type": "array", "items": {"$ref": "#/$defs/quote"}}
+  },
+  "$defs": {
+    "quote": {
+      "type": "object",
+      "required": ["quote_id", "source_id", "extracted_ref", "use", "text", "used_in", "bundled_in", "visibility"],
+      "additionalProperties": false,
+      "properties": {
+        "quote_id": {"$ref": "common.schema.json#/$defs/quote_id"},
+        "source_id": {"$ref": "common.schema.json#/$defs/source_id"},
+        "extracted_ref": {
+          "type": "object", "required": ["extraction_id", "start_line", "end_line"], "additionalProperties": false,
+          "properties": {
+            "extraction_id": {"$ref": "common.schema.json#/$defs/extraction_id"},
+            "start_line": {"type": "integer", "minimum": 1},
+            "end_line": {"type": "integer", "minimum": 1}
+          }
+        },
+        "use": {"enum": ["direct_quote", "template_example", "conversion_log", "artifact_quote"]},
+        "text": {"description": "使った文言。英語50語以内", "$ref": "common.schema.json#/$defs/nonempty"},
+        "used_in": {"$ref": "common.schema.json#/$defs/library_path"},
+        "bundled_in": {"description": "同梱先のSkill名。未定なら空配列", "type": "array", "items": {"type": "string", "pattern": "^[a-z0-9-]+$"}, "uniqueItems": true},
+        "visibility": {"description": "未確定事項7の決定までは private", "enum": ["private"]}
+      }
+    }
+  }
+}

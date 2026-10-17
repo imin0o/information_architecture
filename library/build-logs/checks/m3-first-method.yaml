@@ -1,0 +1,111 @@
+schema_version: 0.1.0
+result: pass
+uv: uv 0.12.7 (61291a8ca 2026-08-27 x86_64-pc-windows-msvc)
+tests:
+- python: Python 3.12.13
+  result: pass
+  tests: 398
+- python: Python 3.14.3
+  result: pass
+  tests: 398
+candidate_snapshot: temporary index; actual index unchanged
+checks:
+- check: manifest
+  result: pass
+  local_originals: run
+  status_counts:
+    bibliography_unconfirmed: 9
+    not_received: 9
+  unassigned_originals: 1
+  errors: []
+- check: fixtures
+  result: pass
+  files:
+  - epub/reflowable.epub
+  - pdf/page-labels.pdf
+  - pdf/unicode-layout.pdf
+  expected_catalogue_sha256: 
+    766e3bbb033302989fe3972e5c98cb594a6b17935950cd03da71a61505b74b1c
+  errors: []
+- check: leaks
+  result: pass
+  targets:
+  - git:index
+  files_scanned: 127
+  known_original_hashes: 10
+  violations: []
+  errors: []
+- check: cases
+  result: pass
+  cases:
+    CASE-BOUNDARY-001: 1.1.0
+    CASE-TAXONOMY-001: 1.1.0
+    CASE-WEBIA-001: 1.1.0
+  rubric_version: 1.1.0
+  content_review: human_only
+  errors: []
+- check: contracts
+  target: tests/fixtures/contracts/webia-run
+  result: pass
+  files:
+  - content-inventory.yaml
+  - controlled-vocabulary.yaml
+  - decisions.yaml
+  - inputs.yaml
+  - observations.yaml
+  - provenance.yaml
+  - receipts.yaml
+  - run.yaml
+  - sitemap.yaml
+  - taxonomy.yaml
+  input_files:
+    run: 3
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 1
+    stale: []
+  errors: []
+- check: contracts
+  target: library
+  result: pass
+  files:
+  - provenance.yaml
+  input_files:
+    run: 0
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 0
+    stale: []
+  errors: []
+- check: library
+  result: pass
+  errors: []
+  knowledge:
+    adopted: []
+    hypothesis:
+    - KN-001
+    - KN-002
+  needs:
+    NEED-01: gap
+    NEED-02: pending
+    NEED-03: gap
+    NEED-04: gap
+    NEED-05: gap
+    NEED-06: gap
+    NEED-07: gap
+    NEED-08: gap
+    NEED-09: gap
+    NEED-10: gap
+  quote_ledger:
+    BOOK-003:
+      previews: 3
+      quotes: 0
+      words_total: 32
+      words_unique_spans: 32
+      overlap_undetermined: 0
+  edited_after_generation: []
+  human_review: not_run

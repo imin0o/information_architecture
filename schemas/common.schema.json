@@ -27,6 +27,13 @@
     "scheme_id": {"type": "string", "pattern": "^SCHEME-[0-9]{3}$"},
     "task_id": {"type": "string", "pattern": "^TASK-[0-9]{2}$"},
     "approval_id": {"type": "string", "pattern": "^APPROVAL-[0-9]{3}$"},
+    "term_id": {"type": "string", "pattern": "^TERM-[0-9]{4}$"},
+    "conflict_id": {"type": "string", "pattern": "^CONFLICT-[0-9]{3}$"},
+    "knowledge_id": {"type": "string", "pattern": "^KN-[0-9]{3}$"},
+    "need_id": {"type": "string", "pattern": "^NEED-[0-9]{2}$"},
+    "quote_id": {"type": "string", "pattern": "^QUOTE-[0-9]{4}$"},
+    "generation_id": {"type": "string", "pattern": "^GEN-[0-9]{3}$"},
+    "library_path": {"description": "リポジトリ直下からの相対パス。library/ 配下に限る", "type": "string", "pattern": "^library/[^\\\\]+$"},
     "classification": {
       "description": "機密区分（IN-02、IN-05）。public < internal < confidential",
       "enum": ["public", "internal", "confidential"]

@@ -1,0 +1,85 @@
+# 根拠抜粋の登録簿（BR-02、付録B.1）。schemas/provenance.schema.json で検証する。
+# 抜粋全文は複製しない。extracted_ref はローカル照合用の位置。locator は人が原典で確認した項目だけを書く。
+# 主張はエージェントの草稿（library/build-logs/knowledge-generation.yaml）で、人のレビューまで unreviewed とする。
+schema_version: "1.0"
+records:
+- evidence_id: EV-0001
+  source_id: BOOK-003
+  source_sha256: 3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref: {extraction_id: EXTRACT-003-001, start_line: 4096, end_line: 4109}
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 1c90e1a382199bdc49ad90e5111507125b5760b440603af05325790af4185c6f
+  excerpt_preview: Parenthetical qualifiers. There are different ways to handle
+  support_reviews:
+  - claim_id: CLAIM-0001
+    claim: 同じ綴りで意味の異なる語（同名異義語）は、括弧で囲んだ限定語をラベルに付けて区別できる
+    claim_sha256: ae3f6f6fc7aceb86dba52f8880791c877cc4293bd6ff3f8317e4471e6cc121c3
+    applicability: 用語を管理するソフトウェアや表示先が、括弧を含むラベルを扱える場合
+    status: unreviewed
+    reviewed_by: null
+    reviewed_at: null
+  - claim_id: CLAIM-0002
+    claim: 限定語は、分野で表すか種類で表すかのどちらかの形式に決め、タクソノミー全体でそろえる
+    claim_sha256: 072c4606b4e1628ad711138db719648aa21e44de9e9d7c0ed8200f132063d60c
+    applicability: 1つのタクソノミーで複数の同名異義語に限定語を付ける場合
+    status: unreviewed
+    reviewed_by: null
+    reviewed_at: null
+  - claim_id: CLAIM-0003
+    claim: 一方の語形だけで意味が定まる場合は、同名異義語のすべてに限定語を付ける必要はない
+    claim_sha256: c06fd996dad22127ba6b1cc715fee89bd40bd6c85eec52fdbf9f7a9ee347b852
+    applicability: 単数形と複数形など、語形の違いで意味を判別できる言語・語彙の場合
+    status: unreviewed
+    reviewed_by: null
+    reviewed_at: null
+- evidence_id: EV-0002
+  source_id: BOOK-003
+  source_sha256: 3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref: {extraction_id: EXTRACT-003-001, start_line: 4263, end_line: 4271}
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 8eb31ae7de5a2dd8abb8be3a34d7784521d870a22aea8f576ed5ecffd56fefc1
+  excerpt_preview: What may be necessary, however, is a note of clarification as to
+  support_reviews:
+  - claim_id: CLAIM-0004
+    claim: スコープノートは、語の適用範囲を狭める・広げる、意味の重なる語を区別する、語の使い方を助言する、のいずれかに使う
+    claim_sha256: 1b4bc760de663d4cb6ec97111b2f93cd4103b464ab80e76ac8b08b7e073856f7
+    applicability: タクソノミー内での優先語の使い方を補う必要がある場合。自明な意味を説明する辞書的な定義には使わない
+    status: unreviewed
+    reviewed_by: null
+    reviewed_at: null
+- evidence_id: EV-0003
+  source_id: BOOK-003
+  source_sha256: 3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+  extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+  extracted_ref: {extraction_id: EXTRACT-003-001, start_line: 4296, end_line: 4302}
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 548db479ae872c0248255878e3899c10e38a26007505d6868a686cbb1aab6e14
+  excerpt_preview: "A scope note ought to be viewable to all: the taxonomy editors,"
+  support_reviews:
+  - claim_id: CLAIM-0005
+    claim: 利用者はスコープノートを読まないか、その存在を知らないことがあるため、同名異義語の区別をスコープノートだけに頼らない
+    claim_sha256: 8b28e1a51369d9947b141a38c6fa53e901e8ce11334700bf639cb5d58aa2e5be
+    applicability: 利用者が検索結果や一覧でラベルだけを見て語を選ぶ場合
+    status: unreviewed
+    reviewed_by: null
+    reviewed_at: null

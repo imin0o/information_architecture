@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "knowledge-index.schema.json",
+  "title": "知識の横断索引と代表ケースの必要知識 library/index.yaml（BR-02）",
+  "description": "entries は知識本文の登録、needs は代表ケースが必要とする知識と対応する本文。採用状態は記録せず、主張レビューと照合記録から導く",
+  "type": "object",
+  "required": ["schema_version", "entries", "needs"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "entries": {"type": "array", "items": {"$ref": "#/$defs/entry"}},
+    "needs": {"type": "array", "items": {"$ref": "#/$defs/need"}}
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": ["knowledge_id", "kind", "title", "path", "claims", "terms", "conflicts"],
+      "additionalProperties": false,
+      "properties": {
+        "knowledge_id": {"$ref": "common.schema.json#/$defs/knowledge_id"},
+        "kind": {"enum": ["book_note", "concept", "method", "criterion", "pattern"]},
+        "title": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "path": {"$ref": "common.schema.json#/$defs/library_path"},
+        "claims": {"description": "本文が [CLAIM-nnnn] で引く主張と一致させる", "type": "array",
+                   "items": {"$ref": "common.schema.json#/$defs/claim_id"}, "uniqueItems": true},
+        "terms": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/term_id"}, "uniqueItems": true},
+        "conflicts": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/conflict_id"}, "uniqueItems": true}
+      }
+    },
+    "need": {
+      "type": "object",
+      "required": ["need_id", "cases", "rubric_items", "description", "entries", "gap"],
+      "additionalProperties": false,
+      "properties": {
+        "need_id": {"$ref": "common.schema.json#/$defs/need_id"},
+        "cases": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^CASE-[A-Z]+-[0-9]{3}$"}, "uniqueItems": true},
+        "rubric_items": {"type": "array", "items": {"type": "string", "pattern": "^R-[0-9]{2}$"}, "uniqueItems": true},
+        "description": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "entries": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/knowledge_id"}, "uniqueItems": true},
+        "gap": {"description": "本文で足りない内容と、候補文献。不足がなければnull", "oneOf": [{"$ref": "common.schema.json#/$defs/nonempty"}, {"type": "null"}]}
+      }
+    }
+  }
+}

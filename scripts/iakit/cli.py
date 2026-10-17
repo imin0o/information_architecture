@@ -10,6 +10,7 @@
   iakit hosts probe --host claude|codex [--space-in-path]   互換性確認用Skillの発見・明示利用・付属資料参照
   iakit contracts check [--local] [DIR ...]   実行記録・判断・出典・構造のスキーマと整合性。--local は抜粋を固定テキストと照合する
   iakit cases check                課題ケースとルーブリックの固定状態（入力ハッシュ・項目の網羅・検査の実在）
+  iakit library check              知識の索引・用語・矛盾・引用台帳・生成記録の整合と、主張レビューから導く採用状態
 
 各検査は --report PATH で本文を含まない結果をYAMLへ保存できる。終了コードは失敗時1。
 """
@@ -18,7 +19,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import cases, contracts, extract_cmd, fixtures, hostprobe, leak_history, leaks, manifest, paths, yamlio
+from . import cases, contracts, extract_cmd, fixtures, hostprobe, leak_history, leaks, library, manifest, paths, yamlio
 
 
 def _emit(results: list[dict], report: Path | None) -> int:
@@ -76,6 +77,7 @@ def _parser() -> argparse.ArgumentParser:
     ct.add_argument("dirs", type=Path, nargs="*")
 
     with_report(sub.add_parser("cases").add_subparsers(dest="action", required=True).add_parser("check"))
+    with_report(sub.add_parser("library").add_subparsers(dest="action", required=True).add_parser("check"))
 
     with_report(sub.add_parser("check")).add_argument("--local", action="store_true")
     return parser
@@ -118,9 +120,12 @@ def main(argv: list[str] | None = None) -> int:
                    for d in args.dirs or contracts.default_targets()]
     elif args.group == "cases":
         results = [cases.check()]
+    elif args.group == "library":
+        results = [library.check()]
     else:
         results = [manifest.check(local=args.local), fixtures.check(), leaks.check(), cases.check()]
         results += [contracts.check_bundle(d) for d in contracts.default_targets()]
+        results += [library.check()] if (paths.ROOT / library.FILES["index"][0]).is_file() else []
     return _emit(results, args.report)
 
 

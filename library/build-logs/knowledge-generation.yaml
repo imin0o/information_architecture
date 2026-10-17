@@ -1,0 +1,33 @@
+# 知識統合にエージェントを使った記録（BR-02）。schemas/knowledge-generation.schema.json で検証する。
+# 本文・プロンプト全文は含めない。outputs のハッシュは生成時点の値で、人が修正すると iakit library check が edited_after_generation に挙げる。
+schema_version: "1.0"
+generations:
+- generation_id: GEN-001
+  generated_at: "2026-10-17T18:00:00+09:00"
+  host: Claude Code（VS Code拡張）
+  model: claude-opus-5-5
+  approval: milestones.md M3「送信・公開の許可」2026-10-17の記録
+  instruction:
+    path: library/build-logs/instructions/knowledge-integration-v1.md
+    sha256: 09883874ef5ba44163a15b51e2487da40fa24febb7646f9061fdbd962ce01ec5
+  inputs:
+  - {extraction_id: EXTRACT-003-001, extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978, start_line: 4060, end_line: 4139}
+  - {extraction_id: EXTRACT-003-001, extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978, start_line: 4250, end_line: 4319}
+  # 精読前の語句検索で、該当行の先頭110文字までを最初の60件だけ表示した。行番号は作業時の会話ログから復元した。
+  searches:
+  - extraction_id: EXTRACT-003-001
+    extracted_sha256: 1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+    pattern: homograph|scope note|qualifier（大文字小文字を区別しない）
+    lines: [1340, 1442, 1650, 1738, 1741, 2073, 4096, 4098, 4106, 4254, 4266, 4267, 4273, 4282, 4296, 4297, 4300, 4301,
+            4302, 4305, 4306, 4307, 4309, 4654, 5540, 5967, 6067, 6561, 7149, 7270, 7768, 7771, 7773, 7774, 7776, 7782,
+            7790, 7969, 8093, 9412, 10527, 10613, 11748, 11868, 12000, 12402, 12782, 12799, 12886, 12931, 13037, 13084,
+            13750, 13792, 15447, 15475, 15476, 15477, 15479, 15701]
+    max_chars: 110
+    detail: complete
+    recovered_from: 作業時の会話ログ（Claude Codeのセッション）から復元
+  outputs:
+  - {path: library/provenance.yaml, sha256: 1333f1bab644200601521e47a47c2675d5e265bfb89c4f39d87e491a7c792420}
+  - {path: library/methods/homograph-disambiguation.md, sha256: d0934bc2594618aa101f55bfc06bd268ee54015f3c3d645a5321848735ae5b34}
+  - {path: library/books/BOOK-003/notes.md, sha256: e556d3ab61bd4e51ea998a68cc9407a50de1702b7362a67e2429832acf6e452a}
+  - {path: library/terms.yaml, sha256: accf636d7b4b2a197061d1a61ad5425f1af7cfc5f9adba99665862a90966f3d2}
+  review: {reviewed_by: null, reviewed_at: null}

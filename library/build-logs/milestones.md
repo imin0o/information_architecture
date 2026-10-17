@@ -306,3 +306,77 @@ P-M2-01はD-M2-11で、P-M2-02はD-M2-13で解消した。`primary: true`を本�
 ### 送信・公開の許可
 
 課題ケースと契約素材はすべて自作の架空資料であり、原典・抽出テキストを使っていない。第三者レビューでCodexへ渡したのは相談メモと、リポジトリ内の自作のケース・スキーマ・検査コードだけである。
+
+## M3 MVPに必要な知識を統合する
+
+- 開始日: 2026-10-17
+- 状態: 作業中。知識ライブラリの形式・検査を用意し、最初の1方法（同名異義語の区別）を根拠登録・手元照合まで通した。人による原典照合・主張レビューは未実施
+
+### 送信・公開の許可
+
+| 送信先 | 対象データ | 用途 | 許可範囲 | 記録日 |
+|---|---|---|---|---|
+| Anthropic（Claude Code、モデルclaude-opus-5-5） | 受領済み原典の固定抽出テキスト | 知識統合（文献ノート・主張・方法本文の草稿作成） | ユーザーが全範囲を許可（「すべて許可」）。公開範囲（未確定事項7）は未決定のまま非公開 | 2026-10-17 |
+
+この許可はM0の「なし」の記録を置き換える。Codexなど他の送信先は含まない。実際に送った範囲は`knowledge-generation.yaml`の`inputs`に記録する。GEN-001では、記録した2範囲のほか、語句検索の該当行60行（1行あたり110文字まで）をBOOK-003の全体から表示した。その行番号は`searches`に記録した（D-M3-12）。
+
+### 決定事項
+
+| ID | 決定 | 理由 |
+|---|---|---|
+| D-M3-01 | 受領済み9冊（BOOK-001、002、003、004、005、007、012、016、018）を`mvp.selected: true`とした。未受領9冊はnullのまま | ユーザー指示「全て」。未受領の文献は統合できないため、受領時に改めて採否を記録する。一覧外の1冊（P-M0-04）は登録簿にないため対象外のまま |
+| D-M3-02 | 統合する章は文献単位でなく、代表ケースの必要知識（`library/index.yaml`の`needs`）から選ぶ | 9冊の全章統合はM4の合格条件に要らない範囲を含む。不足は`needs`の`gap`で説明する |
+| D-M3-03 | 知識本文の採用状態は記録させず、主張レビューと照合記録から`adopted`・`hypothesis`を導出する | 生成した本文の自己申告で採用済みにしないため（D-M2-04と同じ考え方） |
+| D-M3-04 | 本文は`[CLAIM-nnnn]`で主張を引き、索引の`claims`と一致させる。根拠のない記述は「仮説・補完」の節に分ける | BR-02の「根拠のない補完は文献の主張と分ける」を機械検査できるようにする |
+| D-M3-05 | 引用台帳は、プレビューを`provenance.yaml`から自動集計し、それ以外の原典の文言だけを`library/quotes.yaml`に登録する | プレビューを2か所に書くと不一致が生じるため |
+| D-M3-06 | 知識統合の指示は版ごとのファイル（`build-logs/instructions/`）にし、生成記録にそのハッシュを残す | BR-02の「指示の版・ハッシュ」を照合できるようにする |
+| D-M3-07 | 訳語は課題ケース・ルーブリックの語を優先する（homograph→同名異義語） | 固定済みのケースと知識本文の用語を一致させる |
+
+### 成果物
+
+| 成果物 | 場所 |
+|---|---|
+| スキーマ | `schemas/terms`・`conflict`・`knowledge-index`・`quote-ledger`・`knowledge-generation`（各`.schema.json`） |
+| 検査 | `scripts/iakit/library.py`、`iakit library check`（`iakit check`にも追加）、`tests/checks/test_library.py` |
+| 知識統合の指示 | `build-logs/instructions/knowledge-integration-v1.md`（GEN-001で使用）、`v2.md`（D-M3-08〜12を反映。以後の生成で使う） |
+| 18冊の統合状況 | `library/coverage.yaml`、`schemas/book-coverage.schema.json`、`scripts/iakit/library_coverage.py` |
+| 知識ライブラリ | `library/provenance.yaml`（EV-0001〜0003、CLAIM-0001〜0005）、`index.yaml`、`terms.yaml`、`conflicts.yaml`、`quotes.yaml`、`methods/homograph-disambiguation.md`、`books/BOOK-003/notes.md` |
+| 生成記録（本文を含まない） | `build-logs/knowledge-generation.yaml`（GEN-001） |
+| 検査結果（本文を含まない） | `checks/m3-first-method.yaml` |
+
+### 検証結果
+
+| 検査 | 結果 | 記録・条件 |
+|---|---|---|
+| `uv run --locked iakit contracts check --local library` | pass | 3件の抜粋を固定テキストと照合し、原典ハッシュも照合した。人による原典・位置の照合は`not_run` |
+| `uv run --locked iakit library check` | pass | KN-001・002は`hypothesis`。NEED-02は`pending`、ほかの9件は`gap` |
+| `uv run --locked python scripts/verify.py --report …/m3-first-method.yaml` | pass | Python 3.12.13・3.14.3で各398件。M2修正後の381件から17件を追加。一時indexで登録簿・自作素材・漏えい・課題ケース・契約素材・知識ライブラリを検査 |
+
+### 保留事項
+
+| ID | 内容 | 決める人 | 必要になる時点 |
+|---|---|---|---|
+| P-M3-01 | EV-0001〜0003の原典・位置の照合と、CLAIM-0001〜0005の主張レビュー。結果を`provenance.yaml`の`support_reviews`と`verification/receipts.yaml`へ記録する | ユーザー | 統合対象を広げる前（M3の手順の成立確認） |
+| P-M3-02 | BOOK-003の代表箇所の品質確認（P-M1-03の一部）。文献ノートに柱の混入、行末ハイフン、記号の誤認識を観察として記録した | ユーザー | BOOK-003の統合を広げる前 |
+| P-M3-03 | `homograph-disambiguation.md`の「代表ケースとの対応」で、scope_noteに加えて優先ラベルも限定語で区別する案を示した。ルーブリックR-02（scope_noteでの区別）を変えるかどうか | ユーザー | M4のia-taxonomy実装の前 |
+
+### 第三者レビューの反映（2026-10-17）
+
+ユーザーの指示により、D-M3-01〜07のうち5点の確認をCodexへ依頼した。渡したのは相談メモと、リポジトリ内のスキーマ・検査コード・本文を含まない記録だけである。Codexは原典・抜粋全文を開いていない。推奨に従い、次のとおり反映した。
+
+| ID | 決定 | 理由 |
+|---|---|---|
+| D-M3-08 | 本文の採用の単位を、最後の`## 仮説・補完`節より前の部分とする。この節は本文の最後に1つだけ置き、配布生成でも同じ境界（`library.adoptable_text`）を使う | 全主張がsupportedになっても、同じファイルの仮説部分が採用済みとして扱われていた（Codexの指摘） |
+| D-M3-09 | adoptedには、有効な照合記録の`knowledge_files`にその本文が含まれることも要求する | 引用のない規則を本文へ追記してもadoptedのままだった。本文のハッシュを照合記録に結び付け、変更後は再レビューを必要にする |
+| D-M3-10 | `not_supported`の主張を引く本文を`hypothesis`と分けて`not_supported`として出力する | 未レビューと不支持を区別し、採用理由に使わせないため |
+| D-M3-11 | 18冊の統合状況を`library/coverage.yaml`に置く。精読範囲は生成記録、統合済み範囲は出典登録簿から導き、両方を出力する | `needs.gap`はMVPの不足を示すだけで、各文献の未統合範囲を説明しない（M3の完了条件）。BOOK-003では精読範囲内にも未統合の話題がある |
+| D-M3-12 | 生成記録に`searches`を追加し、GEN-001の検索で表示した60行の行番号と表示上限を会話ログから復元して記録した。指示はv2に分け、今後の検索は行番号と件数だけを出力する | 表示された断片も送信済みの入力であり、文章での記録では範囲を特定できないため |
+| D-M3-13 | ルーブリックv1.1.0は変えず、限定語によるラベルの区別は案件側の判断として方法本文に留める | 文献の推奨は表示条件に依存し、R-02の最低合格条件と両立する。ラベルだけで選ぶケースでscope_note方式の不足が確認された場合に、「選択時に意味を区別できる」という条件で改訂を検討する |
+
+P-M3-03はD-M3-13で解消した。Codexの確認は、P-M3-01・02の人による照合・レビュー・品質確認を代替しない。統合対象を広げる前に、この2件を終える。
+
+| 検査 | 結果 | 記録・条件 |
+|---|---|---|
+| `uv run --locked python scripts/verify.py --report library/build-logs/checks/m3-review.yaml` | pass | Python 3.12.13・3.14.3で各404件。398件から6件を追加（採用単位の境界、照合記録への本文の結び付け、レビュー後の追記、not_supportedの区別、統合状況と登録簿の一致、新スキーマ1件） |
+
+`checks/m3-first-method.yaml`は修正前の記録として残す。修正後の根拠には`checks/m3-review.yaml`を使う。
