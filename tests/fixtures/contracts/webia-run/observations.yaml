@@ -1,0 +1,14 @@
+# 契約検査用の自作例。ユーザーが提供した実ユーザー調査の記録だけを登録する。
+schema_version: "1.0"
+run_id: RUN-FIXTURE-001
+studies:
+- study_id: STUDY-001
+  method: tree_test
+  conducted_at: "2026-10-17T14:00:00+09:00"
+  participants: 8
+  target: {artifact_id: ART-004, version: 1}
+  result: supported
+  input_id: INPUT-003
+  locator: "tree-test-summary.md#L8"
+  summary: TASK-01〜TASK-03 で、参加者の大半が想定した到達先を選んだ
+  classification: internal

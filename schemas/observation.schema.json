@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "observation.schema.json",
+  "title": "実ユーザー調査の記録 runs/<run_id>/observations.yaml（FR-07、AC-07）",
+  "description": "ユーザーが提供した調査記録だけを登録する。LLMの模擬評価や専門家の点検は登録できない。個人情報は記録しない",
+  "type": "object",
+  "required": ["schema_version", "run_id", "studies"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "run_id": {"$ref": "common.schema.json#/$defs/run_id"},
+    "studies": {"type": "array", "items": {"$ref": "#/$defs/study"}}
+  },
+  "$defs": {
+    "study": {
+      "type": "object",
+      "required": ["study_id", "method", "conducted_at", "participants", "target", "result", "input_id", "locator",
+                   "summary", "classification"],
+      "additionalProperties": false,
+      "properties": {
+        "study_id": {"$ref": "common.schema.json#/$defs/study_id"},
+        "method": {"enum": ["usability_test", "tree_test", "first_click_test", "card_sort", "survey", "interview",
+                            "analytics"]},
+        "conducted_at": {"$ref": "common.schema.json#/$defs/datetime"},
+        "participants": {"description": "対象者の件数。属性は記録しない", "type": "integer", "minimum": 1},
+        "target": {"description": "調査した成果物とその版", "$ref": "common.schema.json#/$defs/artifact_ref"},
+        "result": {"enum": ["supported", "refuted", "inconclusive"]},
+        "input_id": {"description": "調査記録を登録した入力", "$ref": "common.schema.json#/$defs/input_id"},
+        "locator": {"$ref": "common.schema.json#/$defs/locator"},
+        "summary": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "classification": {"$ref": "common.schema.json#/$defs/classification"}
+      }
+    }
+  }
+}

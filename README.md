@@ -82,3 +82,16 @@ uv run --locked iakit excerpt ref --extraction sources/extracted/EXTRACT-003-001
 ホストでのSkill配置は `uv run --locked iakit hosts probe --host claude --host codex` で確認する。PATH上と別の実行ファイルを使う場合は `IAKIT_CLAUDE_BIN`・`IAKIT_CODEX_BIN` で指定する。自作の `tests/host-compat/iakit-host-probe/` を一時ディレクトリに置き、各ホストのCLIへ質問を送る。終了時に一時ディレクトリを削除する。
 
 ホスト確認の発見・明示利用は、標準出力が期待する`PROBE-RESULT`の1行と一致した場合だけ合格する。標準エラーの診断ログは判定に使わない。結果には`response_check: stdout_exact_line`を記録する。Skillなしの対照では、標準出力にトークンが含まれたら失敗する。
+
+## データ契約と課題ケースの検査
+
+```sh
+uv run --locked iakit contracts check                     # tests/fixtures/contracts/ と library/ の登録簿
+uv run --locked iakit contracts check runs/RUN-001        # 実行ディレクトリ単位
+uv run --locked iakit contracts check --local --extracted sources/extracted runs/RUN-001
+uv run --locked iakit cases check                         # tests/cases/ の版固定とルーブリックの網羅
+```
+
+`contracts check`はスキーマ（`schemas/`、JSON Schema Draft 2020-12）に通ったファイルだけを整合性検査へ渡す。`source_verification`・`support_status`・`confidence`・`validation_status`は登録簿・照合記録・調査記録から導出し、記録された値が導出値と異なれば失敗する。原典・位置の人による照合は行わないため、結果は常に`human_source_check: not_run`となる。`--local`を付けると、手元の固定スナップショットで抜粋のハッシュ・プレビュー・位置を照合し、スナップショットがない根拠は`not_run`として数える。
+
+`cases check`は入力ファイルのハッシュ、ルーブリック全項目への合格条件か非該当理由の記載、境界条件ごとの検査関数の実在を確かめる。設計内容の合否は人がルーブリックで判定し、この検査では判定しない。

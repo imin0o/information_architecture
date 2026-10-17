@@ -1,5 +1,6 @@
 """YAML 1.2（JSON互換の値に限定）の読み書きとJSON Schema検証（4.4）。"""
 
+import functools
 import io
 import json
 import math
@@ -8,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
 from ruamel.yaml import YAML
 
 from .paths import SCHEMAS
@@ -82,9 +85,21 @@ def dumps(data) -> str:
     return buf.getvalue()
 
 
+@functools.cache
+def _registry() -> Registry:
+    """schemas/ の全スキーマを $id で登録し、ファイル間の相対 $ref を配布物内で解決する。"""
+    resources = []
+    for path in sorted(SCHEMAS.glob("*.schema.json")):
+        schema = json.loads(path.read_text(encoding="utf-8"))
+        if schema.get("$id") != path.name:
+            raise DataError(f"{path.name}: $id はファイル名と一致させる")
+        resources.append((path.name, Resource.from_contents(schema, default_specification=DRAFT202012)))
+    return Registry().with_resources(resources)
+
+
 def schema_errors(data, schema_name: str) -> list[str]:
-    schema = json.loads((SCHEMAS / schema_name).read_text(encoding="utf-8"))
-    validator = Draft202012Validator(schema, format_checker=FORMAT_CHECKER)
+    schema = _registry().contents(schema_name)
+    validator = Draft202012Validator(schema, registry=_registry(), format_checker=FORMAT_CHECKER)
     return [
         f"{'/'.join(str(p) for p in err.absolute_path) or '$'}: {err.message}"
         for err in sorted(validator.iter_errors(data), key=lambda e: [str(p) for p in e.absolute_path])

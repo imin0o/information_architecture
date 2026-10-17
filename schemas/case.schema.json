@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "case.schema.json",
+  "title": "課題ケース tests/cases/<case_id>/case.yaml（10章、AC-06、AC-09）",
+  "description": "単一の正解階層への一致は求めない。許容条件・不適切な案・ルーブリック項目別の必須条件で判定する",
+  "type": "object",
+  "required": ["schema_version", "case_id", "case_version", "kind", "task_type", "title", "rubric_version", "inputs",
+               "users", "tasks", "required_conditions", "acceptable_variations", "inappropriate_designs",
+               "rubric", "scenarios"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "case_id": {"type": "string", "pattern": "^CASE-[A-Z]+-[0-9]{3}$"},
+    "case_version": {"description": "固定した版。変更時は理由を changes に記録し、影響するケースを再評価する",
+                     "$ref": "common.schema.json#/$defs/version"},
+    "kind": {"enum": ["representative", "boundary"]},
+    "task_type": {"enum": ["web_ia", "taxonomy", "corporate_document", "exhibition_panel", "content_model",
+                           "design_system", "rag_knowledge"]},
+    "title": {"$ref": "common.schema.json#/$defs/nonempty"},
+    "rubric_version": {"$ref": "common.schema.json#/$defs/version"},
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["path", "format", "sha256", "size_note", "classification"],
+        "additionalProperties": false,
+        "properties": {
+          "path": {"description": "case.yaml からの相対パス", "type": "string", "pattern": "^[^/\\\\.][^\\\\]*$"},
+          "format": {"enum": ["text", "markdown", "csv", "yaml", "json", "xml"]},
+          "sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+          "size_note": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "classification": {"$ref": "common.schema.json#/$defs/classification"}
+        }
+      }
+    },
+    "users": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/nonempty"}},
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["task_id", "description", "priority", "expected_destination"],
+        "additionalProperties": false,
+        "properties": {
+          "task_id": {"$ref": "common.schema.json#/$defs/task_id"},
+          "description": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "priority": {"enum": ["primary", "secondary"]},
+          "expected_destination": {"description": "到達先のコンテンツID、または到達先の条件",
+                                   "$ref": "common.schema.json#/$defs/nonempty"}
+        }
+      }
+    },
+    "required_conditions": {"$ref": "#/$defs/conditions"},
+    "acceptable_variations": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/nonempty"}},
+    "inappropriate_designs": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["design", "violates", "why"], "additionalProperties": false,
+        "properties": {
+          "design": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "violates": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/rubric_id"}},
+          "why": {"$ref": "common.schema.json#/$defs/nonempty"}
+        }
+      }
+    },
+    "rubric": {
+      "description": "ルーブリック全項目について、ケース固有の合格条件か非該当理由を記す",
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["item", "applies", "case_criteria"],
+        "additionalProperties": false,
+        "properties": {
+          "item": {"$ref": "#/$defs/rubric_id"},
+          "applies": {"type": "boolean"},
+          "case_criteria": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/nonempty"}},
+          "not_applicable_reason": {"type": ["string", "null"]}
+        },
+        "if": {"properties": {"applies": {"const": true}}},
+        "then": {"properties": {"case_criteria": {"minItems": 1}, "not_applicable_reason": {"type": "null"}}},
+        "else": {"required": ["not_applicable_reason"], "properties": {"case_criteria": {"maxItems": 0},
+                                "not_applicable_reason": {"$ref": "common.schema.json#/$defs/nonempty"}}}
+      }
+    },
+    "scenarios": {
+      "description": "境界条件と期待する振る舞い。machine_checks は原典のないCIで実行する検査",
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["scenario", "kind", "expected", "machine_checks", "human_check"],
+        "additionalProperties": false,
+        "properties": {
+          "scenario": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "kind": {"enum": ["missing_material", "homonym", "conflicting_evidence", "unsupported_route",
+                            "no_measurement", "refuted", "mixed_results", "confidential", "injected_instruction",
+                            "stale", "refine_limit", "resume"]},
+          "expected": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "machine_checks": {"type": "array", "items": {"type": "string",
+                             "pattern": "^tests/checks/test_[a-z0-9_]+\\.py::test_[a-z0-9_]+$"}},
+          "human_check": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "changes": {
+      "type": "array",
+      "items": {"type": "object", "required": ["version", "reason"], "additionalProperties": false,
+                "properties": {"version": {"$ref": "common.schema.json#/$defs/version"},
+                               "reason": {"$ref": "common.schema.json#/$defs/nonempty"}}}
+    }
+  },
+  "$defs": {
+    "rubric_id": {"type": "string", "pattern": "^R-[0-9]{2}$"},
+    "conditions": {"type": "array", "minItems": 1, "items": {"$ref": "common.schema.json#/$defs/nonempty"}}
+  }
+}

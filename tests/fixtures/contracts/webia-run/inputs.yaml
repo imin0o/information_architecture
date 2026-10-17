@@ -1,0 +1,34 @@
+# 契約検査用の自作例。INPUT-001・002 はCASE-WEBIA-001の入力、INPUT-003 は架空の調査記録。
+schema_version: "1.0"
+run_id: RUN-FIXTURE-001
+inputs:
+- input_id: INPUT-001
+  kind: brief
+  format: markdown
+  description: 依頼の説明（tests/cases/webia-001/inputs/brief.md）
+  received_at: "2026-10-17T09:00:00+09:00"
+  path: ../../../cases/webia-001/inputs/brief.md
+  sha256: "33db897949f4107446c84c51305fa79534d8ecdff17a5b950104241e5233b7cf"
+  classification: internal
+  classification_source: default
+  unreadable: []
+- input_id: INPUT-002
+  kind: page_list
+  format: csv
+  description: ページ一覧（tests/cases/webia-001/inputs/pages.csv）
+  received_at: "2026-10-17T09:00:00+09:00"
+  path: ../../../cases/webia-001/inputs/pages.csv
+  sha256: "b7141cc23f06aa4f79fe85b6d05aec4b8dbc49cabbe9df39c5855d94aba2bb7f"
+  classification: internal
+  classification_source: default
+  unreadable: []
+- input_id: INPUT-003
+  kind: research_record
+  format: markdown
+  description: ユーザーが提供したツリーテスト結果の要約（架空）
+  received_at: "2026-10-17T15:00:00+09:00"
+  path: inputs/tree-test-summary.md
+  sha256: "00d2ae3cf99e7169c9d6724d5d968449d05a6505cb669ad0f11e1b7b2433ba17"
+  classification: internal
+  classification_source: default
+  unreadable: []

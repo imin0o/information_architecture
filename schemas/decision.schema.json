@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "decision.schema.json",
+  "title": "判断記録 runs/<run_id>/decisions.yaml（FR-07）",
+  "description": "source_verification・support_status・confidenceは登録簿・照合記録・調査記録から導出した値と一致しなければならない（整合性検査）",
+  "type": "object",
+  "required": ["schema_version", "run_id", "decisions"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "run_id": {"$ref": "common.schema.json#/$defs/run_id"},
+    "decisions": {"type": "array", "items": {"$ref": "#/$defs/decision"}}
+  },
+  "$defs": {
+    "decision": {
+      "type": "object",
+      "required": ["decision_id", "decision_revision", "run_id", "status", "supersedes", "stage", "target_ids",
+                   "problem", "selected_method", "rationale", "sources", "input_observations", "alternatives",
+                   "alternatives_not_applicable_reason", "assumptions", "counter_evidence", "validation_status",
+                   "validation_record_ids", "confidence", "confidence_basis", "classification", "recorded_at",
+                   "skill_version", "library_version"],
+      "additionalProperties": false,
+      "properties": {
+        "decision_id": {"$ref": "common.schema.json#/$defs/decision_id"},
+        "decision_revision": {"type": "integer", "minimum": 1},
+        "run_id": {"$ref": "common.schema.json#/$defs/run_id"},
+        "status": {"enum": ["active", "superseded", "withdrawn"]},
+        "supersedes": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "object", "required": ["decision_id", "decision_revision"], "additionalProperties": false,
+             "properties": {"decision_id": {"$ref": "common.schema.json#/$defs/decision_id"},
+                            "decision_revision": {"type": "integer", "minimum": 1}}}
+          ]
+        },
+        "stage": {"enum": ["analyze", "classify", "structure", "model", "present", "validate"]},
+        "target_ids": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^(CONTENT|CONCEPT|NODE|SCHEME|ART)-[0-9]{3}$"}
+        },
+        "problem": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "selected_method": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "rationale": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "sources": {"description": "文献の一般的な主張。文献根拠がなければ空配列", "type": "array",
+                    "items": {"$ref": "#/$defs/source"}},
+        "input_observations": {"description": "案件固有の事実", "type": "array", "items": {"$ref": "#/$defs/observation"}},
+        "alternatives": {
+          "type": "array",
+          "items": {"type": "object", "required": ["method", "rejected_because"], "additionalProperties": false,
+                    "properties": {"method": {"$ref": "common.schema.json#/$defs/nonempty"},
+                                   "rejected_because": {"$ref": "common.schema.json#/$defs/nonempty"}}}
+        },
+        "alternatives_not_applicable_reason": {"type": ["string", "null"]},
+        "assumptions": {
+          "description": "未検証の条件。critical は欠ければ採用理由が成立しない重要な適用条件",
+          "type": "array",
+          "items": {"type": "object", "required": ["statement", "critical"], "additionalProperties": false,
+                    "properties": {"statement": {"$ref": "common.schema.json#/$defs/nonempty"},
+                                   "critical": {"type": "boolean"}}}
+        },
+        "counter_evidence": {
+          "description": "反証。not_supportedの主張・反証した調査も含める",
+          "type": "array",
+          "items": {"type": "object", "required": ["ref", "resolved", "note"], "additionalProperties": false,
+                    "properties": {"ref": {"type": "string", "pattern": "^(CLAIM|OBS|STUDY)-[0-9]+$"},
+                                   "resolved": {"type": "boolean"},
+                                   "note": {"$ref": "common.schema.json#/$defs/nonempty"}}}
+        },
+        "validation_status": {"enum": ["not_tested", "planned", "simulated", "tested_supported", "tested_refuted",
+                                       "tested_inconclusive"]},
+        "validation_record_ids": {"type": "array", "uniqueItems": true,
+                                  "items": {"$ref": "common.schema.json#/$defs/study_id"}},
+        "confidence": {"enum": ["high", "medium", "low"]},
+        "confidence_basis": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "classification": {"$ref": "common.schema.json#/$defs/classification"},
+        "recorded_at": {"$ref": "common.schema.json#/$defs/datetime"},
+        "skill_version": {"$ref": "common.schema.json#/$defs/version"},
+        "library_version": {"$ref": "common.schema.json#/$defs/version"}
+      },
+      "allOf": [
+        {"if": {"properties": {"alternatives": {"maxItems": 0}}},
+         "then": {"properties": {"alternatives_not_applicable_reason": {"$ref": "common.schema.json#/$defs/nonempty"}}},
+         "else": {"properties": {"alternatives_not_applicable_reason": {"type": "null"}}}},
+        {"if": {"properties": {"decision_revision": {"const": 1}}},
+         "then": {"properties": {"supersedes": {"type": "null"}}},
+         "else": {"properties": {"supersedes": {"type": "object"}}}}
+      ]
+    },
+    "source": {
+      "type": "object",
+      "required": ["source_id", "evidence_id", "claim_id", "claim", "primary", "source_verification", "support_status"],
+      "additionalProperties": false,
+      "properties": {
+        "source_id": {"$ref": "common.schema.json#/$defs/source_id"},
+        "evidence_id": {"$ref": "common.schema.json#/$defs/evidence_id"},
+        "claim_id": {"$ref": "common.schema.json#/$defs/claim_id"},
+        "claim": {"description": "登録した主張と同一の文字列。言い換えは新規レビューを要する",
+                  "$ref": "common.schema.json#/$defs/nonempty"},
+        "primary": {"description": "欠ければ採用理由が成立しない主要根拠", "type": "boolean"},
+        "source_verification": {"enum": ["verified", "unverified"]},
+        "support_status": {"enum": ["supported", "not_supported", "unclear", "unreviewed"]}
+      }
+    },
+    "observation": {
+      "type": "object", "required": ["observation_id", "input_id", "locator", "observation"],
+      "additionalProperties": false,
+      "properties": {
+        "observation_id": {"$ref": "common.schema.json#/$defs/observation_id"},
+        "input_id": {"$ref": "common.schema.json#/$defs/input_id"},
+        "locator": {"$ref": "common.schema.json#/$defs/locator"},
+        "observation": {"$ref": "common.schema.json#/$defs/nonempty"}
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+# 契約検査用の自作例（付録B.1）。抜粋は自作PDF tests/fixtures/pdf/page-labels.pdf の固定テキスト。
+# reviewed_by は自作素材の試験記録であり、実文献の主張レビューではない。
+# CLAIM-0002 は実在する抜粋に無関係な主張を付けた限界例。ハッシュ検査は通り、人のレビューで not_supported とする。
+schema_version: "1.0"
+records:
+- evidence_id: EV-0001
+  source_id: FIXTURE-page-labels
+  source_sha256: abafc5921ea3ae879e2bc93b54bdea7c4d16a066378cdfe2a86710630d6822bb
+  extracted_sha256: d97e32e1e636261b3a2bde763e8b89b6912e6f360799edbd3a95f8cf99c89771
+  extracted_ref: {extraction_id: EXTRACT-FX-001, start_line: 4, end_line: 5}
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: [2]
+    printed_page_labels: [i]
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 25b4087b7bcb4cb09c5aeaca31d87d5d9089c62d5a82e38a5a3aa71e35f3761c
+  excerpt_preview: Front matter uses roman page numbers.
+  support_reviews:
+  - claim_id: CLAIM-0001
+    claim: 前付けにはローマ数字のページ番号を使う
+    claim_sha256: "aea7dbe0b5ac3df5e9774f124fe54a24f930fb2cdfa65d3373ba020d00940557"
+    applicability: 前付けと本文でページ番号の体系が異なる文書
+    status: supported
+    reviewed_by: fixture-reviewer
+    reviewed_at: "2026-10-17T12:00:00+09:00"
+  - claim_id: CLAIM-0002
+    claim: 独立した複数の属性で絞り込む場合にファセット分類が適する
+    claim_sha256: "2ef6b709b128f0551b4e3278a07a523043f10a22f3fb8ad2d11bc7737a20d581"
+    applicability: 独立した属性があり、その組合せで探索する必要がある場合
+    status: not_supported
+    reviewed_by: fixture-reviewer
+    reviewed_at: "2026-10-17T12:00:00+09:00"
+- evidence_id: EV-0002
+  source_id: FIXTURE-page-labels
+  source_sha256: abafc5921ea3ae879e2bc93b54bdea7c4d16a066378cdfe2a86710630d6822bb
+  extracted_sha256: d97e32e1e636261b3a2bde763e8b89b6912e6f360799edbd3a95f8cf99c89771
+  extracted_ref: {extraction_id: EXTRACT-FX-001, start_line: 10, end_line: 12}
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: [4, 5]
+    printed_page_labels: ["1", "2"]
+    epub_href: null
+    element_id: null
+  excerpt_sha256: "712bf9863d34fdeb948f2085d4c8ed7953ed862171ae4b658395df2d2858d343"
+  excerpt_preview: Arabic numbering restarts at 1 on PDF page index 4.
+  support_reviews:
+  - claim_id: CLAIM-0003
+    claim: 本文のページ番号は1から振り直す
+    claim_sha256: "42dea9ef0067fcc545c6ec0079bd227b9ee46c8aa885fd6647552875264cb335"
+    applicability: 前付けを別の番号体系で数える文書
+    status: unreviewed
+    reviewed_by: null
+    reviewed_at: null

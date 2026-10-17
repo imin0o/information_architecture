@@ -1,0 +1,62 @@
+# MVP未対応経路の境界ケース（FR-08、AC-06）。内容評価は行わず、未対応の示し方だけを確かめる。
+schema_version: "1.0"
+case_id: CASE-BOUNDARY-001
+case_version: 1.1.0
+kind: boundary
+task_type: exhibition_panel
+title: 展示パネルの構成を求める依頼（MVP未対応経路）
+rubric_version: 1.1.0
+changes:
+- version: 1.1.0
+  reason: ルーブリックv1.1.0への更新に追従した。ケースの条件は変えていない
+inputs: []
+users:
+- 展示の来場者
+tasks: []
+required_conditions:
+- 展示パネルの経路がMVPで未対応であることと、対応できる範囲（Analyze までの分析など）を示す
+- Present 段階を黙って省略したり、Web IAの経路へ置き換えたりして完了扱いにしない
+acceptable_variations:
+- 分析だけを行い、残る段階は未対応として報告する
+- 着手せず、必要な追加手順を示して終える
+inappropriate_designs:
+- design: Web IAの経路で処理し、展示パネルの構成として提示する
+  violates: [R-01]
+  why: 未対応の経路を別の経路で代用し、利用者に対応範囲を誤解させる
+rubric:
+- item: R-01
+  applies: false
+  case_criteria: []
+  not_applicable_reason: MVP未対応の経路であり、成果物の内容評価を行わない。未対応の示し方は scenarios で確かめる
+- item: R-02
+  applies: false
+  case_criteria: []
+  not_applicable_reason: 同上
+- item: R-03
+  applies: false
+  case_criteria: []
+  not_applicable_reason: 同上
+- item: R-04
+  applies: false
+  case_criteria: []
+  not_applicable_reason: 同上
+- item: R-05
+  applies: false
+  case_criteria: []
+  not_applicable_reason: 同上
+- item: R-06
+  applies: false
+  case_criteria: []
+  not_applicable_reason: 同上
+- item: R-07
+  applies: false
+  case_criteria: []
+  not_applicable_reason: 同上
+scenarios:
+- scenario: 展示パネルの構成を依頼される
+  kind: unsupported_route
+  expected: 実行記録を supported false とし、対応範囲の説明を残す。completed にしない
+  machine_checks:
+  - tests/checks/test_runs.py::test_unsupported_route_must_not_be_silently_completed
+  - tests/checks/test_runs.py::test_supported_route_must_match_standard_stages
+  human_check: 利用者への応答に、未対応であることと対応できる範囲が書かれているかを確かめる

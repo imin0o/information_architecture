@@ -1,0 +1,66 @@
+schema_version: 0.1.0
+result: pass
+uv: uv 0.12.7 (61291a8ca 2026-08-27 x86_64-pc-windows-msvc)
+tests:
+- python: Python 3.12.13
+  result: pass
+  tests: 329
+- python: Python 3.14.3
+  result: pass
+  tests: 329
+candidate_snapshot: temporary index; actual index unchanged
+checks:
+- check: manifest
+  result: pass
+  local_originals: run
+  status_counts:
+    bibliography_unconfirmed: 9
+    not_received: 9
+  unassigned_originals: 1
+  errors: []
+- check: fixtures
+  result: pass
+  files:
+  - epub/reflowable.epub
+  - pdf/page-labels.pdf
+  - pdf/unicode-layout.pdf
+  expected_catalogue_sha256: 
+    766e3bbb033302989fe3972e5c98cb594a6b17935950cd03da71a61505b74b1c
+  errors: []
+- check: leaks
+  result: pass
+  targets:
+  - git:index
+  files_scanned: 108
+  known_original_hashes: 10
+  violations: []
+  errors: []
+- check: cases
+  result: pass
+  cases:
+    CASE-BOUNDARY-001: 1.0.0
+    CASE-TAXONOMY-001: 1.0.0
+    CASE-WEBIA-001: 1.0.0
+  rubric_version: 1.0.0
+  content_review: human_only
+  errors: []
+- check: contracts
+  target: tests/fixtures/contracts/webia-run
+  result: pass
+  files:
+  - content-inventory.yaml
+  - controlled-vocabulary.yaml
+  - decisions.yaml
+  - inputs.yaml
+  - observations.yaml
+  - provenance.yaml
+  - receipts.yaml
+  - run.yaml
+  - sitemap.yaml
+  - taxonomy.yaml
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 1
+    stale: []
+  errors: []

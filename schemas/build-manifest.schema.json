@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "build-manifest.schema.json",
+  "title": "配布manifest dist/<skill>/build-manifest.yaml（BR-03、AC-02）",
+  "description": "files に自分自身を含めない。distribution_id は自分自身と未確定の配布IDを除く確定内容から決める（M5で生成）",
+  "type": "object",
+  "required": ["schema_version", "skill", "contract_version", "requires_skills", "knowledge", "schemas", "files",
+               "verification_receipts", "tool", "distribution_id"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "skill": {
+      "type": "object", "required": ["name", "version"], "additionalProperties": false,
+      "properties": {"name": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+                     "version": {"$ref": "common.schema.json#/$defs/version"}}
+    },
+    "contract_version": {"description": "入出力契約の版", "$ref": "common.schema.json#/$defs/version"},
+    "requires_skills": {
+      "type": "array",
+      "items": {"type": "object", "required": ["name", "contract_version"], "additionalProperties": false,
+                "properties": {"name": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+                               "contract_version": {"$ref": "common.schema.json#/$defs/version"}}}
+    },
+    "knowledge": {
+      "description": "依存する知識・共有IDの内容ハッシュ",
+      "type": "array",
+      "items": {"type": "object", "required": ["id", "sha256"], "additionalProperties": false,
+                "properties": {"id": {"type": "string", "pattern": "^(CONCEPT|METHOD|EV|CLAIM|TERM|CONFLICT)-[0-9A-Za-z-]+$"},
+                               "sha256": {"$ref": "common.schema.json#/$defs/sha256"}}}
+    },
+    "schemas": {"type": "array", "items": {"$ref": "#/$defs/file"}},
+    "files": {"description": "build-manifest.yaml以外の同梱ファイル", "type": "array", "items": {"$ref": "#/$defs/file"}},
+    "verification_receipts": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/receipt_id"}},
+    "tool": {
+      "type": "object", "required": ["name", "version"], "additionalProperties": false,
+      "properties": {"name": {"const": "iakit"}, "version": {"$ref": "common.schema.json#/$defs/version"}}
+    },
+    "distribution_id": {"type": "string", "pattern": "^DIST-[0-9a-f]{16}$"}
+  },
+  "$defs": {
+    "file": {
+      "type": "object", "required": ["path", "sha256"], "additionalProperties": false,
+      "properties": {"path": {"description": "Skillルートからの相対パス", "type": "string",
+                              "pattern": "^(?!/)(?!.*\\.\\.)(?!.*\\\\)[^\\s].*$"},
+                     "sha256": {"$ref": "common.schema.json#/$defs/sha256"}}
+    }
+  }
+}

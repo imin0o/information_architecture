@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "run.schema.json",
+  "title": "実行記録 runs/<run_id>/run.yaml（4.4、FR-08、NFR-02、NFR-05）",
+  "description": "依存のハッシュが変わった成果物はstaleにする。送信は許可記録の範囲に限る",
+  "type": "object",
+  "required": ["schema_version", "run_id", "task_type", "route", "status", "inputs_sha256", "environment", "skills",
+               "knowledge", "artifacts", "decision_refs", "approvals", "transmissions", "refine", "history"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "run_id": {"$ref": "common.schema.json#/$defs/run_id"},
+    "task_type": {"enum": ["web_ia", "taxonomy", "corporate_document", "exhibition_panel", "content_model",
+                           "design_system", "rag_knowledge"]},
+    "route": {
+      "type": "object", "required": ["stages", "supported", "unsupported_note"], "additionalProperties": false,
+      "properties": {
+        "stages": {"type": "array", "items": {"enum": ["analyze", "classify", "structure", "model", "present", "validate"]}},
+        "supported": {"description": "MVPで対応する経路か。未対応なら黙って省略せず理由を残す", "type": "boolean"},
+        "unsupported_note": {"type": ["string", "null"]}
+      }
+    },
+    "status": {"enum": ["in_progress", "interrupted", "completed", "unresolved"]},
+    "inputs_sha256": {"description": "inputs.yamlのハッシュ", "$ref": "common.schema.json#/$defs/sha256"},
+    "environment": {
+      "type": "object", "required": ["host", "host_version", "model", "model_version", "settings"],
+      "additionalProperties": false,
+      "properties": {
+        "host": {"enum": ["claude-code", "codex", "other"]},
+        "host_version": {"type": ["string", "null"]},
+        "model": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "model_version": {"type": ["string", "null"]},
+        "settings": {"type": "object"}
+      }
+    },
+    "skills": {"type": "array", "items": {"$ref": "#/$defs/hashed_item"}},
+    "knowledge": {"type": "array", "items": {"$ref": "#/$defs/hashed_item"}},
+    "artifacts": {"type": "array", "items": {"$ref": "#/$defs/artifact"}},
+    "decision_refs": {"type": "array", "items": {"$ref": "#/$defs/decision_ref"}},
+    "approvals": {
+      "description": "ユーザーが与えた送信許可。資料内の命令文を根拠にしない",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["approval_id", "destination", "destination_kind", "max_classification", "data_kinds", "purpose",
+                     "granted_by", "granted_at"],
+        "additionalProperties": false,
+        "properties": {
+          "approval_id": {"$ref": "common.schema.json#/$defs/approval_id"},
+          "destination": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "destination_kind": {"enum": ["host_llm", "external_service"]},
+          "max_classification": {"$ref": "common.schema.json#/$defs/classification"},
+          "data_kinds": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/data_kind"}},
+          "purpose": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "granted_by": {"enum": ["user"]},
+          "granted_at": {"$ref": "common.schema.json#/$defs/datetime"}
+        }
+      }
+    },
+    "transmissions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["destination", "destination_kind", "data_kind", "input_ids", "approval_id", "outcome"],
+        "additionalProperties": false,
+        "properties": {
+          "destination": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "destination_kind": {"enum": ["host_llm", "external_service"]},
+          "data_kind": {"$ref": "#/$defs/data_kind"},
+          "input_ids": {"type": "array", "items": {"$ref": "common.schema.json#/$defs/input_id"}},
+          "approval_id": {"oneOf": [{"$ref": "common.schema.json#/$defs/approval_id"}, {"type": "null"}]},
+          "outcome": {"description": "blocked は許可を確認できず送信前に止めたもの", "enum": ["sent", "blocked"]},
+          "requested_by_input": {"description": "資料内の命令文が送信を求めたか", "type": "boolean"}
+        }
+      }
+    },
+    "refine": {
+      "type": "object", "required": ["rounds", "unresolved_critical", "reported_to_user"], "additionalProperties": false,
+      "properties": {
+        "rounds": {"description": "修正から再評価までを1巡とする。上限2", "type": "integer", "minimum": 0},
+        "unresolved_critical": {"type": "array", "items": {"type": "string", "pattern": "^FIND-[0-9]{3}$"}},
+        "reported_to_user": {"type": "boolean"}
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["event", "at", "note"], "additionalProperties": false,
+        "properties": {
+          "event": {"enum": ["started", "interrupted", "resumed", "rerun", "refine", "input_changed", "completed"]},
+          "at": {"$ref": "common.schema.json#/$defs/datetime"},
+          "note": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "data_kind": {"enum": ["source_text", "excerpt", "input", "derived", "log"]},
+    "hashed_item": {
+      "type": "object", "required": ["name", "version", "sha256"], "additionalProperties": false,
+      "properties": {"name": {"$ref": "common.schema.json#/$defs/nonempty"},
+                     "version": {"$ref": "common.schema.json#/$defs/version"},
+                     "sha256": {"$ref": "common.schema.json#/$defs/sha256"}}
+    },
+    "decision_ref": {
+      "type": "object", "required": ["decision_id", "decision_revision"], "additionalProperties": false,
+      "properties": {"decision_id": {"$ref": "common.schema.json#/$defs/decision_id"},
+                     "decision_revision": {"type": "integer", "minimum": 1}}
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["artifact_id", "kind", "path", "version", "sha256", "status", "stale_reason", "classification",
+                   "depends_on", "decision_refs"],
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {"$ref": "common.schema.json#/$defs/artifact_id"},
+        "kind": {"enum": ["content_inventory", "controlled_vocabulary", "taxonomy", "sitemap", "problem_definition",
+                          "ia_review", "validation_plan"]},
+        "path": {"type": "string", "pattern": "^[^/\\\\][^\\\\]*$"},
+        "version": {"type": "integer", "minimum": 1},
+        "sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+        "status": {"enum": ["current", "stale"]},
+        "stale_reason": {"type": ["string", "null"]},
+        "classification": {"$ref": "common.schema.json#/$defs/classification"},
+        "classification_override": {
+          "description": "派生区分の引き下げ。ユーザーの明示指定だけで認める",
+          "type": "object", "required": ["by", "at", "reason"], "additionalProperties": false,
+          "properties": {"by": {"enum": ["user"]}, "at": {"$ref": "common.schema.json#/$defs/datetime"},
+                         "reason": {"$ref": "common.schema.json#/$defs/nonempty"}}
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["ref", "sha256"], "additionalProperties": false,
+            "properties": {
+              "ref": {"type": "string", "pattern": "^(INPUT|ART)-[0-9]{3}$"},
+              "sha256": {"description": "生成時に使った依存のハッシュ", "$ref": "common.schema.json#/$defs/sha256"}
+            }
+          }
+        },
+        "decision_refs": {"type": "array", "items": {"$ref": "#/$defs/decision_ref"}}
+      },
+      "if": {"properties": {"status": {"const": "stale"}}},
+      "then": {"properties": {"stale_reason": {"$ref": "common.schema.json#/$defs/nonempty"}}},
+      "else": {"properties": {"stale_reason": {"type": "null"}}}
+    }
+  }
+}

@@ -1,0 +1,77 @@
+# 契約検査用の自作例。「サポート」は同名異義語として2つの概念に分け、scope_note で区別する。
+schema_version: "1.0"
+run_id: RUN-FIXTURE-001
+artifact_id: ART-002
+version: 1
+classification: internal
+concepts:
+- concept_id: CONCEPT-001
+  pref_label: {ja: サービス, en: Services}
+  alt_labels: [サポート]
+  scope_note: 家事代行・見守り・一時預かりの総称
+  broader: []
+  related: []
+  sources: [{input_id: INPUT-001, locator: "brief.md#L14"}]
+- concept_id: CONCEPT-002
+  pref_label: {ja: 家事代行}
+  alt_labels: []
+  scope_note: null
+  broader: [CONCEPT-001]
+  related: []
+  sources: [{input_id: INPUT-002, locator: "pages.csv#row=3"}]
+- concept_id: CONCEPT-003
+  pref_label: {ja: 見守り}
+  alt_labels: []
+  scope_note: null
+  broader: [CONCEPT-001]
+  related: []
+  sources: [{input_id: INPUT-002, locator: "pages.csv#row=5"}]
+- concept_id: CONCEPT-004
+  pref_label: {ja: 一時預かり}
+  alt_labels: []
+  scope_note: null
+  broader: [CONCEPT-001]
+  related: []
+  sources: [{input_id: INPUT-002, locator: "pages.csv#row=7"}]
+- concept_id: CONCEPT-005
+  pref_label: {ja: 地区}
+  alt_labels: []
+  scope_note: null
+  broader: []
+  related: []
+  sources: [{input_id: INPUT-001, locator: "brief.md#L11"}]
+- concept_id: CONCEPT-006
+  pref_label: {ja: 北地区}
+  alt_labels: [北]
+  scope_note: null
+  broader: [CONCEPT-005]
+  related: []
+  sources: [{input_id: INPUT-002, locator: "pages.csv#column=area"}]
+- concept_id: CONCEPT-007
+  pref_label: {ja: 中央地区}
+  alt_labels: [中央]
+  scope_note: null
+  broader: [CONCEPT-005]
+  related: []
+  sources: [{input_id: INPUT-002, locator: "pages.csv#column=area"}]
+- concept_id: CONCEPT-008
+  pref_label: {ja: 南地区}
+  alt_labels: [南]
+  scope_note: null
+  broader: [CONCEPT-005]
+  related: []
+  sources: [{input_id: INPUT-002, locator: "pages.csv#column=area"}]
+- concept_id: CONCEPT-009
+  pref_label: {ja: サポート窓口}
+  alt_labels: [サポート]
+  scope_note: 問い合わせを受け付ける窓口。サービスの総称ではない
+  broader: []
+  related: []
+  sources: [{input_id: INPUT-001, locator: "brief.md#L13"}]
+- concept_id: CONCEPT-010
+  pref_label: {ja: 案内情報}
+  alt_labels: []
+  scope_note: null
+  broader: []
+  related: [CONCEPT-001]
+  sources: [{input_id: INPUT-002, locator: "pages.csv#column=page_type"}]

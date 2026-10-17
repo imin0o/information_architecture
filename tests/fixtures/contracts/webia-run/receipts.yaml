@@ -1,0 +1,29 @@
+# 契約検査用の自作例（付録B.3）。本文を含まない。checked_by は自作素材の試験記録。
+# EV-0002 には照合記録がないため、source_verification は unverified と導出される。
+schema_version: "1.0"
+receipts:
+- receipt_id: VR-0001
+  evidence_id: EV-0001
+  source_id: FIXTURE-page-labels
+  targets:
+    record_sha256: "cfaa1b201ccf5012afffba94f35ee327fc9624412ec538c9756f7d3a2823417a"
+    source_sha256: abafc5921ea3ae879e2bc93b54bdea7c4d16a066378cdfe2a86710630d6822bb
+    extracted_sha256: d97e32e1e636261b3a2bde763e8b89b6912e6f360799edbd3a95f8cf99c89771
+    locations_sha256: d44be0cfb5792cdbabfc67f9b874f60fa3ea1f79ede3666dcfb3c04fec4472a6
+    excerpt_sha256: 25b4087b7bcb4cb09c5aeaca31d87d5d9089c62d5a82e38a5a3aa71e35f3761c
+    bundle_manifest_sha256: null
+    knowledge_files: []
+  claims:
+  - claim_id: CLAIM-0001
+    claim_sha256: "aea7dbe0b5ac3df5e9774f124fe54a24f930fb2cdfa65d3373ba020d00940557"
+    applicability_sha256: "83d0abeadac3d650a0846a9748eb9192406c9ef5572bd0dfa64305ec3057b852"
+    status: supported
+  - claim_id: CLAIM-0002
+    claim_sha256: "2ef6b709b128f0551b4e3278a07a523043f10a22f3fb8ad2d11bc7737a20d581"
+    applicability_sha256: "918ae39923ccf3e78b1a125ff08aea623750f2d7484f861e0d8f343ac19f0081"
+    status: not_supported
+  machine_checks: {reference: pass, excerpt: pass, original_hash: pass}
+  human_checks:
+    source_location: {result: confirmed, checked_by: fixture-reviewer, checked_at: "2026-10-17T12:00:00+09:00"}
+  tool: {name: iakit, version: 0.1.0}
+  recorded_at: "2026-10-17T12:05:00+09:00"

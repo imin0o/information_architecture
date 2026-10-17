@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "content-inventory.schema.json",
+  "title": "コンテンツ一覧 content-inventory.yaml（FR-01、AC-03）",
+  "description": "各コンテンツが配置済み・未処理・理由付きの対象外のどれかを追跡する。ラベルを識別子にしない",
+  "type": "object",
+  "allOf": [{"$ref": "common.schema.json#/$defs/header"}],
+  "required": ["items"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["content_id", "title", "input_id", "locator", "status", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "content_id": {"$ref": "common.schema.json#/$defs/content_id"},
+          "title": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "input_id": {"$ref": "common.schema.json#/$defs/input_id"},
+          "locator": {"$ref": "common.schema.json#/$defs/locator"},
+          "status": {"enum": ["placed", "unprocessed", "excluded"]},
+          "reason": {"type": ["string", "null"]}
+        },
+        "if": {"properties": {"status": {"const": "placed"}}},
+        "then": {"properties": {"reason": {"type": "null"}}},
+        "else": {"properties": {"reason": {"$ref": "common.schema.json#/$defs/nonempty"}}}
+      }
+    }
+  }
+}

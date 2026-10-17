@@ -1,0 +1,25 @@
+# 契約検査用の自作例（CASE-WEBIA-001の入力を使用）。内容評価の正解例ではない。
+schema_version: "1.0"
+run_id: RUN-FIXTURE-001
+artifact_id: ART-001
+version: 1
+classification: internal
+items:
+- {content_id: CONTENT-001, title: トップ, input_id: INPUT-002, locator: "pages.csv#row=2", status: placed, reason: null}
+- {content_id: CONTENT-002, title: 家事代行（北地区）, input_id: INPUT-002, locator: "pages.csv#row=3", status: placed, reason: null}
+- {content_id: CONTENT-003, title: 家事代行（南地区）, input_id: INPUT-002, locator: "pages.csv#row=4", status: placed, reason: null}
+- {content_id: CONTENT-004, title: 高齢者向け見守り（北地区）, input_id: INPUT-002, locator: "pages.csv#row=5", status: placed, reason: null}
+- {content_id: CONTENT-005, title: 高齢者向け見守り（中央地区）, input_id: INPUT-002, locator: "pages.csv#row=6", status: placed, reason: null}
+- {content_id: CONTENT-006, title: 一時預かり（中央地区）, input_id: INPUT-002, locator: "pages.csv#row=7", status: placed, reason: null}
+- {content_id: CONTENT-007, title: 一時預かり（南地区）, input_id: INPUT-002, locator: "pages.csv#row=8", status: placed, reason: null}
+- {content_id: CONTENT-008, title: 料金一覧, input_id: INPUT-002, locator: "pages.csv#row=9", status: placed, reason: null}
+- {content_id: CONTENT-009, title: よくある質問, input_id: INPUT-002, locator: "pages.csv#row=10", status: placed, reason: null}
+- {content_id: CONTENT-010, title: 申込み方法, input_id: INPUT-002, locator: "pages.csv#row=11", status: placed, reason: null}
+- {content_id: CONTENT-011, title: スタッフ募集, input_id: INPUT-002, locator: "pages.csv#row=12", status: excluded,
+   reason: 利用者向けサービス案内の設計対象外。採用情報の見直しで扱う}
+- {content_id: CONTENT-012, title: 2019年度キャンペーン（終了）, input_id: INPUT-002, locator: "pages.csv#row=13",
+   status: excluded, reason: 終了したキャンペーンで、利用者のタスクに使わない}
+- {content_id: CONTENT-013, title: 会社概要, input_id: INPUT-002, locator: "pages.csv#row=14", status: unprocessed,
+   reason: 運営情報を設計対象に含めるかを依頼者に確認中}
+- {content_id: CONTENT-014, title: サポート窓口へのお問い合わせ, input_id: INPUT-002, locator: "pages.csv#row=15", status: placed,
+   reason: null}

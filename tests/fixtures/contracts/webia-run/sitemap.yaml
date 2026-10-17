@@ -1,0 +1,32 @@
+# 契約検査用の自作例。サービス種別と地区の2つの入口を置き、見守りから料金・申込みへリンクする。
+schema_version: "1.0"
+run_id: RUN-FIXTURE-001
+artifact_id: ART-004
+version: 1
+classification: internal
+inventory: {artifact_id: ART-001, version: 1}
+root: NODE-001
+nodes:
+- {node_id: NODE-001, label: トップ, parent: null, concept_id: null, content_ids: [CONTENT-001], links: []}
+- {node_id: NODE-002, label: サービスから探す, parent: NODE-001, concept_id: CONCEPT-001, content_ids: [], links: []}
+- {node_id: NODE-003, label: 家事代行, parent: NODE-002, concept_id: CONCEPT-002, content_ids: [CONTENT-002, CONTENT-003],
+   links: [NODE-010]}
+- {node_id: NODE-004, label: 見守り, parent: NODE-002, concept_id: CONCEPT-003, content_ids: [CONTENT-004, CONTENT-005],
+   links: [NODE-010]}
+- {node_id: NODE-005, label: 一時預かり, parent: NODE-002, concept_id: CONCEPT-004, content_ids: [CONTENT-006, CONTENT-007],
+   links: [NODE-010]}
+- {node_id: NODE-006, label: 地区から探す, parent: NODE-001, concept_id: CONCEPT-005, content_ids: [], links: []}
+- {node_id: NODE-007, label: 北地区, parent: NODE-006, concept_id: CONCEPT-006, content_ids: [CONTENT-002, CONTENT-004],
+   links: []}
+- {node_id: NODE-008, label: 中央地区, parent: NODE-006, concept_id: CONCEPT-007, content_ids: [CONTENT-005, CONTENT-006],
+   links: []}
+- {node_id: NODE-009, label: 南地区, parent: NODE-006, concept_id: CONCEPT-008, content_ids: [CONTENT-003, CONTENT-007],
+   links: []}
+- {node_id: NODE-010, label: 料金・申込み, parent: NODE-001, concept_id: CONCEPT-010,
+   content_ids: [CONTENT-008, CONTENT-009, CONTENT-010], links: []}
+- {node_id: NODE-011, label: お問い合わせ, parent: NODE-001, concept_id: CONCEPT-009, content_ids: [CONTENT-014], links: []}
+tasks:
+- {task_id: TASK-01, path: [NODE-001, NODE-006, NODE-009]}
+- {task_id: TASK-02, path: [NODE-001, NODE-002, NODE-004, NODE-010]}
+- {task_id: TASK-03, path: [NODE-001, NODE-006, NODE-007]}
+- {task_id: TASK-04, path: [NODE-001, NODE-011]}

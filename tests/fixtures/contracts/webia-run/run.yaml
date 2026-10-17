@@ -1,0 +1,81 @@
+# 契約検査用の自作例（4.4、FR-08）。ハッシュは同じディレクトリのファイルから計算した値。
+schema_version: "1.0"
+run_id: RUN-FIXTURE-001
+task_type: web_ia
+route: {stages: [analyze, classify, structure, validate], supported: true, unsupported_note: null}
+status: completed
+inputs_sha256: "e0b07914a6c2d9db6a7af5ae465d38a65a7b23e4d005cdcae281068416c03972"
+environment: {host: claude-code, host_version: null, model: fixture, model_version: null, settings: {}}
+skills: []
+knowledge: []
+artifacts:
+- artifact_id: ART-001
+  kind: content_inventory
+  path: content-inventory.yaml
+  version: 1
+  sha256: "2473e72730812b5b3c91b656281b15637d6f29ba6f749d1ce4c283995f198347"
+  status: current
+  stale_reason: null
+  classification: internal
+  depends_on: [{ref: INPUT-002, sha256: "b7141cc23f06aa4f79fe85b6d05aec4b8dbc49cabbe9df39c5855d94aba2bb7f"}]
+  decision_refs: [{decision_id: IA-003, decision_revision: 1}]
+- artifact_id: ART-002
+  kind: controlled_vocabulary
+  path: controlled-vocabulary.yaml
+  version: 1
+  sha256: "592fae9b51c213bebaaef20630b6f696265782f488a16ac9bdc2849c6763f8ae"
+  status: current
+  stale_reason: null
+  classification: internal
+  depends_on:
+  - {ref: INPUT-001, sha256: "33db897949f4107446c84c51305fa79534d8ecdff17a5b950104241e5233b7cf"}
+  - {ref: INPUT-002, sha256: "b7141cc23f06aa4f79fe85b6d05aec4b8dbc49cabbe9df39c5855d94aba2bb7f"}
+  decision_refs: []
+- artifact_id: ART-003
+  kind: taxonomy
+  path: taxonomy.yaml
+  version: 1
+  sha256: "e6cbcfb453e29339d0c4e21bb273206111c9f21131f73c2d189e2ad246955296"
+  status: current
+  stale_reason: null
+  classification: internal
+  depends_on:
+  - {ref: ART-001, sha256: "2473e72730812b5b3c91b656281b15637d6f29ba6f749d1ce4c283995f198347"}
+  - {ref: ART-002, sha256: "592fae9b51c213bebaaef20630b6f696265782f488a16ac9bdc2849c6763f8ae"}
+  decision_refs: [{decision_id: IA-001, decision_revision: 2}]
+- artifact_id: ART-004
+  kind: sitemap
+  path: sitemap.yaml
+  version: 1
+  sha256: "fef64d184f4aa9f1f9950de181bf8db713e08380b0fa64d2787f028fe833ff69"
+  status: current
+  stale_reason: null
+  classification: internal
+  depends_on:
+  - {ref: ART-001, sha256: "2473e72730812b5b3c91b656281b15637d6f29ba6f749d1ce4c283995f198347"}
+  - {ref: ART-003, sha256: "e6cbcfb453e29339d0c4e21bb273206111c9f21131f73c2d189e2ad246955296"}
+  decision_refs: [{decision_id: IA-002, decision_revision: 1}]
+decision_refs:
+- {decision_id: IA-001, decision_revision: 1}
+- {decision_id: IA-001, decision_revision: 2}
+- {decision_id: IA-002, decision_revision: 1}
+- {decision_id: IA-003, decision_revision: 1}
+approvals:
+- approval_id: APPROVAL-001
+  destination: claude-code
+  destination_kind: host_llm
+  max_classification: internal
+  data_kinds: [input, derived]
+  purpose: 依頼の処理に必要な入力と派生物の読込み
+  granted_by: user
+  granted_at: "2026-10-17T09:00:00+09:00"
+transmissions:
+- {destination: claude-code, destination_kind: host_llm, data_kind: input, input_ids: [INPUT-001, INPUT-002],
+   approval_id: APPROVAL-001, outcome: sent}
+- {destination: web-search, destination_kind: external_service, data_kind: derived, input_ids: [INPUT-002],
+   approval_id: null, outcome: blocked, requested_by_input: false}
+refine: {rounds: 1, unresolved_critical: [], reported_to_user: false}
+history:
+- {event: started, at: "2026-10-17T09:00:00+09:00", note: ""}
+- {event: refine, at: "2026-10-17T11:00:00+09:00", note: IA-001 を r2 へ改訂}
+- {event: completed, at: "2026-10-17T15:30:00+09:00", note: ""}

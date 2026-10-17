@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "verification-receipt.schema.json",
+  "title": "本文を含まない照合記録 verification/receipts.yaml（付録B.3）",
+  "description": "機械検査と人の確認を別々に記録する。対象のハッシュが変わった記録は無効として扱う",
+  "type": "object",
+  "required": ["schema_version", "receipts"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "receipts": {"type": "array", "items": {"$ref": "#/$defs/receipt"}}
+  },
+  "$defs": {
+    "machine": {"enum": ["pass", "fail", "not_run"]},
+    "receipt": {
+      "type": "object",
+      "required": ["receipt_id", "evidence_id", "source_id", "targets", "claims", "machine_checks", "human_checks",
+                   "tool", "recorded_at"],
+      "additionalProperties": false,
+      "properties": {
+        "receipt_id": {"$ref": "common.schema.json#/$defs/receipt_id"},
+        "evidence_id": {"$ref": "common.schema.json#/$defs/evidence_id"},
+        "source_id": {"$ref": "common.schema.json#/$defs/source_id"},
+        "targets": {
+          "type": "object",
+          "required": ["record_sha256", "source_sha256", "extracted_sha256", "locations_sha256", "excerpt_sha256",
+                       "bundle_manifest_sha256", "knowledge_files"],
+          "additionalProperties": false,
+          "properties": {
+            "record_sha256": {"description": "support_reviewsを除く登録レコードの正規化JSONのハッシュ",
+                              "$ref": "common.schema.json#/$defs/sha256"},
+            "source_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+            "extracted_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+            "locations_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+            "excerpt_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+            "bundle_manifest_sha256": {"description": "同梱する最小manifest。配布生成（M5）前はnull",
+                                       "oneOf": [{"$ref": "common.schema.json#/$defs/sha256"}, {"type": "null"}]},
+            "knowledge_files": {
+              "type": "array",
+              "items": {
+                "type": "object", "required": ["path", "sha256"], "additionalProperties": false,
+                "properties": {"path": {"type": "string", "pattern": "^[^/\\\\][^\\\\]*$"},
+                               "sha256": {"$ref": "common.schema.json#/$defs/sha256"}}
+              }
+            }
+          }
+        },
+        "claims": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["claim_id", "claim_sha256", "applicability_sha256", "status"],
+            "additionalProperties": false,
+            "properties": {
+              "claim_id": {"$ref": "common.schema.json#/$defs/claim_id"},
+              "claim_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+              "applicability_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+              "status": {"enum": ["supported", "not_supported", "unclear", "unreviewed"]}
+            }
+          }
+        },
+        "machine_checks": {
+          "type": "object", "required": ["reference", "excerpt", "original_hash"], "additionalProperties": false,
+          "properties": {"reference": {"$ref": "#/$defs/machine"}, "excerpt": {"$ref": "#/$defs/machine"},
+                         "original_hash": {"$ref": "#/$defs/machine"}}
+        },
+        "human_checks": {
+          "type": "object", "required": ["source_location"], "additionalProperties": false,
+          "properties": {
+            "source_location": {
+              "description": "人が抜粋を原典の該当箇所・記入した位置と照合した結果",
+              "type": "object", "required": ["result", "checked_by", "checked_at"], "additionalProperties": false,
+              "properties": {
+                "result": {"enum": ["confirmed", "rejected", "not_done"]},
+                "checked_by": {"oneOf": [{"$ref": "common.schema.json#/$defs/person"}, {"type": "null"}]},
+                "checked_at": {"oneOf": [{"$ref": "common.schema.json#/$defs/datetime"}, {"type": "null"}]}
+              },
+              "if": {"properties": {"result": {"const": "not_done"}}},
+              "then": {"properties": {"checked_by": {"type": "null"}, "checked_at": {"type": "null"}}},
+              "else": {"properties": {"checked_by": {"type": "string"}, "checked_at": {"type": "string"}}}
+            }
+          }
+        },
+        "tool": {
+          "type": "object", "required": ["name", "version"], "additionalProperties": false,
+          "properties": {"name": {"const": "iakit"}, "version": {"$ref": "common.schema.json#/$defs/version"}}
+        },
+        "recorded_at": {"$ref": "common.schema.json#/$defs/datetime"}
+      }
+    }
+  }
+}

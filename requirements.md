@@ -1,6 +1,6 @@
 # 情報設計AIエージェント Skill群 要件定義書
 
-- Version: 0.3.0
+- Version: 0.3.1
 - Date: 2026-10-17
 - Status: Draft
 - Skill群ID: `information-architecture`（分野別Skillの総称）
@@ -173,9 +173,9 @@ information-architecture/
 
 ### 4.4 共通データ契約
 
-- YAMLは1.2のJSON互換の値に限定し、重複キーと独自タグを拒否する。日時、版番号、ハッシュは文字列として扱う。JSON SchemaはDraft 2020-12に固定し、検証対象の各データに`schema_version`を持たせる。スキーマ内の参照も配布物内で解決できるようにする。
+- YAMLは1.2のJSON互換の値に限定し、重複キーと独自タグを拒否する。日時、版番号、ハッシュは文字列として扱う。JSON SchemaはDraft 2020-12に固定し、検証対象の各データに`schema_version`を持たせる。`schema_version`はファイル単位に持たせ、同じファイル内のレコードに一律に適用する。スキーマ内の参照も配布物内で解決できるようにする。
 - コンテンツは`content_id`、概念は`concept_id`、構造内の位置は`node_id`で識別する。ラベル文字列を識別子にしない。表示ラベル、同義語、英日ラベルは概念IDへ対応付け、同名異義語を許容する。
-- 実行単位は`run_id`とし、`run.yaml`に入力登録簿、使用したSkillと知識の内容ハッシュ、実行環境・モデル、成果物一覧・版・状態、判断ID、再実行履歴を記録する。`inputs.yaml`には入力IDと参照位置を持たせる。ヒアリング回答も入力として登録する。
+- 実行単位は`run_id`とし、`run.yaml`に入力登録簿、使用したSkillと知識の内容ハッシュ、実行環境・モデル、成果物一覧・版・状態、判断ID、再実行履歴を記録する。`inputs.yaml`には入力ID、参照位置、実体への相対パスとハッシュを持たせ、中断後の再開時に実体を照合する。ヒアリング回答もファイルに保存して入力として登録する。
 - 既存成果物を使って段階を省略する場合も、その版、入力との対応、スキーマと参照整合性を検査する。入力不足に対する仮定は許容するが、未読の資料を調査済み、未実施の作業を完了として記録しない。
 
 ## 5. 入力要件
@@ -263,44 +263,55 @@ information-architecture/
 
 各Skillは、構造・分類・方法の採否、適用条件の変更、重要な仮定、評価による修正を`decisions.yaml`へ記録する。ラベルの単純な転記など、判断を伴わない機械的な処理は個別記録を要しない。同じ理由で行う複数の変更は1判断にまとめ、対象IDを列挙する。実質的な選択肢がない場合は`alternatives: []`と`alternatives_not_applicable_reason`を認め、架空の代替案を作らない。
 
-文献が述べる一般的な主張は`sources`、案件固有の事実は`input_observations`、未検証の条件は`assumptions`へ分ける。文献根拠がない場合は`sources: []`を認め、観察・仮定に基づく判断であることを明示する。次は1レコードの形式例であり、ID・主張・状態は実際の照合結果を示すものではない。`schemas/decision.schema.json`とレコード間の整合性検査で検証する。
+文献が述べる一般的な主張は`sources`、案件固有の事実は`input_observations`、未検証の条件は`assumptions`へ分ける。文献根拠がない場合は`sources: []`を認め、観察・仮定に基づく判断であることを明示する。
+
+各根拠の`primary`は、欠ければ採用理由が成立しない主要根拠かを示す。仮定の`critical`は、その仮定が採用理由に不可欠な重要な適用条件かを示す。`counter_evidence`には、`not_supported`の主張や反証した調査などの反証と、その解決状況を記録する。`classification`は、使用した入力・調査記録のうち最も厳しい機密区分を継承する（IN-05）。
+
+次は`decisions.yaml`の形式例であり、ID・主張・状態は実際の照合結果を示すものではない。`schemas/decision.schema.json`とレコード間の整合性検査で検証する。
 
 ```yaml
 schema_version: "1.0"
-decision_id: IA-001
-decision_revision: 1
 run_id: RUN-001
-status: active                  # active | superseded | withdrawn
-supersedes: null
-stage: classify
-target_ids: [CONCEPT-001, CONTENT-001]
-problem: "ユーザーが情報を発見しにくい"
-selected_method: "Faceted Classification"
-rationale: "複数の独立した探索軸が存在するため"
-sources:
-  - source_id: BOOK-003
-    evidence_id: EV-0012
-    claim_id: CLAIM-0012
-    claim: "独立した複数の属性で絞り込む場合にファセット分類が適する"
-    source_verification: unverified  # verified | unverified。付録Bの照合記録から導出
-    support_status: unreviewed       # supported | not_supported | unclear | unreviewed
-input_observations:
-  - observation_id: OBS-001
-    input_id: INPUT-001
-    locator: "pages.csv#row=2"
-    observation: "対象コンテンツは地域とサービス種別の属性を持つ"
-alternatives:
-  - method: "Hierarchical Classification"
-    rejected_because: "1つの軸に固定すると他の軸からの探索経路が失われる"
-assumptions:
-  - "利用者は複数条件で情報を絞り込む"
-validation_status: not_tested
-validation_record_ids: []
-confidence: low
-confidence_basis: "属性は入力資料で確認。文献根拠は未照合・未レビューで、利用者の探索条件も仮定"
-recorded_at: "2026-10-17T10:00:00+09:00"
-skill_version: "0.1.0"
-library_version: "0.1.0"
+decisions:
+  - decision_id: IA-001
+    decision_revision: 1
+    run_id: RUN-001
+    status: active                  # active | superseded | withdrawn
+    supersedes: null                # 2版以降は {decision_id, decision_revision} で直前版を示す
+    stage: classify
+    target_ids: [CONCEPT-001, CONTENT-001]
+    problem: "ユーザーが情報を発見しにくい"
+    selected_method: "Faceted Classification"
+    rationale: "複数の独立した探索軸が存在するため"
+    sources:
+      - source_id: BOOK-003
+        evidence_id: EV-0012
+        claim_id: CLAIM-0012
+        claim: "独立した複数の属性で絞り込む場合にファセット分類が適する"
+        primary: true
+        source_verification: unverified  # verified | unverified。付録Bの照合記録から導出
+        support_status: unreviewed       # supported | not_supported | unclear | unreviewed
+    input_observations:
+      - observation_id: OBS-001
+        input_id: INPUT-001
+        locator: "pages.csv#row=2"
+        observation: "対象コンテンツは地域とサービス種別の属性を持つ"
+    alternatives:
+      - method: "Hierarchical Classification"
+        rejected_because: "1つの軸に固定すると他の軸からの探索経路が失われる"
+    alternatives_not_applicable_reason: null  # alternatives が空のときだけ理由を書く
+    assumptions:
+      - statement: "利用者は複数条件で情報を絞り込む"
+        critical: true
+    counter_evidence: []
+    validation_status: not_tested
+    validation_record_ids: []
+    confidence: low
+    confidence_basis: "属性は入力資料で確認。文献根拠は未照合・未レビューで、利用者の探索条件も仮定"
+    classification: internal
+    recorded_at: "2026-10-17T10:00:00+09:00"
+    skill_version: "0.1.0"
+    library_version: "0.1.0"
 ```
 
 `validation_status`は次のいずれかとする。
@@ -591,35 +602,36 @@ Markdownの成果物は、テンプレートの必須見出しに加え、参照
 
 ### B.1 登録形式と固定スナップショット
 
-`library/provenance.yaml`の1レコードは次の形式とする。値は形式例であり、実在する根拠や検証結果を示さない。`support_reviews`は抜粋と個別の文献主張を結ぶ記録であり、抜粋が実在するかの照合とは分ける。
+`library/provenance.yaml`は次の形式とする。値は形式例であり、実在する根拠や検証結果を示さない。`support_reviews`は抜粋と個別の文献主張を結ぶ記録であり、抜粋が実在するかの照合とは分ける。
 
 ```yaml
 schema_version: "1.0"
-evidence_id: EV-0012
-source_id: BOOK-003
-source_sha256: "…"              # 原典の実ファイルから計算したハッシュ
-extracted_sha256: "…"           # 固定抽出テキスト全体のハッシュ
-extracted_ref:                   # ローカル照合用の位置。配布物内のファイルリンクではない
-  extraction_id: EXTRACT-003-001
-  start_line: 1200
-  end_line: 1214                 # 両端を含む
-locator:                        # 原典との対応を確認できた項目だけを記入する
-  chapter: null
-  section: null
-  pdf_page_indices: []           # PDF内の1始まりのページ順。複数ページも表せる
-  printed_page_labels: []        # 印刷された番号・ローマ数字等。PDF内のページ順とは別
-  epub_href: null
-  element_id: null
-excerpt_sha256: "…"             # 下記の規則による該当範囲のバイト列のハッシュ
-excerpt_preview: "…"            # 範囲の先頭から取る連続部分。英語25語以内
-support_reviews:
-  - claim_id: CLAIM-0012
-    claim: "独立した複数の属性で絞り込む場合にファセット分類が適する"
-    claim_sha256: "…"           # 登録した主張のUTF-8バイト列のハッシュ
-    applicability: "独立した属性があり、その組合せで探索する必要がある場合"
-    status: unreviewed          # supported | not_supported | unclear | unreviewed
-    reviewed_by: null           # supported等への変更には人によるレビュー記録が必要
-    reviewed_at: null
+records:
+  - evidence_id: EV-0012
+    source_id: BOOK-003
+    source_sha256: "…"              # 原典の実ファイルから計算したハッシュ
+    extracted_sha256: "…"           # 固定抽出テキスト全体のハッシュ
+    extracted_ref:                   # ローカル照合用の位置。配布物内のファイルリンクではない
+      extraction_id: EXTRACT-003-001
+      start_line: 1200
+      end_line: 1214                 # 両端を含む
+    locator:                        # 原典との対応を確認できた項目だけを記入する
+      chapter: null
+      section: null
+      pdf_page_indices: []           # PDF内の1始まりのページ順。複数ページも表せる
+      printed_page_labels: []        # 印刷された番号・ローマ数字等。PDF内のページ順とは別
+      epub_href: null
+      element_id: null
+    excerpt_sha256: "…"             # 下記の規則による該当範囲のバイト列のハッシュ
+    excerpt_preview: "…"            # 範囲の先頭から取る連続部分。英語25語以内
+    support_reviews:
+      - claim_id: CLAIM-0012
+        claim: "独立した複数の属性で絞り込む場合にファセット分類が適する"
+        claim_sha256: "…"           # 登録した主張のUTF-8バイト列のハッシュ
+        applicability: "独立した属性があり、その組合せで探索する必要がある場合"
+        status: unreviewed          # supported | not_supported | unclear | unreviewed
+        reviewed_by: null           # supported等への変更には人によるレビュー記録が必要
+        reviewed_at: null
 ```
 
 ハッシュ対象はBR-01の正規化後に保存した不変のバイト列とする。行はLFだけで区切り、指定範囲の各行に元から付いている末尾LFも含める。ファイル末尾のLF直後を追加の空行とは数えない。照合時に空白の除去、改行変更、Unicode正規化を追加しない。`excerpt_preview`は範囲の内容と一致することを検査する。
@@ -671,3 +683,4 @@ support_reviews:
 | 0.1.0 | 2026-10-16 | 初版 |
 | 0.2.0 | 2026-10-17 | 分野別Skill群の構成に変更。入力要件、オーケストレーション（FR-08）、構築時要件（BR-01〜04）を追加。旧FR-08をBR-01へ移動。判断記録の形式、出典照合、受け入れ基準の判定方法、成果物一覧を追加 |
 | 0.3.0 | 2026-10-17 | 設計レビューを反映。Skillの責任境界と共通データ契約、依存関係に基づく自己完結配布と更新、固定抽出・位置対応・原典照合と主張レビューの分離、観察・実測・判断履歴、機密区分の継承、内容評価と実装前の合格条件、段階的な文献統合とMVP完了定義を具体化。外部送信・引用上限・公開範囲・MVPの最終判断は保留を維持 |
+| 0.3.1 | 2026-10-17 | M2の実装と第三者レビューを反映。`schema_version`をファイル単位とし、FR-07・付録B.1の形式例をファイル形式へ改訂。判断記録に主要根拠（`primary`）、仮定の重要度（`critical`）、反証（`counter_evidence`）、機密区分を追加。入力登録簿に実体のパスを追加し、再開時に照合する |

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sitemap.schema.json",
+  "title": "サイトマップ sitemap.yaml（FR-03、AC-03）",
+  "description": "ノードIDで構造を表す。parentは主階層、linksは補助的な経路",
+  "type": "object",
+  "allOf": [{"$ref": "common.schema.json#/$defs/header"}],
+  "required": ["inventory", "root", "nodes", "tasks"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "inventory": {"$ref": "common.schema.json#/$defs/artifact_ref"},
+    "root": {"$ref": "common.schema.json#/$defs/node_id"},
+    "nodes": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["node_id", "label", "parent", "concept_id", "content_ids", "links"],
+        "additionalProperties": false,
+        "properties": {
+          "node_id": {"$ref": "common.schema.json#/$defs/node_id"},
+          "label": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "parent": {"oneOf": [{"$ref": "common.schema.json#/$defs/node_id"}, {"type": "null"}]},
+          "concept_id": {"oneOf": [{"$ref": "common.schema.json#/$defs/concept_id"}, {"type": "null"}]},
+          "content_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/content_id"}},
+          "links": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/node_id"}}
+        }
+      }
+    },
+    "tasks": {
+      "description": "主要タスクの探索経路。ルートから到達先までのノード列",
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["task_id", "path"], "additionalProperties": false,
+        "properties": {
+          "task_id": {"$ref": "common.schema.json#/$defs/task_id"},
+          "path": {"type": "array", "minItems": 1, "items": {"$ref": "common.schema.json#/$defs/node_id"}}
+        }
+      }
+    }
+  }
+}

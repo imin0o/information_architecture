@@ -1,0 +1,121 @@
+# 契約検査用の自作例（FR-07）。状態・confidence は登録簿・照合記録・調査記録から導出した値と一致させる。
+# IA-001 は r1 を r2 で置き換えた例。IA-003 は実質的な代替案がない例。
+schema_version: "1.0"
+run_id: RUN-FIXTURE-001
+decisions:
+- decision_id: IA-001
+  decision_revision: 1
+  run_id: RUN-FIXTURE-001
+  status: superseded
+  supersedes: null
+  stage: classify
+  target_ids: [SCHEME-001]
+  problem: 利用者が自分の地区で使えるサービスを見つけにくい
+  selected_method: 地区を最上位とする階層分類
+  rationale: ページ一覧の全サービスページに地区の属性があるため
+  sources: []
+  input_observations:
+  - {observation_id: OBS-001, input_id: INPUT-002, locator: "pages.csv#column=area",
+     observation: service ページはすべて北・中央・南のいずれかの地区を持つ}
+  alternatives:
+  - {method: サービス種別を最上位とする階層分類, rejected_because: 地区ごとに提供サービスが異なり、種別から入ると提供外の地区を開く}
+  alternatives_not_applicable_reason: null
+  assumptions:
+  - {statement: 利用者は最初に地区を決めてから探す, critical: true}
+  counter_evidence: []
+  validation_status: not_tested
+  validation_record_ids: []
+  confidence: low
+  confidence_basis: 探索の起点を地区とする前提が仮定だけに基づく
+  classification: internal
+  recorded_at: "2026-10-17T10:00:00+09:00"
+  skill_version: 0.1.0
+  library_version: 0.1.0
+- decision_id: IA-001
+  decision_revision: 2
+  run_id: RUN-FIXTURE-001
+  status: active
+  supersedes: {decision_id: IA-001, decision_revision: 1}
+  stage: classify
+  target_ids: [SCHEME-001, SCHEME-002]
+  problem: 利用者が自分の地区で使えるサービスを見つけにくい
+  selected_method: Faceted Classification（サービス種別と地区）
+  rationale: サービス種別と地区が独立した属性で、どちらからも探す利用者がいるため
+  sources:
+  - {source_id: FIXTURE-page-labels, evidence_id: EV-0001, claim_id: CLAIM-0001, claim: 前付けにはローマ数字のページ番号を使う,
+     primary: true, source_verification: verified, support_status: supported}
+  - {source_id: FIXTURE-page-labels, evidence_id: EV-0001, claim_id: CLAIM-0002,
+     claim: 独立した複数の属性で絞り込む場合にファセット分類が適する,
+     primary: false, source_verification: verified, support_status: not_supported}
+  input_observations:
+  - {observation_id: OBS-001, input_id: INPUT-002, locator: "pages.csv#column=area",
+     observation: service ページはすべて北・中央・南のいずれかの地区を持つ}
+  - {observation_id: OBS-002, input_id: INPUT-002, locator: "pages.csv#column=service_type",
+     observation: 同じサービス種別が複数の地区で提供されている}
+  alternatives:
+  - {method: 地区を最上位とする階層分類, rejected_because: サービス種別から探す利用者の経路が失われる}
+  alternatives_not_applicable_reason: null
+  assumptions:
+  - {statement: 利用者はスマートフォンで閲覧する, critical: false}
+  counter_evidence:
+  - {ref: CLAIM-0002, resolved: true, note: 抜粋がこの主張を支持しないため、採用理由に使わない}
+  validation_status: not_tested
+  validation_record_ids: []
+  confidence: medium
+  confidence_basis: 主要根拠は照合済みかつ支持。属性は入力で確認し、実ユーザー調査は未実施
+  classification: internal
+  recorded_at: "2026-10-17T11:00:00+09:00"
+  skill_version: 0.1.0
+  library_version: 0.1.0
+- decision_id: IA-002
+  decision_revision: 1
+  run_id: RUN-FIXTURE-001
+  status: active
+  supersedes: null
+  stage: structure
+  target_ids: [NODE-002, NODE-006]
+  problem: 地区とサービス種別のどちらから探す利用者も主要タスクを完了できるようにする
+  selected_method: 2つの入口と、サービスページから料金・申込みへの補助リンク
+  rationale: 2つの属性からの入口を同じ階層に置くと、どちらの起点でも2段で到達できる
+  sources: []
+  input_observations:
+  - {observation_id: OBS-003, input_id: INPUT-001, locator: "brief.md#L6",
+     observation: 申込み方法と料金を探すのに時間がかかるという声がある}
+  alternatives:
+  - {method: ファセット型の一覧ページ1つ, rejected_because: 料金・申込みへの導線を別に設ける必要がある}
+  alternatives_not_applicable_reason: null
+  assumptions: []
+  counter_evidence: []
+  validation_status: tested_supported
+  validation_record_ids: [STUDY-001]
+  confidence: high
+  confidence_basis: 文献根拠なし。入力の観察があり、現行版のツリーテストで支持された
+  classification: internal
+  recorded_at: "2026-10-17T15:30:00+09:00"
+  skill_version: 0.1.0
+  library_version: 0.1.0
+- decision_id: IA-003
+  decision_revision: 1
+  run_id: RUN-FIXTURE-001
+  status: active
+  supersedes: null
+  stage: analyze
+  target_ids: [CONTENT-011]
+  problem: 採用情報を設計対象に含めるか
+  selected_method: 対象外とする
+  rationale: 依頼の目的は利用者向けのサービス案内であり、求職者は利用者に含まれない
+  sources: []
+  input_observations:
+  - {observation_id: OBS-004, input_id: INPUT-002, locator: "pages.csv#row=12", observation: スタッフ募集の対象者は求職者}
+  alternatives: []
+  alternatives_not_applicable_reason: 依頼範囲で決まり、実質的な選択肢がない
+  assumptions: []
+  counter_evidence: []
+  validation_status: not_tested
+  validation_record_ids: []
+  confidence: medium
+  confidence_basis: 文献根拠なし。入力の観察に基づき、実ユーザー調査は非該当
+  classification: internal
+  recorded_at: "2026-10-17T10:30:00+09:00"
+  skill_version: 0.1.0
+  library_version: 0.1.0

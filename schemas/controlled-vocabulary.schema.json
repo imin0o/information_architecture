@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "controlled-vocabulary.schema.json",
+  "title": "統制語彙 controlled-vocabulary.yaml（FR-02、4.4）",
+  "description": "表示ラベル・同義語・英日ラベルは概念IDへ対応付ける。同名異義語は scope_note で区別すれば許容する",
+  "type": "object",
+  "allOf": [{"$ref": "common.schema.json#/$defs/header"}],
+  "required": ["concepts"],
+  "unevaluatedProperties": false,
+  "properties": {
+    "concepts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["concept_id", "pref_label", "alt_labels", "scope_note", "broader", "related", "sources"],
+        "additionalProperties": false,
+        "properties": {
+          "concept_id": {"$ref": "common.schema.json#/$defs/concept_id"},
+          "pref_label": {
+            "type": "object", "required": ["ja"], "additionalProperties": false,
+            "properties": {"ja": {"$ref": "common.schema.json#/$defs/nonempty"},
+                           "en": {"$ref": "common.schema.json#/$defs/nonempty"}}
+          },
+          "alt_labels": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/nonempty"}},
+          "scope_note": {"type": ["string", "null"]},
+          "broader": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/concept_id"}},
+          "related": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/concept_id"}},
+          "sources": {
+            "description": "概念を確認した入力の位置",
+            "type": "array",
+            "items": {"type": "object", "required": ["input_id", "locator"], "additionalProperties": false,
+                      "properties": {"input_id": {"$ref": "common.schema.json#/$defs/input_id"},
+                                     "locator": {"$ref": "common.schema.json#/$defs/locator"}}}
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,111 @@
+# タクソノミーの代表ケース（requirements.md 10章、AC-06）。入力は架空の自作資料。
+# 合格は人がルーブリックで判定する。単一の正解階層への一致は求めない。
+schema_version: "1.0"
+case_id: CASE-TAXONOMY-001
+case_version: 1.1.0
+kind: representative
+task_type: taxonomy
+title: 同名異義語と同義語を含む生活支援サービスの用語一覧
+rubric_version: 1.1.0
+inputs:
+- path: inputs/brief.md
+  format: markdown
+  sha256: f7311619c5809d02a59024cfead622bbaa35c84cae6849430ed7ac5a0ea1e005
+  size_note: 依頼の説明。設計対象・利用者・目的・利用環境を含む
+  classification: internal
+- path: inputs/concepts.csv
+  format: csv
+  sha256: 50fa9e3314d419601561f7c08f94e13468f6268c62ac75506731280d0bd314dc
+  size_note: 候補語17件。列は term_id・term・source・context。同じ語が2行に現れるものを含む
+  classification: internal
+users:
+- ページを作る担当者
+- サイト内検索を使う利用者
+tasks:
+- task_id: TASK-01
+  description: 担当者が新しいサービスページに付ける語を、1つの概念として選ぶ
+  priority: primary
+  expected_destination: 家事代行・見守り・一時預かりがそれぞれ1つの概念IDに対応する
+- task_id: TASK-02
+  description: 利用者が「ハウスキーピング」「家事支援」で検索し、家事代行の情報に到達する
+  priority: primary
+  expected_destination: T-01〜T-03 が同じ概念IDの優先ラベルと同義語になる
+- task_id: TASK-03
+  description: 利用者が「サポート」で検索したとき、サービスの総称と問い合わせ窓口を区別して選べる
+  priority: secondary
+  expected_destination: T-11 と T-12 が別の概念IDになり、scope_note で区別される
+required_conditions:
+- 17件の候補語すべてを、概念の優先ラベル・同義語・対象外のいずれかとして扱い、対象外には理由を記す
+- T-11 と T-12 の「サポート」を別の概念IDにする
+- パンフレット（T-04）と利用規約（T-05）で異なる「見守り」の位置付けを、矛盾として記録し、採った方と理由を示す
+- 事業者が提供しない「介護」（T-07）をサービスの概念と区別する
+- 上位・下位関係が循環しない
+acceptable_variations:
+- サービス種別・案内情報・手続きの3つの体系に分ける
+- サービスを1つの階層にし、案内情報と手続きを別の一覧にする
+- 「予約」を「申込み」の下位概念とする、または関連概念とする。どちらでも理由を記す
+inappropriate_designs:
+- design: 「サポート」を1つの概念にまとめ、2つの意味を同義語として扱う
+  violates: [R-02]
+  why: 問い合わせ先を探す利用者にサービス一覧が返る
+- design: 「見守り」を介護の下位概念にし、利用規約の記述を記録しない
+  violates: [R-02, R-06]
+  why: 矛盾する入力の一方だけで関係を決めている
+- design: 同義語を別概念のまま残し、担当者が同じサービスに別の語を付けられる
+  violates: [R-02, R-03]
+  why: 担当者ごとの語の揺れが残る
+- design: 候補語の一部を理由なく語彙から外す
+  violates: [R-04]
+  why: 対象外の判断を追跡できない
+rubric:
+- item: R-01
+  applies: true
+  case_criteria:
+  - 担当者の語の選択と、利用者の検索という2つの目的に体系が対応している
+- item: R-02
+  applies: true
+  case_criteria:
+  - 同名異義語・同義語・矛盾する位置付けの扱いが required_conditions を満たす
+- item: R-03
+  applies: true
+  case_criteria:
+  - 優先ラベルが利用者の語で書かれ、同じ親の下位概念、または同じファセット内の概念が同じ観点・粒度でそろっている
+- item: R-04
+  applies: true
+  case_criteria:
+  - 17件の候補語それぞれについて、対応する概念IDか対象外の理由を追跡できる
+- item: R-05
+  applies: false
+  case_criteria: []
+  not_applicable_reason: >-
+    このケースの成果物は統制語彙と分類体系であり、ナビゲーションのノードと経路を設計する責任を持たない。
+    タクソノミーの標準経路もStructureを含まない。検索語から概念への到達は R-02 と TASK-02・TASK-03 で評価する
+- item: R-06
+  applies: true
+  case_criteria:
+  - 「見守り」の位置付けの判断に、T-04 と T-05 の両方の入力位置が参照されている
+- item: R-07
+  applies: true
+  case_criteria:
+  - 利用者の検索行動を未検証の事項として扱う。同義語の採否などで検索語に関する前提を置いた場合は、仮定として示し、検証方法を記している
+scenarios:
+- scenario: 同じ「サポート」が2つの意味で使われている
+  kind: homonym
+  expected: 別の概念IDに分け、それぞれ scope_note で区別する。区別のない同名ラベルは検査で拒否する
+  machine_checks:
+  - tests/checks/test_structure.py::test_homonym_requires_scope_note
+  - tests/checks/test_structure.py::test_homonym_with_scope_notes_is_allowed
+  human_check: scope_note の説明で担当者が2つの概念を選び分けられるかを確かめる
+- scenario: パンフレットと利用規約で「見守り」の位置付けが異なる。文献の主張にも、案件の条件に合わないものがある
+  kind: conflicting_evidence
+  expected: 矛盾を記録して採否の理由を示す。not_supported の文献主張を採用理由に使わず、反証として扱う
+  machine_checks:
+  - tests/checks/test_decisions.py::test_not_supported_claim_cannot_be_primary
+  - tests/checks/test_decisions.py::test_not_supported_claim_must_be_counter_evidence
+  - tests/checks/test_decisions.py::test_unresolved_counter_evidence_forces_low
+  human_check: 判断記録に T-04 と T-05 の両方の参照があり、採った位置付けの理由が入力に基づいているかを確かめる
+changes:
+- version: 1.1.0
+  reason: >-
+    第三者レビュー（Codex）を反映。循環禁止を上位・下位関係に限定し、R-03の粒度の条件を同じ親・同じファセットに絞った。
+    R-07を前提を置いた場合の条件にし、R-05の非該当理由に成果物の責任範囲を加えた

@@ -1,0 +1,27 @@
+# 契約検査用の自作例。サービス種別と地区の2つのファセットで分類する。
+schema_version: "1.0"
+run_id: RUN-FIXTURE-001
+artifact_id: ART-003
+version: 1
+classification: internal
+vocabulary: {artifact_id: ART-002, version: 1}
+inventory: {artifact_id: ART-001, version: 1}
+schemes:
+- {scheme_id: SCHEME-001, label: サービス種別, kind: facet, top_concepts: [CONCEPT-001],
+   decision_ref: {decision_id: IA-001, decision_revision: 2}}
+- {scheme_id: SCHEME-002, label: 地区, kind: facet, top_concepts: [CONCEPT-005],
+   decision_ref: {decision_id: IA-001, decision_revision: 2}}
+- {scheme_id: SCHEME-003, label: 案内, kind: list, top_concepts: [CONCEPT-010, CONCEPT-009],
+   decision_ref: {decision_id: IA-001, decision_revision: 2}}
+assignments:
+- {content_id: CONTENT-001, concept_ids: [CONCEPT-010]}
+- {content_id: CONTENT-002, concept_ids: [CONCEPT-002, CONCEPT-006]}
+- {content_id: CONTENT-003, concept_ids: [CONCEPT-002, CONCEPT-008]}
+- {content_id: CONTENT-004, concept_ids: [CONCEPT-003, CONCEPT-006]}
+- {content_id: CONTENT-005, concept_ids: [CONCEPT-003, CONCEPT-007]}
+- {content_id: CONTENT-006, concept_ids: [CONCEPT-004, CONCEPT-007]}
+- {content_id: CONTENT-007, concept_ids: [CONCEPT-004, CONCEPT-008]}
+- {content_id: CONTENT-008, concept_ids: [CONCEPT-010]}
+- {content_id: CONTENT-009, concept_ids: [CONCEPT-010]}
+- {content_id: CONTENT-010, concept_ids: [CONCEPT-010]}
+- {content_id: CONTENT-014, concept_ids: [CONCEPT-009]}
