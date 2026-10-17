@@ -460,3 +460,76 @@ EXTRACT-001-001の品質確認は、本文、表、定義リストがok、図と
 引用台帳は、直接引用0件、抜粋プレビュー49件（BOOK-001が26件、BOOK-003が23件）で、プレビューはすべて25語以内である。知識本文と主張は、エージェントへの命令文を含まない形で書き、Codexの主張レビューを通した。
 
 - 状態: 完了（2026-10-17）。NEED-04・09はD-M3-22によりM5へ送る
+
+## M4 5つのSkillで標準経路を完成させる
+
+- 実施日: 2026-10-17〜18
+- 状態: 完了。両代表ケースを入力から評価まで通し、タクソノミーでは指摘の修正と再評価を1巡行った。人によるルーブリックの判定（AC-09）はM6で行う
+
+### 決定事項
+
+| ID | 決定 | 理由 |
+|---|---|---|
+| D-M4-01 | 案件の入力は `iakit input add` で実行ディレクトリの `inputs/` に固定し、位置付きの取込み結果 `ingest/<input_id>.yaml`（`schemas/ingest.schema.json`）を作る。書籍の固定抽出（`iakit extract`）とは別のモジュールにする | 書籍の抽出は原典照合とハッシュ契約を持つ構築時の処理で、案件の入力は実行ごとの処理である。責任を分け、印刷ページ番号の推測などを持ち込まない |
+| D-M4-02 | 位置子を形式ごとに固定した（`name#L<行>`、`#row=`、`#/JSON Pointer`、`#xpath=`、`#concept=`、`#page=&L`、`#p=`・`#table=&row=&cell=`）。SKOSはRDF/XMLだけを扱い、DOCTYPE・実体宣言を含むXMLは解析しない | 依存を増やさずに9形式を扱う。XMLの外部実体・実体展開を避ける。読めない部分は `unreadable` に記録し、推測で埋めない |
+| D-M4-03 | 評価の指摘を `findings.yaml`（`schemas/findings.schema.json`）に置き、ia-review.mdは人向けの説明とする。未解決の重大な指摘と `run.yaml` の `refine.unresolved_critical` の一致、解消した版の存在、巡数を検査する | FR-06の指摘の項目とFR-08のRefineを機械検査するため |
+| D-M4-04 | 実行記録のハッシュ・版・依存・機密区分は `iakit run init / artifact / knowledge / refresh / event / resume` で更新し、手で書かない。終了（`completed`・`unresolved`）は契約検査に通った場合だけ記録する | 手書きのハッシュや依存の漏れによるstale化の回避を防ぐ |
+| D-M4-05 | 完了した対応経路には、各段階のMarkdown成果物を含む全成果物を必須にした。Markdown成果物は最初の節を「## 仮定に基づく箇所」とし、判断を `IA-nnn rN` の形で参照する。成果物の種類に `information_audit`・`classification_options`・`information_architecture`・`review_findings` を加えた | IN-04（成果物の冒頭の仮定）とFR-08（IDと版の併記）を検査できるようにする |
+| D-M4-06 | Skillは知識をKN-IDで参照し、文献ノートは手順から参照しない。共通の記録規則 `references/records.md` は各分野Skillに同じ写しを置き、写しの一致を試験する | BR-03の自己完結した配布物にそのまま移せる形にする。配布物への同梱はM5で行う |
+| D-M4-07 | 検証計画には `not_tested` のまま判断を対応付けてよいとした。`planned` にする場合は判断の新しい版と、参照する成果物の更新を要する | 評価の最後に判断の版を上げると、全成果物の判断参照の更新とstale化が連鎖する。`planned` と記録した判断が計画にないことは引き続き検査する |
+| D-M4-08 | 指摘の `basis` に書いた判断の版は、評価した時点の証跡として扱い、現行の判断への参照として検査しない | 再評価後も、指摘がどの版を対象にしたかを残す必要がある |
+
+### 成果物
+
+| 成果物 | 場所 |
+|---|---|
+| Skill | `skills/ia-orchestrator/`（SKILL.md、routing.md、references/）、`ia-analysis/`、`ia-taxonomy/`、`ia-structure/`、`ia-evaluation/`（各SKILL.md、templates/、references/records.md） |
+| スキーマ | `schemas/ingest.schema.json`、`findings.schema.json`。`run.schema.json` の成果物の種類と、`decision.schema.json` の対象IDに `FIND-` を追加 |
+| 処理 | `scripts/iakit/ingest.py`、`ingest_docs.py`（取込み）、`run_cmd.py`、`run_inputs.py`、`cli_run.py`（実行管理）、`run_outputs.py`（成果物一式の検査）。`contracts.py` から呼ぶ |
+| 試験 | `tests/checks/test_ingest.py`、`test_run_cmd.py`、`test_findings.py`、`test_skills.py`。契約素材 `tests/fixtures/contracts/webia-run/` にMarkdown成果物と指摘を追加 |
+| 試行の結果（本文を含むためGit管理外） | `runs/RUN-WEBIA-001/`、`runs/RUN-TAXONOMY-001/`、`runs/RUN-BOUNDARY-001/` |
+| 検査結果（本文を含まない） | `checks/m4.yaml`（全体）、`checks/m4-runs.yaml`（3つの試行の契約検査） |
+
+### 試行の結果
+
+Claude Code 2.1.291、モデル claude-opus-5-5 で、ia-orchestratorの手順に従って実行した。入力は自作の代表ケースだけで、ホストのモデルに読ませる許可を各実行の `approvals` に記録した（ユーザーのM4実装の指示に基づく。外部サービスへの送信はない）。
+
+| 実行 | 経路 | 結果 | 成果物 | 判断 | 指摘 |
+|---|---|---|---|---|---|
+| RUN-WEBIA-001 | Analyze → Classify → Structure → Validate | completed | 11件（全段階） | 7件。confidence は medium 4件、low 3件（critical の仮定を持つもの） | major 1件（提供のない地区×サービスの組合せが分からない。依頼者の確認が要る）、minor 1件。重大な指摘なし、Refine 0巡 |
+| RUN-TAXONOMY-001 | Analyze → Classify → Validate | completed | 9件（全段階）。うち6件はRefineで版2 | 7版（5判断。IA-001・005を版2へ置換） | major 1件（サービスの下の粒度の不一致）、minor 1件。Refine 1巡で修正し、再評価で解消 |
+| RUN-BOUNDARY-001 | 展示パネル（MVP未対応） | interrupted | なし | なし | `completed` の記録は契約検査で拒否された。不足Skill（ia-presentation）と対応範囲を記録して停止 |
+
+- 利用環境が入力にないWeb IAでは、質問文を `questions/Q-001.md` に記録し、回答が得られない場合の分岐（IN-04）を確かめるため、回答を待たずに仮定で進めた。仮定は IA-001 r1（critical: false）とし、各成果物の冒頭に示した。
+- 3つの実行とも `iakit contracts check` と `iakit run resume` はエラー0件で通った。
+- 実際の試行で重大な指摘は出なかった。重大な指摘の修正と2巡後の未解決の報告は、契約素材を使う試験（`test_runs.py`、`test_findings.py`）で確かめている。
+- 評価はSkillの手順による点検であり、ルーブリックによる合否ではない。
+
+試行で次の3つの不具合を見つけ、修正して回帰試験を加えた。
+
+| 不具合 | 修正 |
+|---|---|
+| 未登録の成果物IDを `--depends` に渡すと、新しく割り当てる自身のIDと一致した場合に依存が黙って消えた | 自身のIDを依存にした場合はエラーにする |
+| 開始時の入力登録が `input_changed` として履歴に残った | 成果物の登録後の入力変更だけを記録する。RUN-WEBIA-001の履歴には修正前の2件が残る |
+| 指摘の `basis` に書いた旧版の判断が現行の判断参照として扱われ、再評価後に終了できなかった | D-M4-08 |
+
+### 標準経路での読み込み範囲（NFR-06）
+
+SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録規則61行、入力形式20行、点検項目26行、経路43行、テンプレート31〜55行である。RUN-WEBIA-001で読んだ知識本文は KN-002〜010 の9件、RUN-TAXONOMY-001は KN-002〜008・010 の8件で、文献ノート（KN-001・011・012）は読んでいない。内容ハッシュは各 `run.yaml` の `skills`・`knowledge` にある。
+
+### 検証結果
+
+| 検査 | 結果 | 記録・条件 |
+|---|---|---|
+| `uv run --locked python scripts/verify.py --report library/build-logs/checks/m4.yaml` | pass | Python 3.12.13・3.14.3で各488件。M3の414件から74件を追加 |
+| `uv run --locked iakit contracts check runs/RUN-WEBIA-001 runs/RUN-TAXONOMY-001 runs/RUN-BOUNDARY-001` | pass | `checks/m4-runs.yaml`。人による原典・位置の照合は `not_run` |
+
+### 保留事項
+
+| ID | 内容 | 決める人 | 必要になる時点 |
+|---|---|---|---|
+| P-M4-01 | RUN-WEBIA-001・RUN-TAXONOMY-001の成果物を、固定ルーブリックv1.1.0で人が判定する | ユーザー（またはユーザーが指定した人） | M6（AC-09） |
+| P-M4-02 | 配布物の実行環境に `iakit` がない場合の検査の方法（検証用の処理を同梱するか、点検項目による手作業と `not_run` の報告にとどめるか） | エージェントが案を出し、ユーザーが確認 | M5の配布生成の前 |
+| P-M4-03 | Codexでの標準経路の試行。M4ではClaude Codeだけで実行した | — | M6（AC-10） |
+| P-M4-04 | D-M4-03・05の成果物（`findings.yaml`、成果物の種類の追加、Markdown成果物の冒頭の節）を要件書4.2・FR-06へ反映するか | ユーザー | 要件書の次回改訂 |
+| P-M4-05 | RUN-WEBIA-001のFIND-001（提供のない地区×サービスの組合せ）は、架空の依頼者への確認を要するため未対応のまま残した | — | 代表ケースの改訂時に扱いを決める |

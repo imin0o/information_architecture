@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-from . import decisions, manifest, provenance, provenance_local, runs, structure, yamlio
+from . import decisions, manifest, provenance, provenance_local, run_outputs, runs, structure, yamlio
 from .paths import EXTRACTED, FIXTURES, ORIGINALS, ROOT
 
 SCHEMAS = {
@@ -21,6 +21,7 @@ SCHEMAS = {
     "taxonomy.yaml": "taxonomy.schema.json",
     "sitemap.yaml": "sitemap.schema.json",
     "build-manifest.yaml": "build-manifest.schema.json",
+    "findings.yaml": "findings.schema.json",
 }
 SHARED = {"provenance.yaml": ROOT / "library/provenance.yaml", "receipts.yaml": ROOT / "verification/receipts.yaml"}
 EMPTY = {"provenance.yaml": {"schema_version": "1.0", "records": []},
@@ -130,10 +131,6 @@ def _artifact_document_errors(run: dict, docs: dict) -> list[str]:
                     required.add(docs["controlled-vocabulary.yaml"]["artifact_id"])
         for ref in sorted(required - {dep["ref"] for dep in a["depends_on"]}):
             errors.append(f"{a['artifact_id']}: 本体が参照する依存 {ref} が depends_on にない")
-    if run["status"] == "completed" and run["task_type"] in runs.ROUTES:
-        required = set(ARTIFACT_FILES) - ({"sitemap"} if run["task_type"] == "taxonomy" else set())
-        present = {a["kind"] for a in run["artifacts"]}
-        errors += [f"run.yaml: 完了した経路の必須成果物 {kind} がない" for kind in sorted(required - present)]
     return errors
 
 
@@ -159,7 +156,8 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
         for name, collection, key in (("content-inventory.yaml", "items", "content_id"),
                                       ("controlled-vocabulary.yaml", "concepts", "concept_id"),
                                       ("taxonomy.yaml", "schemes", "scheme_id"),
-                                      ("sitemap.yaml", "nodes", "node_id")):
+                                      ("sitemap.yaml", "nodes", "node_id"),
+                                      ("findings.yaml", "findings", "finding_id")):
             target_ids.update(item[key] for item in docs.get(name, {}).get(collection, []))
         versions = {a: v["version"] for a, v in arts.items() if v["status"] == "current"}
         errors += decisions.decision_errors(docs["decisions.yaml"], provenance.claims_index(prov),
@@ -187,6 +185,7 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
     for name, doc in docs.items():
         if run and "run_id" in doc and doc["run_id"] != run["run_id"]:
             errors.append(f"{name}: run_id が実行記録と一致しない")
+    errors += run_outputs.check(directory, docs)
     return errors, derived
 
 

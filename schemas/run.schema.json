@@ -119,7 +119,8 @@
       "properties": {
         "artifact_id": {"$ref": "common.schema.json#/$defs/artifact_id"},
         "kind": {"enum": ["content_inventory", "controlled_vocabulary", "taxonomy", "sitemap", "problem_definition",
-                          "ia_review", "validation_plan"]},
+                          "information_audit", "classification_options", "information_architecture",
+                          "ia_review", "validation_plan", "review_findings"]},
         "path": {"type": "string", "pattern": "^[^/\\\\][^\\\\]*$"},
         "version": {"type": "integer", "minimum": 1},
         "sha256": {"$ref": "common.schema.json#/$defs/sha256"},

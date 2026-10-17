@@ -1,0 +1,21 @@
+# 契約検査用の自作例。評価の指摘（FR-06）。
+schema_version: "1.0"
+run_id: RUN-FIXTURE-001
+artifact_id: ART-009
+version: 1
+classification: internal
+rubric_version: 1.1.0
+findings:
+- finding_id: FIND-001
+  round: 0
+  severity: minor
+  target: {artifact_id: ART-004, version: 1}
+  locator: NODE-010
+  problem: ラベル「料金・申込み」は料金一覧・よくある質問・申込み方法の3ページをまとめており、よくある質問を含むことが分からない
+  basis: [R-03]
+  recommendation: ラベルに「よくある質問」を含めるか、別ノードに分ける
+  resolution_condition: NODE-010 の表示ラベルと配置するコンテンツの範囲が一致する
+  return_to: structure
+  status: open
+  resolved_in: null
+  note: 主要タスクの完了を妨げないため、残件として記録する

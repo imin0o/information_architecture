@@ -36,7 +36,7 @@ def test_stale_marking_after_input_change_passes(check_bundle):
     def changed(d):
         # 更新版のページ一覧を再登録した状態。実体はこの素材に含めない
         d["inputs.yaml"]["inputs"][1].update(sha256="1" * 64, path="inputs/pages-v2.csv")
-        make_stale(d, "ART-001", "ART-002", "ART-003", "ART-004")
+        make_stale(d, "ART-001", "ART-002", "ART-003", "ART-004", "ART-006", "ART-007", "ART-008", "ART-009", "ART-010")
     # stale化した成果物の旧調査は、適用可否を確かめるまで tested_* の根拠にできない
     assert check_bundle(changed) == ["IA-002 r1: STUDY-001 は ART-004 v1 の調査で、現行版に適用できるか未確認"]
 
@@ -104,6 +104,7 @@ def test_unresolved_after_two_rounds_must_be_reported(check_bundle):
     def unresolved(d, reported, status):
         d["run.yaml"].update(status=status, refine={"rounds": 2, "unresolved_critical": ["FIND-001"],
                                                     "reported_to_user": reported})
+        d["findings.yaml"]["findings"][0].update(severity="critical", status="unresolved")
     assert has(check_bundle(lambda d: unresolved(d, False, "completed")), "completed になっている")
     assert has(check_bundle(lambda d: unresolved(d, False, "unresolved")), "ユーザーへ報告する")
     assert check_bundle(lambda d: unresolved(d, True, "unresolved")) == []
@@ -233,7 +234,7 @@ def test_artifact_document_classification_must_match_run(run_copy):
     (run_copy / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
     result = contracts.check_bundle(run_copy)
     assert result["result"] == "fail"
-    assert result["errors"] == ["sitemap.yaml: 機密区分が実行記録の ART-004 と一致しない"]
+    assert "sitemap.yaml: 機密区分が実行記録の ART-004 と一致しない" in result["errors"]
 
 
 @pytest.mark.parametrize(("name", "missing"), [("content-inventory.yaml", "INPUT-002"),
@@ -279,7 +280,7 @@ def test_missing_bundle_or_required_files_fail(run_copy, missing, capsys):
 
 def test_completed_run_cannot_drop_required_artifacts(check_bundle):
     errors = check_bundle(lambda d: d["run.yaml"].update(artifacts=[]))
-    assert has(errors, "完了した経路の必須成果物 sitemap がない")
+    assert has(errors, "段階 structure の成果物 sitemap がない")
 
 
 def test_registered_structured_artifact_in_subdirectory_is_validated(run_copy):
@@ -310,5 +311,9 @@ def test_matching_artifact_classification_with_user_override_passes(run_copy):
     run["artifacts"][3].update(classification="public", sha256=manifest.sha256_file(run_copy / "sitemap.yaml"),
                                 classification_override={"by": "user", "at": "2026-10-17T16:00:00+09:00",
                                                          "reason": "公開部分のみ使う指定"})
+    for a in run["artifacts"]:
+        for dep in a["depends_on"]:
+            if dep["ref"] == "ART-004":
+                dep["sha256"] = run["artifacts"][3]["sha256"]
     (run_copy / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
     assert contracts.check_bundle(run_copy)["result"] == "pass"

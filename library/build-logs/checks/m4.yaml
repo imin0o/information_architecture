@@ -1,0 +1,269 @@
+schema_version: 0.1.0
+result: pass
+uv: uv 0.12.7 (61291a8ca 2026-08-27 x86_64-pc-windows-msvc)
+tests:
+- python: Python 3.12.13
+  result: pass
+  tests: 488
+- python: Python 3.14.3
+  result: pass
+  tests: 488
+candidate_snapshot: temporary index; actual index unchanged
+checks:
+- check: manifest
+  result: pass
+  local_originals: run
+  status_counts:
+    bibliography_unconfirmed: 9
+    not_received: 9
+  unassigned_originals: 1
+  errors: []
+- check: fixtures
+  result: pass
+  files:
+  - epub/reflowable.epub
+  - pdf/page-labels.pdf
+  - pdf/unicode-layout.pdf
+  expected_catalogue_sha256: 
+    766e3bbb033302989fe3972e5c98cb594a6b17935950cd03da71a61505b74b1c
+  errors: []
+- check: leaks
+  result: pass
+  targets:
+  - git:index
+  files_scanned: 191
+  known_original_hashes: 10
+  violations: []
+  errors: []
+- check: cases
+  result: pass
+  cases:
+    CASE-BOUNDARY-001: 1.1.0
+    CASE-TAXONOMY-001: 1.1.0
+    CASE-WEBIA-001: 1.1.0
+  rubric_version: 1.1.0
+  content_review: human_only
+  errors: []
+- check: contracts
+  target: tests/fixtures/contracts/webia-run
+  result: pass
+  files:
+  - content-inventory.yaml
+  - controlled-vocabulary.yaml
+  - decisions.yaml
+  - findings.yaml
+  - inputs.yaml
+  - observations.yaml
+  - provenance.yaml
+  - receipts.yaml
+  - run.yaml
+  - sitemap.yaml
+  - taxonomy.yaml
+  input_files:
+    run: 3
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 1
+    stale: []
+  errors: []
+- check: contracts
+  target: library
+  result: pass
+  files:
+  - provenance.yaml
+  - receipts.yaml
+  input_files:
+    run: 0
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 49
+    stale: []
+  errors: []
+- check: library
+  result: pass
+  errors: []
+  knowledge:
+    adopted:
+    - KN-001
+    - KN-002
+    - KN-003
+    - KN-004
+    - KN-005
+    - KN-006
+    - KN-007
+    - KN-008
+    - KN-009
+    - KN-010
+    - KN-011
+    - KN-012
+    hypothesis: []
+    not_supported: []
+  needs:
+    NEED-01: adopted
+    NEED-02: adopted
+    NEED-03: adopted
+    NEED-04: pending
+    NEED-05: adopted
+    NEED-06: adopted
+    NEED-07: adopted
+    NEED-08: adopted
+    NEED-09: gap
+    NEED-10: adopted
+  coverage:
+    status_counts:
+      not_received: 9
+      not_started: 7
+      partial: 2
+    extractions:
+      EXTRACT-001-001:
+        read:
+        - - 296
+          - 385
+        - - 1365
+          - 1444
+        - - 3137
+          - 3196
+        - - 3445
+          - 3534
+        - - 4417
+          - 4526
+        - - 5492
+          - 5541
+        - - 9130
+          - 9269
+        - - 9606
+          - 9735
+        - - 9763
+          - 9802
+        - - 11140
+          - 11209
+        displayed_lines: 0
+        integrated:
+        - - 1382
+          - 1395
+        - - 3141
+          - 3145
+        - - 3174
+          - 3184
+        - - 3454
+          - 3460
+        - - 3488
+          - 3506
+        - - 3511
+          - 3528
+        - - 4486
+          - 4490
+        - - 4501
+          - 4526
+        - - 5493
+          - 5499
+        - - 5517
+          - 5521
+        - - 9138
+          - 9151
+        - - 9229
+          - 9244
+        - - 9254
+          - 9258
+        - - 9649
+          - 9655
+        - - 9671
+          - 9678
+        - - 9682
+          - 9686
+        - - 9769
+          - 9773
+        - - 9779
+          - 9783
+        - - 11183
+          - 11186
+        - - 11190
+          - 11200
+      EXTRACT-003-001:
+        read:
+        - - 55
+          - 134
+        - - 3843
+          - 3952
+        - - 4060
+          - 4139
+        - - 4250
+          - 4319
+        - - 4440
+          - 4629
+        - - 4847
+          - 5076
+        - - 9968
+          - 10117
+        displayed_lines: 60
+        integrated:
+        - - 3844
+          - 3848
+        - - 3890
+          - 3897
+        - - 3907
+          - 3911
+        - - 3938
+          - 3942
+        - - 4096
+          - 4109
+        - - 4263
+          - 4271
+        - - 4296
+          - 4302
+        - - 4456
+          - 4462
+        - - 4503
+          - 4507
+        - - 4523
+          - 4530
+        - - 4547
+          - 4560
+        - - 4604
+          - 4623
+        - - 4866
+          - 4870
+        - - 4979
+          - 4982
+        - - 4996
+          - 5008
+        - - 5038
+          - 5044
+        - - 5056
+          - 5060
+        - - 5062
+          - 5068
+        - - 5074
+          - 5076
+        - - 9979
+          - 9983
+        - - 10027
+          - 10033
+        - - 10077
+          - 10083
+        - - 10103
+          - 10108
+  sample_reviews:
+    EXTRACT-001-001: issue
+    EXTRACT-003-001: issue
+  quote_ledger:
+    BOOK-001:
+      previews: 26
+      quotes: 0
+      words_total: 236
+      words_unique_spans: 236
+      overlap_undetermined: 0
+    BOOK-003:
+      previews: 23
+      quotes: 0
+      words_total: 232
+      words_unique_spans: 232
+      overlap_undetermined: 0
+  edited_after_generation:
+  - library/provenance.yaml
+  - library/terms.yaml
+  human_review: not_run

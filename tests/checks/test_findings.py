@@ -1,0 +1,74 @@
+"""評価の指摘とRefineの整合、Markdown成果物の判断参照（FR-06、FR-08、IN-04）。"""
+
+from iakit import yamlio
+
+
+def has(errors, text):
+    return any(text in e for e in errors)
+
+
+def finding(d):
+    return d["findings.yaml"]["findings"][0]
+
+
+def test_bundle_findings_pass(check_bundle):
+    assert check_bundle() == []
+
+
+def test_open_critical_must_be_listed_in_refine(check_bundle):
+    errors = check_bundle(lambda d: finding(d).update(severity="critical"))
+    assert has(errors, "refine.unresolved_critical [] が指摘の状態 ['FIND-001'] と一致しない")
+
+
+def test_completed_run_with_open_critical_is_rejected(check_bundle):
+    def critical(d):
+        finding(d).update(severity="critical")
+        d["run.yaml"]["refine"]["unresolved_critical"] = ["FIND-001"]
+    assert has(check_bundle(critical), "未解決の重大な指摘が残るのに completed")
+
+
+def test_unresolved_critical_before_second_round_is_rejected(check_bundle):
+    def early(d):
+        finding(d).update(severity="critical", status="unresolved")
+        d["run.yaml"]["refine"]["unresolved_critical"] = ["FIND-001"]
+        d["run.yaml"]["status"] = "in_progress"
+    assert has(check_bundle(early), "2巡に達する前の重大な指摘は open のまま")
+
+
+def test_resolved_requires_newer_registered_version(check_bundle):
+    assert has(check_bundle(lambda d: finding(d).update(status="resolved", resolved_in={"artifact_id": "ART-004", "version": 1})),
+               "resolved_in は対象と同じ成果物の、指摘より新しい")
+    assert has(check_bundle(lambda d: finding(d).update(status="resolved", resolved_in={"artifact_id": "ART-004", "version": 2})),
+               "resolved_in は")
+
+
+def test_finding_target_and_round_must_exist(check_bundle):
+    assert has(check_bundle(lambda d: finding(d)["target"].update(version=3)), "対象 ART-004 v3 が実行記録にない")
+    assert has(check_bundle(lambda d: finding(d).update(round=2)), "round 2 が実行記録の巡数 1 を超える")
+
+
+def test_duplicate_finding_ids_are_rejected(check_bundle):
+    assert has(check_bundle(lambda d: d["findings.yaml"]["findings"].append(dict(finding(d)))), "finding_id が重複")
+
+
+def test_resolved_without_version_fails_schema(bundle_docs):
+    doc = dict(bundle_docs["findings.yaml"])
+    doc["findings"] = [dict(doc["findings"][0], status="resolved", resolved_in=None)]
+    assert yamlio.schema_errors(doc, "findings.schema.json")
+
+
+def test_findings_must_match_registration(check_bundle):
+    assert has(check_bundle(lambda d: d["findings.yaml"].update(version=2)), "review_findings と一致しない")
+
+
+def test_completed_route_requires_validation_outputs(check_bundle):
+    def drop(d):
+        d["run.yaml"]["artifacts"] = [a for a in d["run.yaml"]["artifacts"] if a["kind"] != "validation_plan"]
+    assert has(check_bundle(drop), "段階 validate の成果物 validation_plan がない")
+
+
+def test_planned_decision_must_appear_in_validation_plan(check_bundle):
+    def planned(d):
+        ia3 = next(x for x in d["decisions.yaml"]["decisions"] if x["decision_id"] == "IA-003")
+        ia3["validation_status"] = "planned"
+    assert has(check_bundle(planned), "planned の判断 IA-003 r1 に検証方法が対応付いていない")

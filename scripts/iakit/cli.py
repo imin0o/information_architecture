@@ -11,6 +11,15 @@
   iakit contracts check [--local] [DIR ...]   実行記録・判断・出典・構造のスキーマと整合性。--local は抜粋を固定テキストと照合する
   iakit cases check                課題ケースとルーブリックの固定状態（入力ハッシュ・項目の網羅・検査の実在）
   iakit library check              知識の索引・用語・矛盾・引用台帳・生成記録の整合と、主張レビューから導く採用状態
+  iakit run init DIR --run-id ID --task-type TYPE --host HOST --model MODEL   実行ディレクトリと経路・Skillの記録を作る
+  iakit input add DIR FILE --kind KIND --description TEXT [--format F] [--classification C] [--replace INPUT-nnn]
+                                   入力を固定・登録し、位置付きの取込み結果 ingest/<ID>.yaml を作る
+  iakit run artifact DIR PATH --kind KIND [--depends ID ...] [--decision IA-nnn:REV ...]
+                                   成果物のハッシュ・版・依存・機密区分を登録する（依存先が変われば後続をstaleにする）
+  iakit run knowledge DIR KN-nnn ...   段階で読んだ知識本文の内容ハッシュを記録する
+  iakit run refresh DIR            入力登録簿のハッシュ・判断参照・未解決の重大な指摘を同期し、依存が変わった成果物をstaleにする
+  iakit run event DIR EVENT [--note TEXT] [--status S]   履歴を追加する。resumed は再開前の照合に通った場合だけ
+  iakit run resume DIR             再開前の照合（入力登録簿・入力の実体・取込み結果・成果物のハッシュ）
   iakit review sheet               人の確認用シートを sources/review/ に作る（Git管理外。本文を含む）
   iakit review record --by NAME (--all-ok | --reject EV | --claim CLAIM=STATUS | --sample-issue ID:KIND:MEMO)
                                    人の判定から主張レビュー・照合記録・抽出品質の確認を書き込む
@@ -22,8 +31,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import (cases, contracts, extract_cmd, fixtures, hostprobe, leak_history, leaks, library, manifest, paths,
-               review, yamlio)
+from . import (cases, cli_run, contracts, extract_cmd, fixtures, hostprobe, leak_history, leaks, library, manifest,
+               paths, review, yamlio)
 
 
 def _emit(results: list[dict], report: Path | None) -> int:
@@ -93,6 +102,7 @@ def _parser() -> argparse.ArgumentParser:
     rr.add_argument("--sample-issue", action="append", default=[], metavar="EXTRACT-ID:KIND:MEMO",
                     help="抽出品質の問題。メモに原典の本文を書かない")
 
+    cli_run.add_parsers(sub)
     with_report(sub.add_parser("check")).add_argument("--local", action="store_true")
     return parser
 
@@ -104,6 +114,8 @@ def main(argv: list[str] | None = None) -> int:
         paths.require_checkout()
     except ValueError as exc:
         parser.error(str(exc))
+    if args.group in ("run", "input"):
+        return cli_run.command(args)
     if args.group == "fixtures" and args.action == "build":
         for name in fixtures.build():
             print(f"wrote {name}")

@@ -103,3 +103,21 @@ uv run --locked iakit cases check                         # tests/cases/ の版�
 `iakit review sheet`は未確認の根拠と、新たな知識本文にまだ確認が結び付いていない根拠を確認シートに載せる。判定は`iakit review record --by <名前>`に`--all-ok`または個別の指定を付けて記録する。個別の`--sample-issue`だけでは他の品質確認を合格にせず、未登録のID・確認種別や不正な指定があれば、どの確認記録も変更しない。
 
 `--claim`・`--reject`・`--sample-issue`は確認済みの対象にも使える。照合記録は追記して履歴を残し、同じ根拠の原典照合状態には追記順の最新の有効記録を使う。後から却下した根拠を、過去の合格だけで検証済みに戻さない。
+
+## Skillと実行ディレクトリ
+
+MVPの5つのSkillのソースは `skills/` にある。入口は `ia-orchestrator`（経路は `skills/ia-orchestrator/routing.md`）で、`ia-analysis`・`ia-taxonomy`・`ia-structure`・`ia-evaluation` のSKILL.mdを順に読んで実行する。各Skillは手順、テンプレート、記録規則（`references/records.md`、各Skillに同じ写しを置く）を持ち、知識は `library/index.yaml` のKN-IDで参照する。配布物への同梱はM5で行う。
+
+```sh
+uv run --locked iakit run init runs/RUN-001 --run-id RUN-001 --task-type web_ia --host claude-code --model <モデル名>
+uv run --locked iakit input add runs/RUN-001 <ファイル> --kind page_list --description <説明> [--classification internal]
+uv run --locked iakit run knowledge runs/RUN-001 KN-007 KN-008      # 段階で読んだ知識の内容ハッシュ
+uv run --locked iakit run artifact runs/RUN-001 content-inventory.yaml --kind content_inventory
+uv run --locked iakit run event runs/RUN-001 refine --note FIND-001  # Refineの巡数を進める
+uv run --locked iakit run event runs/RUN-001 completed               # 契約検査に通らなければ終了しない
+uv run --locked iakit run resume runs/RUN-001                        # 再開前のハッシュ照合
+```
+
+`input add` は入力を `inputs/` に固定し、位置付きの取込み結果 `ingest/<input_id>.yaml` を作る。対応形式はテキスト、Markdown、PDF、DOCX、CSV、XML、JSON、YAML、SKOS（RDF/XMLのみ）で、位置子と読めない部分の扱いは `skills/ia-orchestrator/references/input-formats.md` に書いた。書籍の固定抽出（`iakit extract`）とは別の処理で、印刷ページ番号は推測しない。DOCTYPE・実体宣言を含むXMLは解析しない。資料内の命令文の候補は `instruction_like` として示すが、従わない。
+
+`run artifact` は成果物のハッシュ・版・依存・機密区分を記録する。依存は本体の参照から導き、本体から読めない依存は `--depends` で渡す。依存先が変わると後続の成果物を連鎖的に `stale` にする。`contracts check` は、完了した経路の全段階の成果物、Markdown成果物の最初の節「## 仮定に基づく箇所」と判断参照の版、評価の指摘（`findings.yaml`）とRefineの整合、取込み結果と入力のハッシュの対応も検査する。

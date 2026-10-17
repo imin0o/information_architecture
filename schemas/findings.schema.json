@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "findings.schema.json",
+  "title": "評価の指摘 runs/<run_id>/findings.yaml（FR-06、FR-08）",
+  "description": "ia-evaluationの指摘。人向けの説明は ia-review.md に書き、ID・重大度・対象版・解消条件・状態はここで機械検査する",
+  "type": "object",
+  "required": ["schema_version", "run_id", "artifact_id", "version", "classification", "rubric_version", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "run_id": {"$ref": "common.schema.json#/$defs/run_id"},
+    "artifact_id": {"$ref": "common.schema.json#/$defs/artifact_id"},
+    "version": {"type": "integer", "minimum": 1},
+    "classification": {"$ref": "common.schema.json#/$defs/classification"},
+    "rubric_version": {
+      "description": "適用した固定ルーブリックの版。ルーブリックがない案件では null",
+      "oneOf": [{"$ref": "common.schema.json#/$defs/version"}, {"type": "null"}]
+    },
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}}
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "required": ["finding_id", "round", "severity", "target", "locator", "problem", "basis", "recommendation",
+                   "resolution_condition", "return_to", "status", "resolved_in", "note"],
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": {"type": "string", "pattern": "^FIND-[0-9]{3}$"},
+        "round": {"description": "指摘した評価の巡。初回評価は0、修正後の再評価は1・2", "type": "integer", "minimum": 0, "maximum": 2},
+        "severity": {
+          "description": "critical: 主要タスクを妨げる・根拠の不正な断定・機密情報の不適切な扱い。major: 局所的な誤解や不整合。minor: 意味を変えない表記上の問題",
+          "enum": ["critical", "major", "minor"]
+        },
+        "target": {"$ref": "common.schema.json#/$defs/artifact_ref"},
+        "locator": {"description": "対象成果物内の位置（ID、見出し、行など）", "$ref": "common.schema.json#/$defs/nonempty"},
+        "problem": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "basis": {
+          "description": "指摘の根拠。ルーブリック項目、検査結果、判断・入力・主張のID",
+          "type": "array", "minItems": 1, "items": {"$ref": "common.schema.json#/$defs/nonempty"}
+        },
+        "recommendation": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "resolution_condition": {"description": "解消したと判定できる条件", "$ref": "common.schema.json#/$defs/nonempty"},
+        "return_to": {"description": "修正を担当する段階", "enum": ["analyze", "classify", "structure", "validate"]},
+        "status": {
+          "description": "open: 未対応。resolved: 修正版で解消を確認。unresolved: 2巡後も残りユーザーへ報告。accepted: ユーザーが残置を決めた",
+          "enum": ["open", "resolved", "unresolved", "accepted"]
+        },
+        "resolved_in": {
+          "description": "解消を確認した成果物の版",
+          "oneOf": [{"$ref": "common.schema.json#/$defs/artifact_ref"}, {"type": "null"}]
+        },
+        "note": {"type": ["string", "null"]}
+      },
+      "if": {"properties": {"status": {"const": "resolved"}}},
+      "then": {"properties": {"resolved_in": {"$ref": "common.schema.json#/$defs/artifact_ref"}}},
+      "else": {"properties": {"resolved_in": {"type": "null"}}}
+    }
+  }
+}
