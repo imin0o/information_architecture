@@ -75,7 +75,8 @@ def test_pass_with_failed_item_is_rejected(judge):
 
 
 def test_pass_with_critical_issue_is_rejected(judge):
-    issue = {"severity": "critical", "item": "R-05", "problem": "主要タスクに到達できない", "basis": ["ART-006 v1"]}
+    issue = {"severity": "critical", "item": "R-05", "problem": "主要タスクに到達できない", "basis": ["ART-006 v1"],
+             "residual": "残せない"}
     assert has(judge(lambda j: j["issues"].append(issue)), "verdict pass が")
 
 
@@ -84,6 +85,20 @@ def test_fail_verdict_with_failed_item_passes_check(judge):
         j["items"][0]["result"] = "fail"
         j["verdict"] = "fail"
     assert judge(failed) == []
+
+
+def test_accepted_critical_finding_blocks_pass(judge, tmp_path):
+    def accepted(j):
+        path = tmp_path / "run" / "findings.yaml"
+        doc = yamlio.load(path)
+        doc["findings"][0].update(severity="critical", status="accepted")
+        path.write_text(yamlio.dumps(doc), encoding="utf-8")
+    assert has(judge(accepted), "verdict pass が")
+
+
+def test_issue_requires_residual_reason(judge):
+    issue = {"severity": "minor", "item": "R-03", "problem": "表記の揺れ", "basis": ["ART-006 v1"]}
+    assert has(judge(lambda j: j["issues"].append(issue)), "residual")
 
 
 def test_item_without_basis_is_rejected(judge):

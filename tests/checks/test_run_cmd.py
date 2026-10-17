@@ -151,3 +151,19 @@ def test_dependency_on_own_new_id_is_rejected(run_dir):
     audit(run_dir)
     with pytest.raises(ValueError, match="自身のID"):
         run_cmd.artifact(run_dir, "information-audit.md", "information_audit", ["ART-001"], [])
+
+
+def test_superseded_decision_makes_dependents_stale(tmp_path):
+    d = tmp_path / "run"
+    shutil.copytree(ROOT / "tests/fixtures/contracts/webia-run", d)
+    doc = yamlio.load(d / "decisions.yaml")
+    r2 = next(x for x in doc["decisions"] if x["decision_id"] == "IA-001" and x["decision_revision"] == 2)
+    r3 = dict(r2, decision_revision=3, supersedes={"decision_id": "IA-001", "decision_revision": 2})
+    r2["status"] = "superseded"
+    doc["decisions"].append(r3)
+    (d / "decisions.yaml").write_text(yamlio.dumps(doc), encoding="utf-8")
+    staled = run_cmd.refresh(d)["staled"]
+    run = yamlio.load(d / "run.yaml")
+    taxonomy = next(a for a in run["artifacts"] if a["kind"] == "taxonomy")
+    assert taxonomy["artifact_id"] in staled and "IA-001 r2 が現行でなくなった" in taxonomy["stale_reason"]
+    assert run["status"] == "in_progress"

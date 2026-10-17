@@ -58,6 +58,24 @@ def test_bundled_contracts_check_passes_fixture(installed, tmp_path):
     assert (code, out["result"]) == (0, "pass"), out
 
 
+def test_bundled_knowledge_records_hash_without_book_notes(installed, tmp_path):
+    run(installed, "run", "init", tmp_path / "RUN-X-003", "--run-id", "RUN-X-003",
+        "--task-type", "taxonomy", "--host", "codex", "--model", "m")
+    code, out = run(installed, "run", "knowledge", tmp_path / "RUN-X-003", "KN-002")
+    assert code == 0, out
+    code, out = run(installed, "run", "knowledge", tmp_path / "RUN-X-003", "KN-001")
+    assert code == 1 and "索引にない知識" in out["error"]
+
+
+def test_bundled_judgment_reads_bundled_case(installed, tmp_path):
+    from test_judgment import record
+    shutil.copytree(BUNDLE, tmp_path / "run")
+    data = record(yamlio.load(tmp_path / "run" / "run.yaml"))
+    (tmp_path / "run" / "rubric-judgment.yaml").write_text(yamlio.dumps(data), encoding="utf-8")
+    code, out = run(installed, "run", "judgment", tmp_path / "run", "--case", "webia-001")
+    assert (code, out["result"]) == (0, "pass"), out
+
+
 def test_bundled_runtime_reports_missing_skill(installed, tmp_path):
     shutil.rmtree(installed / "ia-taxonomy")
     code, out = run(installed, "run", "init", tmp_path / "RUN-X-002", "--run-id", "RUN-X-002",

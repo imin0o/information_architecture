@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import manifest, runs, yamlio
-from .decisions import max_classification
+from .decisions import latest_active, max_classification
 from .paths import SKILLS
 
 STAGE_SKILLS = {"analyze": "ia-analysis", "classify": "ia-taxonomy", "structure": "ia-structure",
@@ -107,6 +107,14 @@ def refresh(directory: Path) -> dict:
             run["history"].append({"event": "input_changed", "at": now(), "note": "入力登録簿を更新した"})
     current, staled, changed = _current_hashes(run, inputs), [], True
     arts = {a["artifact_id"]: a for a in run["artifacts"]}
+    active = latest_active(decisions)
+    for a in (a for a in run["artifacts"] if a["status"] == "current"):
+        old = next((r for r in a["decision_refs"] if (r["decision_id"], r["decision_revision"]) not in active), None)
+        if old:
+            # 回答の追加などで判断が置き換わった。旧版に基づく成果物と、その後続を使わない
+            a.update(status="stale", stale_reason=f"判断 {old['decision_id']} r{old['decision_revision']} が現行でなくなった。"
+                                                  "現行の判断で作り直すまで使わない")
+            staled.append(a["artifact_id"])
     while changed:
         changed = False
         for a in (a for a in run["artifacts"] if a["status"] == "current"):

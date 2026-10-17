@@ -58,6 +58,34 @@ def markdown_errors(directory: Path, run: dict, decisions: list[dict]) -> list[s
     return errors
 
 
+def _header(text: str, markdown: bool) -> str:
+    """成果物の冒頭。Markdownは最初の節の本文、YAMLは最初の値より前のコメント行。"""
+    lines = text.splitlines()
+    if not markdown:
+        return "\n".join(ln for ln in lines[:next((i for i, ln in enumerate(lines)
+                                                   if ln.strip() and not ln.startswith("#")), len(lines))])
+    start = next((i for i, ln in enumerate(lines) if ln.startswith("## ")), len(lines))
+    end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")), len(lines))
+    return "\n".join(lines[start + 1:end])
+
+
+def assumption_errors(directory: Path, run: dict, decisions: list[dict]) -> list[str]:
+    """仮定を持つ判断を参照する現行の成果物は、冒頭にその判断をIDと版で示す（IN-04、R-07）。"""
+    with_assumptions = {(d["decision_id"], d["decision_revision"]) for d in decisions if d["assumptions"]}
+    errors = []
+    for a in run["artifacts"]:
+        path = directory / a["path"]
+        if a["status"] != "current" or a["kind"] == "review_findings" or not path.is_file():
+            continue
+        header = _header(path.read_text(encoding="utf-8"), a["kind"] in MARKDOWN_KINDS)
+        shown = {(m.group(1), int(m.group(2))) for m in DECISION_REF.finditer(header)}
+        place = "最初の節" if a["kind"] in MARKDOWN_KINDS else "先頭のコメント"
+        errors += [f"{a['artifact_id']}（{a['path']}）: 仮定を持つ判断 {d} r{r} を{place}に示していない"
+                   for d, r in sorted((x["decision_id"], x["decision_revision"]) for x in a["decision_refs"])
+                   if (d, r) in with_assumptions and (d, r) not in shown]
+    return errors
+
+
 def findings_errors(doc: dict, run: dict) -> list[str]:
     errors, seen = [], set()
     arts = {a["artifact_id"]: a for a in run["artifacts"]}
@@ -109,6 +137,7 @@ def check(directory: Path, docs: dict) -> list[str]:
         return found
     decisions = docs.get("decisions.yaml", {"decisions": []})["decisions"]
     found += required_errors(run) + markdown_errors(directory, run, decisions)
+    found += assumption_errors(directory, run, decisions)
     reg = next((a for a in run["artifacts"] if a["kind"] == "review_findings"), None)
     doc = docs.get("findings.yaml")
     if doc:

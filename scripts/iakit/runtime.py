@@ -10,8 +10,10 @@ import shutil
 from pathlib import Path
 
 from . import provenance, yamlio
+from .cases import CASES
 from .paths import ROOT, SCHEMAS
 
+KNOWLEDGE_INDEX = "library/index.yaml"
 PACKAGE = ROOT / "scripts" / "iakit"
 ENTRY = ROOT / "scripts" / "run_iakit.py"
 SEEDS = ("cli_run", "contracts", "judgment")
@@ -57,4 +59,33 @@ def bundle(dest: Path) -> list[str]:
         "# 出典IDと原典のsha256（配布物の照合用。runtime.bundle が生成）\n"
         + yamlio.dumps({"sources": provenance.registered_sources()}), encoding="utf-8")
     written.append(provenance.REGISTERED)
+    return written + _cases(dest) + _knowledge(dest)
+
+
+def _cases(dest: Path) -> list[str]:
+    """run judgment が読む固定ケースとルーブリック。ケースの入力は写さない。"""
+    written = []
+    for src in [CASES / "rubric.yaml", *sorted(CASES.glob("*/case.yaml"))]:
+        rel = src.relative_to(ROOT)
+        (dest / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(src, dest / rel)
+        written.append(rel.as_posix())
     return written
+
+
+def _knowledge(dest: Path) -> list[str]:
+    """run knowledge が読む索引と知識本文。Skillが参照しない文献ノート（book_note）は写さない（D-M4-06）。
+
+    引用量の上限や公開範囲の確認は、配布生成（M5）が引用台帳で行う。
+    """
+    index = yamlio.load(ROOT / KNOWLEDGE_INDEX)
+    index["entries"] = [e for e in index["entries"] if e["kind"] != "book_note"]
+    written = []
+    for e in index["entries"]:
+        (dest / e["path"]).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / e["path"], dest / e["path"])
+        written.append(e["path"])
+    (dest / KNOWLEDGE_INDEX).write_text(
+        "# 配布物に同梱した知識の索引（runtime.bundle が library/index.yaml から文献ノートを除いて生成）\n"
+        + yamlio.dumps(index), encoding="utf-8")
+    return written + [KNOWLEDGE_INDEX]

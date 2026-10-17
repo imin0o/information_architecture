@@ -128,4 +128,4 @@ uv run --locked iakit run resume runs/RUN-001                        # 再開前
 uv run --locked iakit run judgment runs/RUN-001 --case webia-001
 ```
 
-配布物では、`iakit.runtime.bundle` が実行時処理（`scripts/run_iakit.py` と必要なモジュール、スキーマ）をia-orchestratorに同梱し、`uv run <ia-orchestrator>/scripts/run_iakit.py run ...` で同じコマンドを使える。
+配布物では、`iakit.runtime.bundle` が実行時処理（`scripts/run_iakit.py` と必要なモジュール、スキーマ、固定ケースとルーブリック、知識の索引と本文）をia-orchestratorに同梱し、`uv run <ia-orchestrator>/scripts/run_iakit.py run ...` で同じコマンドを使える。

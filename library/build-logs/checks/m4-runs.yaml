@@ -64,3 +64,48 @@ checks:
     valid: 49
     stale: []
   errors: []
+- check: contracts
+  target: runs/RUN-WEBIA-002
+  result: pass
+  files:
+  - content-inventory.yaml
+  - controlled-vocabulary.yaml
+  - decisions.yaml
+  - findings.yaml
+  - inputs.yaml
+  - provenance.yaml
+  - receipts.yaml
+  - run.yaml
+  - sitemap.yaml
+  - taxonomy.yaml
+  input_files:
+    run: 2
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 49
+    stale: []
+  errors: []
+- check: contracts
+  target: runs/RUN-TAXONOMY-002
+  result: pass
+  files:
+  - content-inventory.yaml
+  - controlled-vocabulary.yaml
+  - decisions.yaml
+  - findings.yaml
+  - inputs.yaml
+  - provenance.yaml
+  - receipts.yaml
+  - run.yaml
+  - taxonomy.yaml
+  input_files:
+    run: 2
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 49
+    stale: []
+  errors: []

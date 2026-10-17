@@ -15,6 +15,27 @@ def test_bundle_findings_pass(check_bundle):
     assert check_bundle() == []
 
 
+def artifact(d, kind):
+    return next(a for a in d["run.yaml"]["artifacts"] if a["kind"] == kind)
+
+
+def test_yaml_artifact_must_show_assumed_decision_in_header(check_bundle):
+    ref = {"decision_id": "IA-001", "decision_revision": 2}
+    errors = check_bundle(lambda d: artifact(d, "sitemap")["decision_refs"].append(ref))
+    assert has(errors, "仮定を持つ判断 IA-001 r2 を先頭のコメントに示していない")
+
+
+def test_markdown_artifact_must_show_assumed_decision_in_first_section(check_bundle):
+    ref = {"decision_id": "IA-001", "decision_revision": 2}
+    errors = check_bundle(lambda d: artifact(d, "information_architecture")["decision_refs"].append(ref))
+    assert has(errors, "仮定を持つ判断 IA-001 r2 を最初の節に示していない")
+
+
+def test_decision_without_assumptions_needs_no_header(check_bundle):
+    ref = {"decision_id": "IA-003", "decision_revision": 1}
+    assert not has(check_bundle(lambda d: artifact(d, "sitemap")["decision_refs"].append(ref)), "仮定を持つ判断")
+
+
 def test_open_critical_must_be_listed_in_refine(check_bundle):
     errors = check_bundle(lambda d: finding(d).update(severity="critical"))
     assert has(errors, "refine.unresolved_critical [] が指摘の状態 ['FIND-001'] と一致しない")

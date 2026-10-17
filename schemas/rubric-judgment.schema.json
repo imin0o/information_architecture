@@ -52,12 +52,14 @@
       "description": "判定エージェントが見つけた問題。critical が1件でもあれば verdict は fail",
       "type": "array",
       "items": {
-        "type": "object", "required": ["severity", "item", "problem", "basis"], "additionalProperties": false,
+        "type": "object", "required": ["severity", "item", "problem", "basis", "residual"], "additionalProperties": false,
         "properties": {
           "severity": {"enum": ["critical", "major", "minor"]},
           "item": {"type": "string", "pattern": "^R-[0-9]{2}$"},
           "problem": {"$ref": "common.schema.json#/$defs/nonempty"},
-          "basis": {"$ref": "#/$defs/basis"}
+          "basis": {"$ref": "#/$defs/basis"},
+          "residual": {"description": "残す場合の理由と影響（ルーブリックの pass_rule）。成果物に記載がある場合はその位置を書いてもよい",
+                       "$ref": "common.schema.json#/$defs/nonempty"}
         }
       }
     },

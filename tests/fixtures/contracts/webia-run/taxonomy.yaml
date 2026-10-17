@@ -1,4 +1,5 @@
 # 契約検査用の自作例。サービス種別と地区の2つのファセットで分類する。
+# 仮定に基づく箇所: ファセットの選び方（IA-001 r2）。
 schema_version: "1.0"
 run_id: RUN-FIXTURE-001
 artifact_id: ART-003
