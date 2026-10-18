@@ -9,7 +9,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import manifest, runs, yamlio
+from . import distverify, manifest, runs, yamlio
 from .decisions import artifact_inputs, latest_active, max_classification
 from .paths import SKILLS
 
@@ -73,6 +73,9 @@ def init(directory: Path, run_id: str, task_type: str, host: str, model: str, ho
     missing = [n for n, item in items.items() if item is None]
     if supported and missing:
         raise ValueError(f"標準経路に必要なSkillがない: {missing}。段階を省略せず、配置してから開始する")
+    found = distverify.set_errors(skills_root, needed, require_all=False)
+    if found:
+        raise ValueError(f"配布物の検査に失敗した: {found[:5]}。配布物をディレクトリ単位で入れ替えてから開始する")
     note = None if supported else (
         f"MVP未対応の経路（{' → '.join(stages)}）。不足Skill: {missing}。"
         "対応できる範囲はAnalyzeまでの分析で、残る段階は未実施として報告する")

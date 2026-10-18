@@ -106,8 +106,8 @@ def test_requirements_examples_follow_schema(marker, schema):
 
 
 BUILD = {
-    "schema_version": "1.0", "skill": {"name": "ia-taxonomy", "version": "0.1.0"}, "contract_version": "1.0.0",
-    "requires_skills": [{"name": "ia-analysis", "contract_version": "1.0.0"}],
+    "schema_version": "1.0", "skill": {"name": "ia-taxonomy", "version": "0.1.0"}, "contract_version": "1.0",
+    "requires_skills": [{"name": "ia-analysis", "contract_version": "1.0"}],
     "knowledge": [{"id": "CONCEPT-001", "sha256": "a" * 64}], "schemas": [{"path": "schemas/taxonomy.schema.json",
                                                                          "sha256": "b" * 64}],
     "files": [{"path": "SKILL.md", "sha256": "c" * 64}], "verification_receipts": ["VR-0001"],

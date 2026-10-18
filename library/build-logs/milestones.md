@@ -573,3 +573,37 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 | P-M4-05 | RUN-WEBIA-001のFIND-001（提供のない地区×サービスの組合せ） | 対処済み。未提供と仮定して示し方を加えた（IA-008 r1）。依頼者の確認（questions/Q-002.md）がないため major の残件として open | 代表ケースの改訂時 |
 | P-M4-06 | Codex CLI 0.135（PATHの先頭）と npm の 0.151 は現在の `~/.codex/config.toml`（`[features.context_management]`）を読めず起動しない。0.160（デスクトップアプリの同梱版）で実行した | ユーザー（CLIの更新） | 次にCodexへ依頼する前 |
 | P-M4-07 | 知識本文の根拠状態の表記が照合記録より古い箇所がある（RUN-WEBIA-002 の実行記録の報告）。Codexは照合記録を優先した | エージェント | M5の配布生成の前 |
+
+## M5 配布生成と更新検査を完成させる
+
+- 開始日: 2026-10-18
+- 状態: 進行中。配布物の生成・検査・差分、混在の検出、判断比較、CI・pre-pushへの統合を実装した。BOOK-005による文献追加試験（P-M5-01）と、CIの必須チェックの設定（P-M5-02）が残る
+
+### 決定事項
+
+| ID | 決定 | 理由 |
+|---|---|---|
+| D-M5-01 | `iakit dist build` が5つのSkillを `dist/<skill>/` に生成する。分野Skillには、SKILL.mdと付属ファイルが参照するKN-IDの知識本文・索引・用語・矛盾記録・根拠情報と、本文に現れる成果物ファイル名に対応するスキーマ（`$ref` の参照先を含む）を同梱する。ia-orchestratorには実行時処理（D-M4-10）と、文献ノート以外の全知識・全スキーマを同梱する | BR-03。分野Skillを単独で使う場合も知識本文が欠けない。実行時処理は全経路の `run knowledge` と契約検査を担うため、全知識を持つ |
+| D-M5-02 | `requires_skills` は、ia-orchestratorでは対応済み経路（`runs.ROUTES`）の全段階のSkillと、そのSKILL.mdの契約版から導く。分野Skillは空とする | 依存の宣言を経路の定義と二重に持たない。分野Skillの単独利用では入力を外部成果物で満たす（BR-03） |
+| D-M5-03 | `runtime-evidence.yaml` の `provenance_sha256`・`receipts_sha256`（登録簿全体のハッシュ）を、同梱する根拠に結び付いた照合記録のIDと内容ハッシュの一覧（`receipts`）に置き換えた。`registered-sources.yaml` は同梱する主張の出典と自作素材に限り、配布する索引には `needs` を写さない | 登録簿全体のハッシュでは、無関係な文献・照合記録の追加で全配布物が変わる（BR-03、AC-02） |
+| D-M5-04 | 生成順は、同梱ファイルの確定、`verification/bundle-receipt.yaml`（同梱ファイルのハッシュ、既存の照合記録のID、主張の状態の集計）の作成、`build-manifest.yaml` の作成とする。配布IDは manifest から `distribution_id` を除いた内容の正規化JSONのsha256の先頭16桁とする。日時は記録しない | 付録B.3の順序と循環の回避。同じ入力からの再生成を一致させる |
+| D-M5-05 | `build-manifest.schema.json` の契約版をSKILL.mdの `metadata.contract_version` と同じ `major.minor` 形式にし、共有IDに `KN-` を加えた | M2で定めた契約（D-M2-10）は3桁の版を仮定していたが、Skillと `run_cmd.CONTRACT_VERSION` は `1.0` を使う。知識はKN-IDで参照する（D-M4-06） |
+| D-M5-06 | 配布物の検査（`distverify`）を `dist check` と配布物での `run init` で共有する。manifestと実ファイルの差、配布IDの不一致、依存Skillの不足・契約版の不一致、同じ共有IDで内容の異なる配布物の混在を検出する。`run init` は経路に要らないSkillの欠落では止めない。`__pycache__` は同梱物として扱わない | BR-03の「開始前に共有IDの内容ハッシュと契約版を確認し、不一致なら停止する」。配布先でPythonが作るキャッシュで誤検出しない |
+| D-M5-07 | `verification/distributions.yaml` に配布候補ごとの配布IDと照合記録のハッシュを記録する。`iakit check`（CI・`scripts/verify.py` を含む）とpre-pushは、一時ディレクトリで再生成した結果と記録を照合する。pre-pushは漏えい検査を先に実行し、その後に配布検査を行う | 原典のないCIで、配布参照・ハッシュ・既存照合記録を確認する（付録B.3）。CIの検査はローカルの送信前検査の代わりにしない |
+| D-M5-08 | `iakit run compare` で、2つの実行の判断（ID・対象・前提・根拠・代替案・採否・検証状況・confidence）、Skill・知識の内容ハッシュ、環境の差分を出す | NFR-02・AC-08の判断比較。一致率は品質の指標にしない |
+
+### 検証結果
+
+| 検査 | 結果 | 記録・条件 |
+|---|---|---|
+| `uv run --locked python scripts/verify.py --report library/build-logs/checks/m5.yaml` | pass | Python 3.12.13・3.14.3で各563件。M4の488件から75件を追加。`iakit check --local` の配布検査を含み、原典の再照合は `not_run` |
+| `uv run --locked iakit dist build` の再実行 | 全Skill `unchanged` | 同じ入力から同じ配布IDになる |
+| `tests/checks/test_dist.py` | pass | チェックアウトの写しで、同一入力の再生成、原典・固定抽出のない環境での配布IDの一致、Skill固有の変更、共有知識の変更、知識の追加、無関係な文献ノートの追加、参照資料の削除、参照切れでの中止、記録の不一致、配置先の改変・追加・依存欠落・manifest改変、混在の検出、配布物での `run init` を確認 |
+
+### 保留事項
+
+| ID | 内容 | 状態・決める人 | 必要になる時点 |
+|---|---|---|---|
+| P-M5-01 | BOOK-005を統合する文献追加試験（AC-08）。NEED-04・09の根拠を補い（D-M3-22）、既存ケースの再実行と `run compare` による判断比較を行う。追加した根拠の原典照合・主張レビューは、作成者と別の確認者（Codex。D-M3-18）が行う | 未実施。更新処理と判断比較の仕組みは自作素材で確認済み | M5の完了前 |
+| P-M5-02 | GitHubでCIを必須チェックにする設定（ブランチ保護） | 未実施。リポジトリ設定の変更で、ローカル実装とは別の操作。ユーザー | M5の完了前 |
+| P-M4-07 | KN-002本文の冒頭に「主張はすべて未レビュー」という古い表記が残る | 未解消。本文を直すと、その本文のハッシュを持つ照合記録（VR-0001ほか）が無効になり、主張が未照合へ戻る。P-M5-01の確認と同じ回で修正と再確認を行う | P-M5-01と同時 |

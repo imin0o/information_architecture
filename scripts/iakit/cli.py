@@ -21,6 +21,9 @@
   iakit run event DIR EVENT [--note TEXT] [--status S]   履歴を追加する。resumed は再開前の照合に通った場合だけ
   iakit run resume DIR             再開前の照合（入力登録簿・入力の実体・取込み結果・成果物のハッシュ）
   iakit run judgment DIR --case NAME   独立した判定エージェントのルーブリック判定（rubric-judgment.yaml）を検査する
+  iakit dist build [--out DIR]     配布物を新しいディレクトリで生成・検査し、dist/ を丸ごと入れ替える
+  iakit dist check [DIR]           DIR を指定すれば配置済み配布物の検査。省略時は再生成して verification/distributions.yaml と照合
+  iakit dist diff OLD NEW          2つの配布ディレクトリの配布IDとファイルの差分
   iakit review sheet               人の確認用シートを sources/review/ に作る（Git管理外。本文を含む）
   iakit review record --by NAME (--all-ok | --reject EV | --claim CLAIM=STATUS | --sample-issue ID:KIND:MEMO)
                                    人の判定から主張レビュー・照合記録・抽出品質の確認を書き込む
@@ -32,8 +35,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import (cases, cli_run, contracts, extract_cmd, fixtures, hostprobe, leak_history, leaks, library, manifest,
-               paths, review, yamlio)
+from . import (cases, cli_run, contracts, dist, extract_cmd, fixtures, hostprobe, leak_history, leaks, library,
+               manifest, paths, review, yamlio)
 
 
 def _emit(results: list[dict], report: Path | None) -> int:
@@ -103,6 +106,13 @@ def _parser() -> argparse.ArgumentParser:
     rr.add_argument("--sample-issue", action="append", default=[], metavar="EXTRACT-ID:KIND:MEMO",
                     help="抽出品質の問題。メモに原典の本文を書かない")
 
+    ds = sub.add_parser("dist").add_subparsers(dest="action", required=True)
+    with_report(ds.add_parser("build")).add_argument("--out", type=Path, help="出力先（既定: dist）")
+    with_report(ds.add_parser("check")).add_argument("dir", type=Path, nargs="?")
+    dd = with_report(ds.add_parser("diff"))
+    dd.add_argument("old", type=Path)
+    dd.add_argument("new", type=Path)
+
     cli_run.add_parsers(sub)
     with_report(sub.add_parser("check")).add_argument("--local", action="store_true")
     return parser
@@ -149,6 +159,13 @@ def main(argv: list[str] | None = None) -> int:
         results = [cases.check()]
     elif args.group == "library":
         results = [library.check()]
+    elif args.group == "dist":
+        try:
+            results = [dist.build(args.out or dist.DIST) if args.action == "build" else
+                       dist.check(args.dir) if args.action == "check" else
+                       {"check": "dist_diff", "result": "pass", "diff": dist.diff(args.old, args.new)}]
+        except (ValueError, OSError) as exc:
+            results = [{"check": f"dist_{args.action}", "result": "fail", "errors": [str(exc)]}]
     elif args.group == "review":
         results = [review.sheet() if args.action == "sheet" else
                    review.record(args.by, args.all_ok, args.reject, args.claim, args.sample_issue)]
@@ -156,6 +173,7 @@ def main(argv: list[str] | None = None) -> int:
         results = [manifest.check(local=args.local), fixtures.check(), leaks.check(), cases.check()]
         results += [contracts.check_bundle(d) for d in contracts.default_targets()]
         results += [library.check()] if (paths.ROOT / library.FILES["index"][0]).is_file() else []
+        results += [dist.check()]
     return _emit(results, args.report)
 
 

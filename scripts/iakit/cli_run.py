@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 
-from . import contracts, ingest, judgment, run_cmd, run_inputs, runs, yamlio
+from . import contracts, ingest, judgment, run_cmd, run_compare, run_inputs, runs, yamlio
 
 
 def add_parsers(sub) -> None:
@@ -30,6 +30,9 @@ def add_parsers(sub) -> None:
     rj = rn.add_parser("judgment", help="独立した判定エージェントによるルーブリック判定の記録を検査する")
     rj.add_argument("dir", type=Path)
     rj.add_argument("--case", required=True, help="tests/cases のケース名（webia-001 など）またはケースのディレクトリ")
+    rc = rn.add_parser("compare", help="2つの実行の判断・Skill・知識の差分（NFR-02）")
+    rc.add_argument("dir", type=Path, help="基準の実行ディレクトリ")
+    rc.add_argument("other", type=Path)
     re_ = rn.add_parser("event")
     re_.add_argument("dir", type=Path)
     re_.add_argument("event", choices=["interrupted", "resumed", "rerun", "refine", "completed"])
@@ -68,6 +71,8 @@ def command(args) -> int:
             out = {"result": "fail" if errors else "pass", "errors": errors}
         elif args.action == "judgment":
             out = judgment.check(args.dir, args.case)
+        elif args.action == "compare":
+            out = run_compare.compare(args.dir, args.other)
         else:
             final = args.event == "completed" or args.status in ("completed", "unresolved")
             if final:

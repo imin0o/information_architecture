@@ -3,12 +3,20 @@
   "$id": "runtime-evidence.schema.json",
   "title": "配布時に固定した主張と照合状態（原典本文・抜粋・抽出パスを含まない）",
   "type": "object",
-  "required": ["schema_version", "provenance_sha256", "receipts_sha256", "knowledge_files", "claims"],
+  "required": ["schema_version", "receipts", "knowledge_files", "claims"],
   "additionalProperties": false,
   "properties": {
     "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
-    "provenance_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
-    "receipts_sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+    "receipts": {
+      "description": "同梱する根拠に結び付いた照合記録と、その内容のハッシュ（無関係な記録の追加で変わらない）",
+      "type": "array", "items": {
+        "type": "object", "required": ["receipt_id", "sha256"], "additionalProperties": false,
+        "properties": {
+          "receipt_id": {"$ref": "common.schema.json#/$defs/receipt_id"},
+          "sha256": {"$ref": "common.schema.json#/$defs/sha256"}
+        }
+      }
+    },
     "knowledge_files": {
       "type": "array", "items": {
         "type": "object", "required": ["path", "sha256"], "additionalProperties": false,

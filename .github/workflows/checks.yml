@@ -24,4 +24,6 @@ jobs:
           enable-cache: false
       - run: uv sync --locked
       - run: uv run --locked pytest -q
+      # Includes the distribution check: regenerate into a temp dir, verify references, hashes,
+      # mixing and leaks, and compare with verification/distributions.yaml. Source re-check is not_run.
       - run: uv run --locked iakit check --local

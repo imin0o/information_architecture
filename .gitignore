@@ -20,6 +20,8 @@ htmlcov/
 
 # Python / Skill build outputs and local verification scratch space
 /dist/
+# iakit dist build の生成中・入れ替え中の作業ディレクトリ
+/.dist-*/
 /build/
 *.egg-info/
 /.tmp/

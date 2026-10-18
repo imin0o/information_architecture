@@ -48,6 +48,28 @@ runnerはPython 3.12・3.14の一時環境で回帰テストを実行し、`.git
 
 GitHub Actionsの定義は `.github/workflows/checks.yml`。Python両版でlock整合・回帰テスト・index全件を検査する。原典をアップロードせず、原典再照合は `not_run` とする。外部CIは送信後の確認であり、送信前検査の代わりにはならない。CIの実行・必須チェック設定・公開範囲の変更はローカル実装とは別の操作で、今回実施していない。
 
+## 配布物の生成と検査
+
+```sh
+uv run --locked iakit dist build                 # dist/<skill>/ を生成し、verification/distributions.yaml を更新する
+uv run --locked iakit dist check                 # 一時ディレクトリで再生成し、記録と照合する（iakit check にも含む）
+uv run --locked iakit dist check <配置先>        # 移設・配置した配布物の検査
+uv run --locked iakit dist diff <旧> <新>        # 配布IDとファイルの差分
+uv run --locked iakit run compare <実行A> <実行B> # 判断・Skill・知識の差分（NFR-02）
+```
+
+`dist build` は5つのSkillを新しい作業ディレクトリに生成し、検査に通った場合だけ `dist/` を丸ごと入れ替える。旧ディレクトリへの差分コピーはしないため、削除した参照資料は残らない。検査に失敗した場合は既存の `dist/` を変更しない。
+
+各Skillには、SKILL.mdと付属ファイルに加えて、本文が参照するKN-IDの知識本文・索引・用語・矛盾記録、主張と照合状態（`library/runtime-evidence.yaml`）、使う成果物のスキーマとその参照先を同梱する。ia-orchestratorは実行時処理を持つため、文献ノート以外の全知識と全スキーマを同梱する。文献ノート、原典、抽出テキスト、抜粋は同梱しない。Markdownの相対リンクが配布物の中で解決しなければ生成を止める。
+
+生成の順序は、同梱ファイルの確定、対象に結び付いた照合記録（`verification/bundle-receipt.yaml`）の作成、`build-manifest.yaml` の作成とする。照合記録は同梱ファイルのハッシュと、既存の照合記録（VR-ID）から導いた主張の状態を持つ。原典の再照合はしない。manifestには `requires_skills`（契約版付き）、共有ID（KN・CLAIM・EV・TERM・CONFLICT）の内容ハッシュ、スキーマと同梱ファイルのハッシュ、構築ツールの版を記録し、manifest自身と配布IDを除いた内容から配布ID（`DIST-` + 16桁）を決める。生成日時は記録しない。
+
+同梱する出典ハッシュと照合記録は、同梱する主張に関係する分だけに絞る。無関係な文献や照合記録を追加しても配布IDは変わらない。原典・固定抽出のない環境（CI）でも、同じ配布IDになる。
+
+`dist check <配置先>` と、配布物での `run init` は、manifestと実ファイルの差（欠落・追加・変更）、配布IDの不一致、依存Skillの不足と契約版の不一致、同じ共有IDで内容の異なる配布物の混在を検出する。`run init` では、経路に要らないSkillの欠落は止めない。Pythonが作る `__pycache__` は同梱物として扱わない。
+
+`verification/distributions.yaml` は配布候補ごとの配布IDと照合記録のハッシュを記録する。`iakit check`・CI・pre-pushは、再生成した結果がこの記録と一致しない場合に失敗する。Skill・知識・実行時処理を変更したら `dist build` を実行し、記録を一緒にコミットする。ZIP等に圧縮する場合は、検査した `dist/` から作り、配布IDで対応を確認する。
+
 ## 配布前の検査と残る制約
 
 ```sh
@@ -106,7 +128,7 @@ uv run --locked iakit cases check                         # tests/cases/ の版�
 
 ## Skillと実行ディレクトリ
 
-MVPの5つのSkillのソースは `skills/` にある。入口は `ia-orchestrator`（経路は `skills/ia-orchestrator/routing.md`）で、`ia-analysis`・`ia-taxonomy`・`ia-structure`・`ia-evaluation` のSKILL.mdを順に読んで実行する。各Skillは手順、テンプレート、記録規則（`references/records.md`、各Skillに同じ写しを置く）を持ち、知識は `library/index.yaml` のKN-IDで参照する。配布物への同梱はM5で行う。
+MVPの5つのSkillのソースは `skills/` にある。入口は `ia-orchestrator`（経路は `skills/ia-orchestrator/routing.md`）で、`ia-analysis`・`ia-taxonomy`・`ia-structure`・`ia-evaluation` のSKILL.mdを順に読んで実行する。各Skillは手順、テンプレート、記録規則（`references/records.md`、各Skillに同じ写しを置く）を持ち、知識は `library/index.yaml` のKN-IDで参照する。配布物への同梱は `iakit dist build` が行う。
 
 ```sh
 uv run --locked iakit run init runs/RUN-001 --run-id RUN-001 --task-type web_ia --host claude-code --model <モデル名>
@@ -130,4 +152,4 @@ uv run --locked iakit run judgment runs/RUN-001 --case webia-001
 ```
 
 配布物では、`iakit.runtime.bundle` が実行時処理（`scripts/run_iakit.py` と必要なモジュール、スキーマ、固定ケースとルーブリック、知識の索引と本文）をia-orchestratorに同梱し、`uv run <ia-orchestrator>/scripts/run_iakit.py run ...` で同じコマンドを使える。
-文献根拠の検査には、構築時に出典登録簿と照合記録から導出した `library/runtime-evidence.yaml`（主張・適用条件・照合状態）を同梱する。原典本文・抜粋・抽出パス・文献ノートは含めない。`registered-sources.yaml` でこの情報のハッシュを固定し、同梱知識の変更・欠落も検査する。配布先で原典照合を再実行したとは扱わない。
+文献根拠の検査には、構築時に出典登録簿と照合記録から導出した `library/runtime-evidence.yaml`（主張・適用条件・照合状態）を同梱する。原典本文・抜粋・抽出パス・文献ノートは含めない。`registered-sources.yaml` でこの情報のハッシュを固定し、同梱知識の変更・欠落も検査する。`runtime-evidence.yaml` は、同梱する根拠に結び付いた照合記録のIDと内容ハッシュを持つ。配布先で原典照合を再実行したとは扱わない。

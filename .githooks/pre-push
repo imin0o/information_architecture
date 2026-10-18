@@ -1,3 +1,12 @@
 #!/bin/sh
-# stdin contains refs proposed for this push. Do not consume it before iakit.
-exec uv run --locked iakit leaks check --pre-push "$1"
+# stdin contains refs proposed for this push. Keep it for iakit leaks check, which runs first.
+refs=$(cat)
+if ! printf '%s' "$refs" | uv run --locked iakit leaks check --pre-push "$1"; then
+  exit 1
+fi
+# 配布候補の記録（verification/distributions.yaml）が現行の生成結果と一致することを確かめる。
+if ! out=$(uv run --locked iakit dist check </dev/null 2>&1); then
+  printf '%s\n' "$out" >&2
+  printf '%s\n' "iakit dist check が失敗したため、送信を中止しました。iakit dist build で再生成してください。" >&2
+  exit 1
+fi

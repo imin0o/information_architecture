@@ -1,11 +1,13 @@
-"""配布物に同梱する実行時処理（D-M4-10、P-M4-02）。
+"""配布物に同梱する実行時処理と知識（D-M4-10、P-M4-02、BR-03）。
 
 配布先にリポジトリがなくても、run・input・contracts check・run judgment を使えるようにする。
 入口 scripts/run_iakit.py と、そこから使うモジュール（import を辿って集める）、スキーマを、
 リポジトリと同じ相対配置（scripts/iakit、schemas）で ia-orchestrator の下へ写す。
+知識（索引・本文・用語・矛盾・根拠情報）は、各Skillが参照するKN-IDの分だけ写す（dist.build）。
 """
 
 import ast
+import re
 import shutil
 from pathlib import Path
 
@@ -14,9 +16,12 @@ from .cases import CASES
 from .paths import EXTRACTED, ROOT, SCHEMAS
 
 KNOWLEDGE_INDEX = "library/index.yaml"
+TERMS = "library/terms.yaml"
+CONFLICTS = "library/conflicts.yaml"
 PACKAGE = ROOT / "scripts" / "iakit"
 ENTRY = ROOT / "scripts" / "run_iakit.py"
 SEEDS = ("cli_run", "contracts", "judgment")
+SCHEMA_REF = re.compile(r'"\$ref":\s*"([a-z0-9-]+\.schema\.json)')
 
 
 def _imports(name: str) -> set[str]:
@@ -40,35 +45,64 @@ def modules() -> list[str]:
     return sorted(seen)
 
 
+def schema_closure(names: set[str]) -> list[str]:
+    """スキーマと、その $ref が指すスキーマ（配布物内で参照が閉じるようにする。D-M2-03）。"""
+    seen, todo = set(), sorted(names)
+    while todo:
+        name = todo.pop()
+        if name in seen:
+            continue
+        seen.add(name)
+        todo += sorted(set(SCHEMA_REF.findall((SCHEMAS / name).read_text(encoding="utf-8"))) - seen)
+    return sorted(seen)
+
+
 def bundle(dest: Path) -> list[str]:
-    """dest（配布物の ia-orchestrator）へ実行時処理とスキーマを写し、写した相対パスを返す。"""
+    """dest（ia-orchestrator）へ実行時処理とスキーマ、全知識（文献ノートを除く）を写し、相対パスを返す。"""
+    return bundle_runtime(dest) + bundle_knowledge(dest, None)
+
+
+def bundle_runtime(dest: Path) -> list[str]:
     written = []
     for name in modules():
         target = dest / "scripts" / "iakit" / f"{name}.py"
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(PACKAGE / f"{name}.py", target)
         written.append(target.relative_to(dest).as_posix())
-    (dest / "schemas").mkdir(parents=True, exist_ok=True)
-    for schema in sorted(SCHEMAS.glob("*.schema.json")):
-        shutil.copyfile(schema, dest / "schemas" / schema.name)
-        written.append(f"schemas/{schema.name}")
     shutil.copyfile(ENTRY, dest / "scripts" / ENTRY.name)
     written.append(f"scripts/{ENTRY.name}")
-    written += _cases(dest) + _knowledge(dest)
-    written += _evidence(dest)
-    # 原典の登録簿は同梱せず、出典IDとハッシュだけを写す（本文・パスを含めない）
-    (dest / provenance.REGISTERED).write_text(
-        "# 出典IDと原典のsha256（配布物の照合用。runtime.bundle が生成）\n"
-        + yamlio.dumps({"sources": provenance.registered_sources(),
-                        "runtime_evidence_sha256": manifest.sha256_file(dest / provenance.RUNTIME_EVIDENCE)}), encoding="utf-8")
-    written.append(provenance.REGISTERED)
+    written += bundle_schemas(dest, {p.name for p in SCHEMAS.glob("*.schema.json")})
+    return written + _cases(dest)
+
+
+def bundle_schemas(dest: Path, names: set[str]) -> list[str]:
+    (dest / "schemas").mkdir(parents=True, exist_ok=True)
+    written = []
+    for name in schema_closure(names):
+        shutil.copyfile(SCHEMAS / name, dest / "schemas" / name)
+        written.append(f"schemas/{name}")
     return written
+
+
+def bundle_knowledge(dest: Path, knowledge_ids: set[str] | None) -> list[str]:
+    """索引・本文・用語・矛盾・根拠情報・出典ハッシュ。knowledge_ids が None なら文献ノート以外の全件。"""
+    written = _knowledge(dest, knowledge_ids)
+    written += _evidence(dest)
+    sources = provenance.registered_sources()
+    claims = yamlio.load(dest / provenance.RUNTIME_EVIDENCE)["claims"]
+    # 同梱する主張の出典と自作素材だけを写す（無関係な文献の追加で配布物を書き換えない。BR-03）
+    used = {c["source_id"] for c in claims} | {s for s in sources if s.startswith("FIXTURE-")}
+    (dest / provenance.REGISTERED).write_text(
+        "# 出典IDと原典のsha256（配布物の照合用。runtime.bundle_knowledge が生成）\n"
+        + yamlio.dumps({"sources": {k: v for k, v in sources.items() if k in used},
+                        "runtime_evidence_sha256": manifest.sha256_file(dest / provenance.RUNTIME_EVIDENCE)}),
+        encoding="utf-8", newline="\n")
+    return written + [provenance.REGISTERED]
 
 
 def _evidence(dest: Path) -> list[str]:
     """構築時の照合状態を固定する。原典本文・抜粋・抽出ファイルのパスは同梱しない。"""
-    prov_path, receipts_path = ROOT / "library/provenance.yaml", ROOT / "verification/receipts.yaml"
-    prov, receipts = yamlio.load(prov_path), yamlio.load(receipts_path)
+    prov, receipts = yamlio.load(ROOT / "library/provenance.yaml"), yamlio.load(ROOT / "verification/receipts.yaml")
     errors = (yamlio.schema_errors(prov, "provenance.schema.json")
               + yamlio.schema_errors(receipts, "verification-receipt.schema.json"))
     if not errors:
@@ -78,19 +112,22 @@ def _evidence(dest: Path) -> list[str]:
     derived = provenance.derive(prov, receipts, ROOT, EXTRACTED)
     index = yamlio.load(dest / KNOWLEDGE_INDEX)
     wanted = {c for e in index["entries"] for c in e["claims"]}
+    claims = [{"source_id": r["source_id"], "source_sha256": r["source_sha256"],
+               "evidence_id": r["evidence_id"], "claim_id": c["claim_id"], "claim": c["claim"],
+               "claim_sha256": c["claim_sha256"], "applicability": c["applicability"],
+               **derived["states"][(r["evidence_id"], c["claim_id"])]}
+              for r in prov["records"] for c in r["support_reviews"] if c["claim_id"] in wanted]
+    evidence = {c["evidence_id"] for c in claims}
     doc = {
         "schema_version": "1.0",
-        "provenance_sha256": manifest.sha256_file(prov_path),
-        "receipts_sha256": manifest.sha256_file(receipts_path),
+        # 同梱する根拠に結び付いた照合記録だけを固定する（無関係な記録の追加で変わらない）
+        "receipts": [{"receipt_id": rc["receipt_id"], "sha256": provenance.canonical_sha256(rc)}
+                     for rc in receipts["receipts"] if rc["evidence_id"] in evidence],
         "knowledge_files": [{"path": e["path"], "sha256": manifest.sha256_file(dest / e["path"])}
                             for e in index["entries"]],
-        "claims": [{"source_id": r["source_id"], "source_sha256": r["source_sha256"],
-                    "evidence_id": r["evidence_id"], "claim_id": c["claim_id"], "claim": c["claim"],
-                    "claim_sha256": c["claim_sha256"], "applicability": c["applicability"],
-                    **derived["states"][(r["evidence_id"], c["claim_id"])]}
-                   for r in prov["records"] for c in r["support_reviews"] if c["claim_id"] in wanted],
+        "claims": claims,
     }
-    missing = sorted(wanted - {c["claim_id"] for c in doc["claims"]})
+    missing = sorted(wanted - {c["claim_id"] for c in claims})
     if missing:
         raise ValueError(f"同梱する知識の主張が出典登録簿にない: {missing}")
     errors = yamlio.schema_errors(doc, "runtime-evidence.schema.json")
@@ -111,19 +148,31 @@ def _cases(dest: Path) -> list[str]:
     return written
 
 
-def _knowledge(dest: Path) -> list[str]:
-    """run knowledge が読む索引と知識本文。Skillが参照しない文献ノート（book_note）は写さない（D-M4-06）。
-
-    引用量の上限や公開範囲の確認は、配布生成（M5）が引用台帳で行う。
-    """
+def _knowledge(dest: Path, knowledge_ids: set[str] | None) -> list[str]:
+    """run knowledge が読む索引と知識本文、本文が使う用語と矛盾記録。文献ノート（book_note）は写さない（D-M4-06）。"""
     index = yamlio.load(ROOT / KNOWLEDGE_INDEX)
-    index["entries"] = [e for e in index["entries"] if e["kind"] != "book_note"]
+    entries = [e for e in index["entries"] if e["kind"] != "book_note"]
+    if knowledge_ids is not None:
+        missing = sorted(knowledge_ids - {e["knowledge_id"] for e in entries})
+        if missing:
+            raise ValueError(f"Skillが参照する知識が索引にない（または文献ノート）: {missing}")
+        entries = [e for e in entries if e["knowledge_id"] in knowledge_ids]
+    # needs（代表ケースの必要知識と候補文献）は構築時の管理情報なので写さない
+    index = {"schema_version": index["schema_version"], "entries": entries, "needs": []}
     written = []
-    for e in index["entries"]:
+    for e in entries:
         (dest / e["path"]).parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / e["path"], dest / e["path"])
         written.append(e["path"])
     (dest / KNOWLEDGE_INDEX).write_text(
-        "# 配布物に同梱した知識の索引（runtime.bundle が library/index.yaml から文献ノートを除いて生成）\n"
-        + yamlio.dumps(index), encoding="utf-8")
-    return written + [KNOWLEDGE_INDEX]
+        "# 配布物に同梱した知識の索引（runtime.bundle_knowledge が library/index.yaml から生成）\n"
+        + yamlio.dumps(index), encoding="utf-8", newline="\n")
+    terms = {t for e in entries for t in e["terms"]}
+    conflicts = {c for e in entries for c in e["conflicts"]}
+    for rel, key, wanted, id_key in ((TERMS, "terms", terms, "term_id"),
+                                     (CONFLICTS, "conflicts", conflicts, "conflict_id")):
+        doc = yamlio.load(ROOT / rel)
+        doc[key] = [item for item in doc[key] if item[id_key] in wanted]
+        (dest / rel).write_text("# 同梱した知識が参照する分だけを写した（runtime.bundle_knowledge が生成）\n"
+                                + yamlio.dumps(doc), encoding="utf-8", newline="\n")
+    return written + [KNOWLEDGE_INDEX, TERMS, CONFLICTS]

@@ -14,18 +14,18 @@
       "properties": {"name": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
                      "version": {"$ref": "common.schema.json#/$defs/version"}}
     },
-    "contract_version": {"description": "入出力契約の版", "$ref": "common.schema.json#/$defs/version"},
+    "contract_version": {"description": "入出力契約の版（SKILL.md の metadata.contract_version）", "$ref": "#/$defs/contract_version"},
     "requires_skills": {
       "type": "array",
       "items": {"type": "object", "required": ["name", "contract_version"], "additionalProperties": false,
                 "properties": {"name": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
-                               "contract_version": {"$ref": "common.schema.json#/$defs/version"}}}
+                               "contract_version": {"$ref": "#/$defs/contract_version"}}}
     },
     "knowledge": {
       "description": "依存する知識・共有IDの内容ハッシュ",
       "type": "array",
       "items": {"type": "object", "required": ["id", "sha256"], "additionalProperties": false,
-                "properties": {"id": {"type": "string", "pattern": "^(CONCEPT|METHOD|EV|CLAIM|TERM|CONFLICT)-[0-9A-Za-z-]+$"},
+                "properties": {"id": {"type": "string", "pattern": "^(KN|CONCEPT|METHOD|EV|CLAIM|TERM|CONFLICT)-[0-9A-Za-z-]+$"},
                                "sha256": {"$ref": "common.schema.json#/$defs/sha256"}}}
     },
     "schemas": {"type": "array", "items": {"$ref": "#/$defs/file"}},
@@ -38,6 +38,7 @@
     "distribution_id": {"type": "string", "pattern": "^DIST-[0-9a-f]{16}$"}
   },
   "$defs": {
+    "contract_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+$"},
     "file": {
       "type": "object", "required": ["path", "sha256"], "additionalProperties": false,
       "properties": {"path": {"description": "Skillルートからの相対パス", "type": "string",
