@@ -31,7 +31,7 @@ checks:
   result: pass
   targets:
   - git:index
-  files_scanned: 214
+  files_scanned: 216
   known_original_hashes: 10
   violations: []
   errors: []
@@ -80,7 +80,7 @@ checks:
   local_excerpt_check: skipped
   human_source_check: not_run
   existing_receipts:
-    valid: 57
+    valid: 61
     stale:
     - VR-0001
     - VR-0002
@@ -106,6 +106,7 @@ checks:
     - KN-013
     - KN-014
     - KN-015
+    - KN-016
     hypothesis: []
     not_supported: []
   needs:
@@ -117,7 +118,7 @@ checks:
     NEED-06: adopted
     NEED-07: adopted
     NEED-08: adopted
-    NEED-09: pending
+    NEED-09: adopted
     NEED-10: adopted
   coverage:
     status_counts:
@@ -131,6 +132,10 @@ checks:
           - 385
         - - 1365
           - 1444
+        - - 1700
+          - 1721
+        - - 1995
+          - 2010
         - - 3137
           - 3196
         - - 3445
@@ -150,7 +155,9 @@ checks:
         displayed_lines: 0
         integrated:
         - - 1382
-          - 1395
+          - 1403
+        - - 1428
+          - 1438
         - - 3141
           - 3145
         - - 3174
@@ -289,10 +296,10 @@ checks:
     EXTRACT-005-001: issue
   quote_ledger:
     BOOK-001:
-      previews: 26
+      previews: 28
       quotes: 0
-      words_total: 236
-      words_unique_spans: 236
+      words_total: 248
+      words_unique_spans: 248
       overlap_undetermined: 0
     BOOK-003:
       previews: 23
@@ -308,6 +315,7 @@ checks:
       overlap_undetermined: 0
   edited_after_generation:
   - library/books/BOOK-005/notes.md
+  - library/methods/applicability-check.md
   - library/methods/conflicting-requirements.md
   - library/methods/hierarchy-acyclicity.md
   - library/methods/homograph-disambiguation.md
@@ -319,12 +327,12 @@ checks:
   target: regenerated
   result: pass
   errors: []
-  existing_receipts_checked: 141
+  existing_receipts_checked: 153
   distributions:
   - skill: ia-analysis
-    distribution_id: DIST-2e5a16c0f1d552f2
+    distribution_id: DIST-0afbbaeb2136602e
     bundle_receipt_sha256: 
-      ece975b39aaaa97d37859e675488c65b94b30736cb2e8dd2e2669b3b71e33de7
+      305d66898f4c99319768afdd0c918ee8f566dd55eddf4784ea8168ac1501a845
     files: 21
   - skill: ia-evaluation
     distribution_id: DIST-bb93ccbcd9caf4ba
@@ -332,17 +340,17 @@ checks:
       27f029b1c5411be7384ac65675c791bdcd2614799dc48a9f24a9669d64249129
     files: 20
   - skill: ia-orchestrator
-    distribution_id: DIST-1afe928010395c27
+    distribution_id: DIST-d738d7738b9a142e
     bundle_receipt_sha256: 
-      a70980678c6abe22774f67f56ec62b608d251c47d9741b33d19ad024ba078775
-    files: 80
+      17dcf2800423fd7d15cfb88f07430daf23e24d59db260379fe2308ef2aed2e5c
+    files: 81
   - skill: ia-structure
     distribution_id: DIST-2ea40107d1032f43
     bundle_receipt_sha256: 
       156a7fc8f515e1f366ed108d8b1b43da11d2fe3577c4dfaf9d42d267732e9cb2
     files: 22
   - skill: ia-taxonomy
-    distribution_id: DIST-5c241d90fd7769cb
+    distribution_id: DIST-e39b851d1fcb1625
     bundle_receipt_sha256: 
-      72fdb08787156a26d989c1cfba35d51e1fc5e469eb69e3460ae788e90a7feedb
-    files: 26
+      18320886098dbf5d48d982c10ea2e7de94777202726827c83ca5a38a79622e69
+    files: 27

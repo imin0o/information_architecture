@@ -592,13 +592,14 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 | D-M5-07 | `verification/distributions.yaml` に配布候補ごとの配布IDと照合記録のハッシュを記録する。`iakit check`（CI・`scripts/verify.py` を含む）とpre-pushは、一時ディレクトリで再生成した結果と記録を照合する。pre-pushは漏えい検査を先に実行し、その後に配布検査を行う | 原典のないCIで、配布参照・ハッシュ・既存照合記録を確認する（付録B.3）。CIの検査はローカルの送信前検査の代わりにしない |
 | D-M5-08 | `iakit run compare` で、2つの実行の判断（ID・対象・前提・根拠・代替案・採否・検証状況・confidence）、Skill・知識の内容ハッシュ、環境の差分を出す | NFR-02・AC-08の判断比較。一致率は品質の指標にしない |
 | D-M5-09 | BOOK-005（EXTRACT-005-001、EPUB）から根拠8件（EV-0050〜0057）、主張12件（CLAIM-0052〜0063）を登録し、新しい知識本文KN-013（階層の循環の禁止と複数の上位概念）、KN-014（組織化の原則の明文化と要件の対立の扱い）、文献ノートKN-015を作った（GEN-003）。KN-004は書き換えず、NEED-04の本文にKN-013を加えた | 既存の本文を変えると、その本文に結び付いた照合記録が無効になり、確認済みの主張まで再レビューが要る。新しい内容は独立した本文に分けられる（指示v2） |
-| D-M5-10 | NEED-09は `pending` のまま残す。KN-014は入力・関係者の要件の対立を扱うが、文献の適用条件と案件の条件の違い（NEED-09の後半）はBOOK-005の読んだ範囲になく、判断記録の契約（M2）で補う | 文献にない内容を文献の主張として扱わない |
+| D-M5-10 | NEED-09は `pending` のまま残す。KN-014は入力・関係者の要件の対立を扱うが、文献の適用条件と案件の条件の違い（NEED-09の後半）はBOOK-005の読んだ範囲になく、判断記録の契約（M2）で補う（D-M5-17で解消） | 文献にない内容を文献の主張として扱わない |
 | D-M5-11 | 原典照合・主張レビュー・抽出品質の確認は、作成者（Claude Code）と別のCodexが `codex exec -s read-only` で行った（D-M3-18）。PATH上のcodex-cli 0.135.0は利用者の設定を読めないため、デスクトップ版同梱の新しい版を使った（D-M1-11と同じ扱い）。1回目にCLAIM-0058（図9.4の例の一般化）が `not_supported`、本文の帰属・限定の不足が4件指摘され、主張を例に限定し、文献にない記述を「仮説・補完」へ移した。2回の再確認で指摘がなくなった後に `iakit review record --by Codex --all-ok` で記録した（VR-0050〜0060） | 作成者の自己確認を確認に使わない。指摘を直す前の版で記録しない |
 | D-M5-12 | P-M4-07を同じ回で解消した。KN-002の古い表記を削除し、KN-002・KN-001の根拠（EV-0001〜0003）を再確認して照合記録を更新した | 本文の変更で無効になった照合記録を、BOOK-005の確認と同じ回で付け直す |
 | D-M5-13 | ia-taxonomyの「使う知識」にKN-013・KN-014を加えた。配布物の再生成では、ia-orchestratorとia-taxonomyだけが変わり、ia-analysis・ia-structure・ia-evaluationの配布IDは変わらなかった | 分野Skillは本文が参照するKN-IDだけを同梱する（D-M5-01）。文献の追加が関係しない配布物を変えないことの確認（AC-02） |
 | D-M5-14 | 文献追加後の再実行は、ia-taxonomyを通る2ケース（CASE-TAXONOMY-001、CASE-WEBIA-001）を、M4と同じホスト・モデル（Claude Code、claude-opus-5-5）で新しい実行RUN-TAXONOMY-003・RUN-WEBIA-003として行った。実行エージェントには前回の成果物を読ませず、Skillはチェックアウトの `skills/` を使った。送信の許可はM4と同じ範囲（D-M4-09）を各run.yamlに記録した | 前回の実行と環境をそろえ、差を文献とSkillの変更に帰せるようにする。CASE-BOUNDARY-001はMVP未対応の経路で、知識を使わない |
 | D-M5-15 | 独立判定はCodexを読み取り専用（`codex exec -s read-only`）で動かし、判定のYAMLを最終メッセージで受け取って `rubric-judgment.yaml` に保存し、`iakit run judgment` で検査した。書き込みを許すCodexの起動は、Claude Codeの自動許可で拒否された | 判定者に成果物を変更させない。判定の中身はCodexの出力のまま保存し、親は書式の検査だけを行う |
 | D-M5-16 | `run compare` は判断を判断IDで対応づけるため、独立した2つの実行では、同じIDの別の論点が対になる（例: 前回のIA-001は分類の判断、今回のIA-001は経路の判断）。差の説明は、対象と採否で論点を対応づけて読んだ（検証結果の表）。論点の自動対応づけは行わない | 判断IDは実行ごとの連番で、論点の同一性を機械的に決める鍵がない。対応づけを推測で自動化すると、比較の誤りを隠す |
+| D-M5-17 | NEED-09の後半の根拠を、BOOK-001の2章（GEN-002で読んだ範囲）から補った（GEN-004）。根拠2件（EV-0058・0059）、主張2件（CLAIM-0064「状況はそれぞれ固有で、ベストプラクティスがあっても各システムは独自になる」、CLAIM-0065「問いを利用者・コンテンツ・文脈に分けて答える」）と、知識本文KN-016（文献の適用条件と案件の条件の照合）を作った。照合の運用手順は文献の主張でないため「仮説・補完」に置いた。Codexの確認で本文の帰属の指摘3件を直し、再確認後に記録した（VR-0061〜0064）。ia-taxonomyの適用条件の照合の文からKN-016を参照する | 受領済みの抽出から語句検索で候補を探し、既存の章で根拠が見つかった。KN-014・BOOK-001のノートは照合記録に結び付いているため書き換えず、新しい本文に分けた（D-M5-09と同じ理由） |
 
 ### 検証結果
 
@@ -607,7 +608,9 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 | `uv run --locked python scripts/verify.py --report library/build-logs/checks/m5.yaml` | pass | Python 3.12.13・3.14.3で各563件。M4の488件から75件を追加。`iakit check --local` の配布検査を含み、原典の再照合は `not_run` |
 | `uv run --locked iakit dist build` の再実行 | 全Skill `unchanged` | 同じ入力から同じ配布IDになる |
 | BOOK-005の原典照合・主張レビュー（Codex） | 1回目: 抜粋8件一致、CLAIM-0058 `not_supported`、本文の指摘4件。修正後の再確認2回で指摘なし | `iakit review record --by Codex --all-ok`（VR-0050〜0060、`library/build-logs/checks/m5-review.yaml`）。抽出品質はEXTRACT-005-001の本文2件・注の配置がok、図（Figure 9.4）がissue |
-| `iakit library check` | pass | KN-001〜015がadopted。NEED-01〜08・10がadopted、NEED-09がpending（D-M5-10） |
+| `iakit library check` | pass | KN-001〜016がadopted。NEED-01〜10がすべてadopted（D-M5-17の後） |
+| BOOK-001の追加根拠の原典照合・主張レビュー（Codex） | 抜粋4件一致、主張4件supported、本文の指摘3件。修正後の再確認で指摘なし | `iakit review record --by Codex --all-ok`（VR-0061〜0064、`library/build-logs/checks/m5-review-2.yaml`） |
+| KN-016追加後の `iakit dist build` | ia-orchestrator・ia-taxonomy・ia-analysis が `changed` | ia-analysisは、同梱する根拠EV-0024・0025に新しい照合記録が付いたため変わった。ia-structure・ia-evaluationは不変 |
 | 文献追加後の `iakit dist build` | ia-orchestrator・ia-taxonomyだけ `changed` | ia-orchestratorは2本文の追加と索引、ia-taxonomyはSKILL.mdと同梱知識。ia-analysis・ia-structure・ia-evaluationは配布IDが同じ |
 | RUN-TAXONOMY-003（CASE-TAXONOMY-001の再実行） | completed、Refine 2巡。Codexの判定は1回目fail（R-03の用語の初出説明、minor）、修正後pass | 前回RUN-TAXONOMY-001もpass。残件はminor 2件（SCHEME-005の編集画面での扱い、木構造の説明の根の例外） |
 | RUN-WEBIA-003（CASE-WEBIA-001の再実行） | completed、Refine 2巡。Codexの判定は1回目fail（R-05のタスクIDと到達先の対応、R-06の入力と矛盾する不採用理由。major）、修正後pass | 前回RUN-WEBIA-001もpass。残件はmajor 1件（地区別一覧に出ないサービスが提供なしかページの欠落か入力から分からない）で、前回の残件と同じ論点 |
@@ -620,6 +623,6 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 | ID | 内容 | 状態・決める人 | 必要になる時点 |
 |---|---|---|---|
 | P-M5-01 | BOOK-005を統合する文献追加試験（AC-08）。NEED-04・09の根拠を補い（D-M3-22）、既存ケースの再実行と `run compare` による判断比較を行う。追加した根拠の原典照合・主張レビューは、作成者と別の確認者（Codex。D-M3-18）が行う | 解消（2026-10-18）。D-M5-09〜16と検証結果の表を参照 | — |
-| P-M5-02 | GitHubでCIを必須チェックにする設定（ブランチ保護） | 未実施。リポジトリ設定の変更で、ローカル実装とは別の操作。ユーザー | M5の完了前 |
+| P-M5-02 | GitHubでCIを必須チェックにする設定（ブランチ保護） | 未実施。2026-10-18に確認した。非公開リポジトリのブランチ保護・ルールセットはGitHub Proが必要（APIはHTTP 403）。さらに2026-10-16以降のCIは、アカウントの支払い失敗か利用上限のため、全ジョブが開始前に止まっている（「recent account payments have failed or your spending limit needs to be increased」）。コードの失敗ではない。支払い・上限の解消と、Pro契約か公開（未確定事項7）のどれを選ぶかはユーザーが決める。それまでは `scripts/verify.py` とpre-push（漏えい検査・配布検査）がローカルの検査となる | M5の完了前 |
 | P-M4-07 | KN-002本文の冒頭に「主張はすべて未レビュー」という古い表記が残る | 解消（D-M5-12） | — |
-| P-M5-03 | NEED-09の後半（文献の適用条件と案件の条件の違い）の文献根拠 | 未登録。判断記録の契約（M2）で扱う（D-M5-10）。候補文献の調査はM6以降 | MVPの完了判定には必須でない |
+| P-M5-03 | NEED-09の後半（文献の適用条件と案件の条件の違い）の文献根拠 | 解消（D-M5-17） | — |
