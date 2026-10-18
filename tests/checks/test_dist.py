@@ -82,12 +82,12 @@ def test_shared_knowledge_change_updates_every_dependent_skill(repo):
 
 
 def test_unrelated_book_note_does_not_rewrite_distributions(repo):
-    note = repo / "library/books/BOOK-005/notes.md"
+    note = repo / "library/books/BOOK-002/notes.md"
     note.parent.mkdir(parents=True)
-    note.write_text("# BOOK-005 文献ノート\n\n未統合。\n", encoding="utf-8")
+    note.write_text("# BOOK-002 文献ノート\n\n未統合。\n", encoding="utf-8")
     index = yamlio.load(repo / "library/index.yaml")
-    index["entries"].append({"knowledge_id": "KN-099", "kind": "book_note", "title": "BOOK-005 文献ノート",
-                             "path": "library/books/BOOK-005/notes.md", "claims": [], "terms": [], "conflicts": []})
+    index["entries"].append({"knowledge_id": "KN-099", "kind": "book_note", "title": "BOOK-002 文献ノート",
+                             "path": "library/books/BOOK-002/notes.md", "claims": [], "terms": [], "conflicts": []})
     (repo / "library/index.yaml").write_text(yamlio.dumps(index), encoding="utf-8")
     code, out = iakit(repo, "dist", "build")
     assert code == 0 and changed(out) == [], out
