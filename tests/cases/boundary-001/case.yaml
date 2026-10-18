@@ -1,12 +1,14 @@
 # MVP未対応経路の境界ケース（FR-08、AC-06）。内容評価は行わず、未対応の示し方だけを確かめる。
 schema_version: "1.0"
 case_id: CASE-BOUNDARY-001
-case_version: 1.1.0
+case_version: 1.2.0
 kind: boundary
 task_type: exhibition_panel
 title: 展示パネルの構成を求める依頼（MVP未対応経路）
-rubric_version: 1.1.0
+rubric_version: 1.2.0
 changes:
+- version: 1.2.0
+  reason: ルーブリックv1.2.0（入力の不足の扱い）への更新に追従した。ケースの条件は変えていない
 - version: 1.1.0
   reason: ルーブリックv1.1.0への更新に追従した。ケースの条件は変えていない
 inputs: []

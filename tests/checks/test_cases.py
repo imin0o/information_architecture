@@ -41,13 +41,13 @@ def test_missing_rubric_item_is_detected(case_root):
 
 
 def test_rubric_version_mismatch_is_detected(case_root):
-    edit(case_root / "rubric.yaml", lambda r: r.update(rubric_version="1.2.0", changes=[
-        {"version": "1.2.0", "reason": "試験"}]))
+    edit(case_root / "rubric.yaml", lambda r: r.update(rubric_version="9.0.0", changes=[
+        {"version": "9.0.0", "reason": "試験"}]))
     assert any("rubric_version" in e for e in cases.check(case_root)["errors"])
 
 
 def test_version_bump_requires_change_reason(case_root):
-    edit(case_root / "webia-001/case.yaml", lambda c: c.update(case_version="1.2.0"))
+    edit(case_root / "webia-001/case.yaml", lambda c: c.update(case_version="9.0.0"))
     assert any("変更理由" in e for e in cases.check(case_root)["errors"])
 
 

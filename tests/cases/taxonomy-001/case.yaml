@@ -2,11 +2,11 @@
 # 合格は成果物を作ったエージェントとは別の確認者がルーブリックで判定する。単一の正解階層への一致は求めない。
 schema_version: "1.0"
 case_id: CASE-TAXONOMY-001
-case_version: 1.1.0
+case_version: 1.2.0
 kind: representative
 task_type: taxonomy
 title: 同名異義語と同義語を含む生活支援サービスの用語一覧
-rubric_version: 1.1.0
+rubric_version: 1.2.0
 inputs:
 - path: inputs/brief.md
   format: markdown
@@ -105,6 +105,8 @@ scenarios:
   - tests/checks/test_decisions.py::test_unresolved_counter_evidence_forces_low
   human_check: 判断記録に T-04 と T-05 の両方の参照があり、採った位置付けの理由が入力に基づいているかを確かめる
 changes:
+- version: 1.2.0
+  reason: ルーブリックv1.2.0（入力の不足の扱い）への更新に追従した。ケースの条件は変えていない
 - version: 1.1.0
   reason: >-
     第三者レビュー（Codex）を反映。循環禁止を上位・下位関係に限定し、R-03の粒度の条件を同じ親・同じファセットに絞った。

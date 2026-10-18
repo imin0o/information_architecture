@@ -103,3 +103,16 @@ def test_issue_requires_residual_reason(judge):
 
 def test_item_without_basis_is_rejected(judge):
     assert has(judge(lambda j: j["items"][0].update(basis=[])), "判定の根拠（basis）がない")
+
+
+def test_input_gap_is_recorded_without_severity(judge):
+    """入力にない情報は、成果物が明示していれば重大度を付けず input_gaps に記録する（ルーブリック v1.2.0）。"""
+    gap = {"item": "R-05", "gap": "地区別の料金が入力にない", "basis": ["ART-006 v1"],
+           "handling": "ART-007 v1 section=未検証の判断と検証方法"}
+    assert judge(lambda j: j.update(input_gaps=[gap])) == []
+
+
+def test_input_gap_has_no_severity(judge):
+    gap = {"item": "R-05", "gap": "地区別の料金が入力にない", "basis": ["ART-006 v1"], "handling": "検証計画",
+           "severity": "major"}
+    assert has(judge(lambda j: j.update(input_gaps=[gap])), "severity")

@@ -63,6 +63,19 @@
         }
       }
     },
+    "input_gaps": {
+      "description": "固定ケースの入力にない情報・入力どうしの解消できない矛盾のうち、成果物が仮定・未解決として明示し検証計画に載せたもの（rubric.yaml の input_gaps）。成果物の不備ではないため重大度を付けない",
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["item", "gap", "basis", "handling"], "additionalProperties": false,
+        "properties": {
+          "item": {"type": "string", "pattern": "^R-[0-9]{2}$"},
+          "gap": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "basis": {"$ref": "#/$defs/basis"},
+          "handling": {"description": "成果物での明示と検証計画の位置", "$ref": "common.schema.json#/$defs/nonempty"}
+        }
+      }
+    },
     "verdict": {"enum": ["pass", "fail"]},
     "reason": {"$ref": "common.schema.json#/$defs/nonempty"}
   },

@@ -10,6 +10,7 @@
     "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
     "rubric_version": {"$ref": "common.schema.json#/$defs/version"},
     "pass_rule": {"$ref": "common.schema.json#/$defs/nonempty"},
+    "input_gaps": {"description": "入力の不足を成果物の不備と区別する規則", "$ref": "common.schema.json#/$defs/nonempty"},
     "changes": {"$ref": "case.schema.json#/properties/changes"},
     "severity": {
       "type": "object", "required": ["critical", "major", "minor"], "additionalProperties": false,

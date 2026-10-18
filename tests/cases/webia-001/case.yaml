@@ -2,11 +2,11 @@
 # 合格は成果物を作ったエージェントとは別の確認者がルーブリックで判定する。単一の正解階層への一致は求めない。
 schema_version: "1.0"
 case_id: CASE-WEBIA-001
-case_version: 1.1.0
+case_version: 1.2.0
 kind: representative
 task_type: web_ia
 title: 複数属性から生活支援サービスを探す架空のサービスサイト
-rubric_version: 1.1.0
+rubric_version: 1.2.0
 inputs:
 - path: inputs/brief.md
   format: markdown
@@ -166,6 +166,8 @@ scenarios:
   - tests/checks/test_runs.py::test_missing_input_file_is_not_run
   human_check: null
 changes:
+- version: 1.2.0
+  reason: ルーブリックv1.2.0（入力の不足の扱い）への更新に追従した。ケースの条件は変えていない
 - version: 1.1.0
   reason: >-
     第三者レビュー（Codex）を反映。資料不足を質問・回答あり・回答なしに分け、IN-03・IN-04に合わせた。
