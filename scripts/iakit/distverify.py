@@ -22,7 +22,8 @@ def files_of(skill_dir: Path) -> dict[str, str]:
     """build-manifest.yaml 以外の同梱ファイルと sha256。"""
     return {p.relative_to(skill_dir).as_posix(): manifest.sha256_file(p)
             for p in sorted(skill_dir.rglob("*"))
-            if p.is_file() and p.name != MANIFEST_NAME and not IGNORED_PARTS & set(p.relative_to(skill_dir).parts)}
+            if p.is_file() and p != skill_dir / MANIFEST_NAME
+            and not IGNORED_PARTS & set(p.relative_to(skill_dir).parts)}
 
 
 def distribution_id(doc: dict) -> str:
@@ -58,6 +59,16 @@ def skill_errors(skill_dir: Path) -> tuple[dict | None, list[str]]:
     for rel in sorted(recorded.keys() & actual.keys()):
         if recorded[rel] != actual[rel]:
             errors.append(f"{name}: {rel} が配布時から変わった")
+    evidence_path = skill_dir / provenance.RUNTIME_EVIDENCE
+    if evidence_path.is_file():
+        evidence = yamlio.load(evidence_path)
+        found = yamlio.schema_errors(evidence, "runtime-evidence.schema.json")
+        errors += [f"{name}: runtime-evidence.yaml {e}" for e in found]
+        if not found:
+            pending = [c["claim_id"] for c in evidence["claims"]
+                       if (c["source_verification"], c["support_status"]) != ("verified", "supported")]
+            if pending:
+                errors.append(f"{name}: 有効な原典照合・主張レビューがない: {pending}")
     return doc, errors
 
 
@@ -67,7 +78,7 @@ def set_errors(skills_root: Path, names: list[str], require_all: bool = True) ->
     require_all が偽なら、names にないSkillへの依存は不足として扱わない（経路に要らないSkill）。
     """
     present = [n for n in names if (skills_root / n / "SKILL.md").is_file()]
-    with_manifest = [n for n in present if (skills_root / n / MANIFEST_NAME).is_file()]
+    with_manifest = [n for n in names if (skills_root / n / MANIFEST_NAME).is_file()]
     if not with_manifest:
         return []
     errors = [f"{n}: {MANIFEST_NAME} がない（配布物と開発用の写しが混在している）"

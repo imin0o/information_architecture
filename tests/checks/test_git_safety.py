@@ -7,7 +7,7 @@ import subprocess
 
 import pytest
 
-from iakit import fixture_pdf, fixtures, leak_history, leaks, yamlio
+from iakit import fixture_pdf, fixtures, leak_history, leaks, push_check, yamlio
 from iakit.paths import ROOT
 from conftest import git
 
@@ -19,6 +19,28 @@ def commit(repo, message):
 
 def updates(tip, old=None):
     return f"refs/heads/main {tip} refs/heads/main {old or '0' * 40}\n"
+
+
+def test_full_push_check_deduplicates_tips_and_skips_deletion(repo, monkeypatch):
+    tip = commit(repo, "initial")
+    calls = []
+
+    def check(root, oid):
+        calls.append((root, oid))
+        return {"commit": oid, "result": "pass", "checks": []}
+
+    monkeypatch.setattr(push_check, "_check_tip", check)
+    result = push_check.check_push(updates(tip) + updates(tip) + updates("0" * 40, tip), root=repo)
+    assert result["result"] == "pass" and result["commits_checked"] == 1
+    assert calls == [(repo, tip)]
+    assert push_check.check_push(updates("0" * 40, tip), root=repo)["commits_checked"] == 0
+
+
+@pytest.mark.parametrize("value", ["bad input", updates("f" * 40)])
+def test_full_push_check_rejects_invalid_or_missing_commits(repo, value):
+    commit(repo, "initial")
+    result = push_check.check_push(value, root=repo)
+    assert result["result"] == "fail" and result["errors"]
 
 
 def test_pre_push_catches_added_then_deleted_confidential_file(repo):

@@ -64,7 +64,16 @@ def build_skill(name: str, dest: Path) -> dict:
 
 def _write(path: Path, doc: dict, comment: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(f"# {comment}\n" + yamlio.dumps(doc), encoding="utf-8", newline="\n")
+    staged = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", newline="\n", delete=False,
+                                         prefix=f".{path.name}-", dir=path.parent) as stream:
+            staged = Path(stream.name)
+            stream.write(f"# {comment}\n" + yamlio.dumps(doc))
+        staged.replace(path)
+    finally:
+        if staged:
+            staged.unlink(missing_ok=True)
 
 
 def _broken_links(dest: Path) -> list[str]:
@@ -85,6 +94,9 @@ def _receipt(name: str, dest: Path) -> dict:
     evidence = yamlio.load(dest / provenance.RUNTIME_EVIDENCE)
     claims = evidence["claims"]
     confirmed = [c for c in claims if (c["source_verification"], c["support_status"]) == ("verified", "supported")]
+    pending = sorted(c["claim_id"] for c in claims if c not in confirmed)
+    if pending:
+        raise ValueError(f"{name}: 有効な原典照合・主張レビューがない: {pending}")
     files = distverify.files_of(dest)
     files.pop(RECEIPT, None)
     return {
@@ -146,6 +158,11 @@ def _generate(work: Path) -> list[dict]:
     lib = library.check()
     if lib["result"] != "pass" or lib.get("knowledge", {}).get("not_supported"):
         raise ValueError(f"知識ライブラリの検査に通らない: {lib['errors'][:3] or lib.get('knowledge')}")
+    bundled = {e["knowledge_id"] for e in yamlio.load(ROOT / runtime.KNOWLEDGE_INDEX)["entries"]
+               if e["kind"] != "book_note"}
+    pending = sorted(bundled - set(lib["knowledge"]["adopted"]))
+    if pending:
+        raise ValueError(f"配布する知識に有効な照合・レビュー記録がない: {pending}")
     return [build_skill(n, work / n) for n in skill_names()]
 
 
@@ -165,17 +182,31 @@ def build(out: Path = DIST, record: Path | None = RECORD) -> dict:
             return {"check": "dist_build", "result": "fail", "errors": errors}
         summary = _summary(docs, work)
         changes = diff(out, work) if out.is_dir() else {"new": True}
-        if out.exists():
-            old = out.with_name(f".{out.name}-old")
-            shutil.rmtree(old, ignore_errors=True)
-            out.rename(old)
-            work.rename(out)
-            shutil.rmtree(old)
-        else:
-            work.rename(out)
-        if record:
-            _write(record, {"schema_version": "1.0", "distributions": summary},
-                   "配布候補と、その同梱物に結び付いた照合記録のハッシュ（iakit dist build が生成。本文を含まない）")
+        backup = Path(tempfile.mkdtemp(prefix=f".{out.name}-old-", dir=out.parent)).resolve() if out.exists() else None
+        old = backup / "previous" if backup else None
+        try:
+            if old:
+                out.rename(old)
+            try:
+                work.rename(out)
+                if record:
+                    _write(record, {"schema_version": "1.0", "distributions": summary},
+                           "配布候補と、その同梱物に結び付いた照合記録のハッシュ（iakit dist build が生成。本文を含まない）")
+            except OSError:
+                try:
+                    if not work.exists():
+                        out.rename(work)
+                    if old:
+                        old.rename(out)
+                except OSError as exc:
+                    raise OSError(f"配布物の復元に失敗した。退避先 {old} と配置先 {out} を確認する") from exc
+                raise
+        finally:
+            # 復元にも失敗した場合は旧配布物を消さず、場所をエラーに残す。
+            if backup and not old.exists():
+                backup.rmdir()
+        if backup:
+            shutil.rmtree(backup)
         return {"check": "dist_build", "result": "pass", "out": out.as_posix(), "distributions": summary,
                 "diff": changes}
     finally:

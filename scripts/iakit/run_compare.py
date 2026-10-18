@@ -4,19 +4,26 @@
 出力の一致や判断の一致率を品質の代わりにしない。差分は人や確認エージェントが説明に使う材料である。
 """
 
+import json
 from pathlib import Path
 
 from . import yamlio
 
-FIELDS = {
+def _ordered(items: list[dict]) -> list[dict]:
+    return sorted(items, key=lambda item: json.dumps(item, ensure_ascii=False, sort_keys=True))
+
+
+FIELDS = {f: lambda d, key=f: d[key] for f in (
+    "stage", "problem", "selected_method", "rationale", "alternatives_not_applicable_reason",
+    "validation_status", "confidence", "confidence_basis", "classification", "skill_version", "library_version",
+)} | {
     "target_ids": lambda d: sorted(d["target_ids"]),
-    "selected_method": lambda d: d["selected_method"],
-    "assumptions": lambda d: sorted(a["statement"] for a in d["assumptions"]),
-    "sources": lambda d: sorted(f"{s['evidence_id']}/{s['claim_id']}:{s['source_verification']}/{s['support_status']}"
-                                for s in d["sources"]),
-    "alternatives": lambda d: sorted(a["method"] for a in d["alternatives"]),
-    "validation_status": lambda d: d["validation_status"],
-    "confidence": lambda d: d["confidence"],
+    "assumptions": lambda d: _ordered(d["assumptions"]),
+    "sources": lambda d: _ordered(d["sources"]),
+    "alternatives": lambda d: _ordered(d["alternatives"]),
+    "input_observations": lambda d: _ordered(d["input_observations"]),
+    "counter_evidence": lambda d: _ordered(d["counter_evidence"]),
+    "validation_record_ids": lambda d: sorted(d["validation_record_ids"]),
 }
 
 
@@ -51,7 +58,7 @@ def compare(base: Path, other: Path) -> dict:
             fields["status"] = {"base": a["status"], "other": b["status"]}
         if fields:
             changed[did] = {"stage": [a["stage"], b["stage"]], "fields": fields}
-    env = [{k: r["environment"][k] for k in ("host", "host_version", "model", "model_version")} for r in runs]
+    env = [r["environment"] for r in runs]
     return {
         "result": "pass",
         "runs": [r["run_id"] for r in runs],

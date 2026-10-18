@@ -36,6 +36,20 @@ def test_modules_cover_runtime_imports():
     assert not {"cli", "extract_cmd", "review", "leaks"} & set(names)
 
 
+def test_evidence_includes_claims_reached_through_terms_and_conflicts(tmp_path):
+    runtime.bundle_knowledge(tmp_path, {"KN-002"})
+    terms = yamlio.load(tmp_path / runtime.TERMS)
+    terms["terms"][0]["claims"].append("CLAIM-0011")
+    (tmp_path / runtime.TERMS).write_text(yamlio.dumps(terms), encoding="utf-8")
+    conflicts = {"schema_version": "1.0", "conflicts": [{"conflict_id": "CONFLICT-9999", "topic": "synthetic",
+                 "positions": [{"claim_id": c, "applicability": "synthetic"} for c in ("CLAIM-0028", "CLAIM-0034")],
+                 "resolution": None}]}
+    (tmp_path / runtime.CONFLICTS).write_text(yamlio.dumps(conflicts), encoding="utf-8")
+    runtime._evidence(tmp_path)
+    evidence = yamlio.load(tmp_path / provenance.RUNTIME_EVIDENCE)
+    assert {"CLAIM-0011", "CLAIM-0028", "CLAIM-0034"} <= {c["claim_id"] for c in evidence["claims"]}
+
+
 def test_bundled_runtime_uses_bundled_package(installed):
     probe = ("import sys; sys.path.insert(0, sys.argv[1]); import iakit.paths as p; "
              "print(p.ROOT.name, p.CHECKOUT, p.SKILLS.name)")

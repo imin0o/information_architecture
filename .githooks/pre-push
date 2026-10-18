@@ -4,9 +4,8 @@ refs=$(cat)
 if ! printf '%s' "$refs" | uv run --locked iakit leaks check --pre-push "$1"; then
   exit 1
 fi
-# 送信前の必須検査（ブランチ保護は使わない。D-M5-18）。CIと同じ iakit check --local を実行する。
-# 配布候補の記録（verification/distributions.yaml）と現行の生成結果の照合も含む。
-if ! out=$(uv run --locked iakit check --local </dev/null 2>&1); then
+# 送信予定の各コミットを一時checkoutで全件検査する。作業ツリーの修正では代用しない。
+if ! out=$(printf '%s' "$refs" | uv run --locked iakit check --pre-push 2>&1); then
   printf '%s\n' "$out" >&2
   printf '%s\n' "iakit check --local が失敗したため、送信を中止しました。配布の不一致なら iakit dist build で再生成してください。" >&2
   exit 1

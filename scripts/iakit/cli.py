@@ -36,7 +36,7 @@ import sys
 from pathlib import Path
 
 from . import (cases, cli_run, contracts, dist, extract_cmd, fixtures, hostprobe, leak_history, leaks, library,
-               manifest, paths, review, yamlio)
+               manifest, paths, push_check, review, yamlio)
 
 
 def _emit(results: list[dict], report: Path | None) -> int:
@@ -114,7 +114,9 @@ def _parser() -> argparse.ArgumentParser:
     dd.add_argument("new", type=Path)
 
     cli_run.add_parsers(sub)
-    with_report(sub.add_parser("check")).add_argument("--local", action="store_true")
+    ck = with_report(sub.add_parser("check")).add_mutually_exclusive_group()
+    ck.add_argument("--local", action="store_true")
+    ck.add_argument("--pre-push", action="store_true", help="標準入力の送信予定コミットを一時checkoutで全件検査する")
     return parser
 
 
@@ -169,6 +171,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.group == "review":
         results = [review.sheet() if args.action == "sheet" else
                    review.record(args.by, args.all_ok, args.reject, args.claim, args.sample_issue)]
+    elif args.pre_push:
+        results = [push_check.check_push(sys.stdin.read())]
     else:
         results = [manifest.check(local=args.local), fixtures.check(), leaks.check(), cases.check()]
         results += [contracts.check_bundle(d) for d in contracts.default_targets()]

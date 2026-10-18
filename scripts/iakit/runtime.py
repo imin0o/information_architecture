@@ -112,6 +112,8 @@ def _evidence(dest: Path) -> list[str]:
     derived = provenance.derive(prov, receipts, ROOT, EXTRACTED)
     index = yamlio.load(dest / KNOWLEDGE_INDEX)
     wanted = {c for e in index["entries"] for c in e["claims"]}
+    wanted.update(c for t in yamlio.load(dest / TERMS)["terms"] for c in t["claims"])
+    wanted.update(p["claim_id"] for c in yamlio.load(dest / CONFLICTS)["conflicts"] for p in c["positions"])
     claims = [{"source_id": r["source_id"], "source_sha256": r["source_sha256"],
                "evidence_id": r["evidence_id"], "claim_id": c["claim_id"], "claim": c["claim"],
                "claim_sha256": c["claim_sha256"], "applicability": c["applicability"],
