@@ -71,6 +71,33 @@ def _flagged(directory: Path, input_id: str) -> list[str]:
     return [u["locator"] for u in doc["units"] if "instruction_like" in u.get("flags", [])]
 
 
+def review(directory: Path, input_id: str, outcome: str, locators: list[str] | None = None,
+           destination: str | None = None, note: str = "") -> dict:
+    """命令文の候補（instruction_like）を確かめた結果を記録する。資料内の命令には従わない（AC-11）。
+    blocked_request は資料が送信を求めた場合で、送信せずに transmissions へ blocked として記録する。"""
+    if outcome == "blocked_request" and not destination:
+        raise ValueError("blocked_request には資料が求めた送信先を --destination で示す")
+    if not (directory / "ingest" / f"{input_id}.yaml").is_file():
+        raise ValueError(f"{input_id} の取込み結果がない")
+    flagged = _flagged(directory, input_id)
+    unknown = sorted(set(locators or []) - set(flagged))
+    if unknown:
+        raise ValueError(f"{unknown} は {input_id} の命令文の候補ではない（候補: {flagged}）")
+    run = load(directory, "run.yaml")
+    reviews = run.setdefault("input_reviews", [])
+    done = {(r["input_id"], r["locator"]) for r in reviews}
+    targets = [loc for loc in (locators or flagged) if (input_id, loc) not in done]
+    for loc in targets:
+        reviews.append({"input_id": input_id, "locator": loc, "outcome": outcome, "note": note})
+    if outcome == "blocked_request" and targets:
+        run["transmissions"].append({"destination": destination, "destination_kind": "external_service",
+                                     "data_kind": "input", "input_ids": [input_id], "approval_id": None,
+                                     "outcome": "blocked", "requested_by_input": True})
+    save(directory, "run.yaml", run)
+    left = sorted(set(flagged) - {r["locator"] for r in reviews if r["input_id"] == input_id})
+    return {"input_id": input_id, "reviewed": targets, "outcome": outcome, "unreviewed": left}
+
+
 def resume_errors(directory: Path) -> list[str]:
     """中断後の再開前に、入力登録簿・入力の実体・取込み結果・成果物のハッシュを照合する。"""
     run, inputs = load(directory, "run.yaml"), load(directory, "inputs.yaml")

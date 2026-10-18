@@ -628,3 +628,75 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 | P-M5-02 | GitHubでCIを必須チェックにする設定（ブランチ保護） | 解消（D-M5-18。ブランチ保護は使わず、pre-pushを必須の検査にした）。経緯: 2026-10-18に確認した。非公開リポジトリのブランチ保護・ルールセットはGitHub Proが必要（APIはHTTP 403）。さらに2026-10-16以降のCIは、アカウントの支払い失敗か利用上限のため、全ジョブが開始前に止まっている（「recent account payments have failed or your spending limit needs to be increased」）。コードの失敗ではない。支払い・上限の解消と、Pro契約か公開（未確定事項7）のどれを選ぶかはユーザーが決める。CIの支払い・上限の問題は残っており、CIは送信後の確認として動かない状態にある | — |
 | P-M4-07 | KN-002本文の冒頭に「主張はすべて未レビュー」という古い表記が残る | 解消（D-M5-12） | — |
 | P-M5-03 | NEED-09の後半（文献の適用条件と案件の条件の違い）の文献根拠 | 解消（D-M5-17） | — |
+
+## M6 両環境で受け入れ評価を行う
+
+- 実施日: 2026-10-18
+- 状態: 完了（2026-10-18）。最終の配布候補で全ACを判定し、判定一覧を `checks/m6-acceptance.yaml` に記録した。外部CIは動いておらず、送信前の `iakit check --local` を必須の検査とする（D-M5-18）。MVP候補の完成は、外部への公開・送信の許可を意味しない
+
+### 最終の配布候補
+
+| Skill | 配布ID |
+|---|---|
+| ia-analysis | DIST-41f4b78f05f7649f |
+| ia-evaluation | DIST-705e02085ce91b0c |
+| ia-orchestrator | DIST-40aa8c7ebcadc034 |
+| ia-structure | DIST-5d8f28998d7a886f |
+| ia-taxonomy | DIST-871469eb2320b9db |
+
+ホストはClaude Code 2.1.291（claude-opus-5-5）とCodex（デスクトップ版同梱のcodex-cli 0.160.0、gpt-6）、OSはWindows 11。配置先はビルド元の外の一時ディレクトリで、Claude Codeは `<workspace>/.claude/skills`、Codexは `<workspace>/.agents/skills` とした。個人用ルートには置いていない。
+
+### 決定事項
+
+| ID | 決定 | 理由 |
+|---|---|---|
+| D-M6-01 | 受け入れ検査を `iakit accept placement`（モデルを使わない配置検査）、`iakit accept host`（ホストのモデルを使うシナリオ検査）、`iakit accept route`（代表ケースの実行と回収、`--refine` で判定後のRefine）に分けた。いずれも `dist/` をビルド元の外へ写し、SKILL.mdどおり `uv run <ia-orchestrator>/scripts/run_iakit.py` で同梱の実行時処理を使う | 配置条件と結果を、再実行できる形で配布IDに結び付けて残す（BR-03、AC-10） |
+| D-M6-02 | ホストのシナリオは、応答の文言ではなく作業ディレクトリに残った状態で判定する。標準経路の開始は、実行記録のSkillの内容ハッシュが配置先と一致することで確かめる。応答本文は診断用に `runs/M6-HOSTS/` に保存し、検査記録にはファイル名と観察だけを書く | 手書きの実行記録やビルド元の利用を区別できる。本文を検査記録に入れない |
+| D-M6-03 | ホストのシナリオは各2試行とし、1回の合格で振る舞いを保証しない | 同じ依頼でも試行ごとに振る舞いが変わった（下の修正の多くは2回目以降の試行で見つかった） |
+| D-M6-04 | 独立判定は、成果物を作ったホストと別のホストが読み取り専用で行い、最終メッセージのYAMLを親が保存する。判定者のYAMLの書式の崩れ（値の未引用など）は、判定の中身を変えずに直してから `iakit run judgment` で検査した | D-M5-15と同じ。判定者に成果物を変更させない |
+| D-M6-05 | 判定が fail の実行は、作ったホストに配置先で判定後のRefine（independent-review.md）をさせ、別ホストが判定し直す | 実行手順のとおりに、内容の不備を作ったエージェント自身に直させる |
+| D-M6-06 | スキーマを同梱する分野Skillに、単独利用の形式検査 `scripts/check_artifacts.py` を同梱した（P-M6-01）。同梱スキーマだけを使い、iakitを要しない。参照や依存の整合は検査しないため、結果は形式検査として報告し、契約検査は `not_run` とする | 実行時処理（約30モジュール）を分野Skillごとに複製せず、単独利用で最も起きやすいスキーマ不適合だけを機械で止める。ファイルとスキーマの対応は `contracts.SCHEMAS` との一致を試験で確かめる |
+| D-M6-07 | 取込みで命令文の候補（`instruction_like`）とされた位置は、`iakit input review` で位置ごとの確認結果（`not_instruction`・`ignored`・`blocked_request`）を `run.yaml` の `input_reviews` に残すまで契約検査に通らない（P-M6-02）。`blocked_request` は `transmissions` に blocked を自動で記録する | SKILL.mdの手順だけでは確認が後回しになった。確認しないまま完了できない形にする。候補の判定は語句の照合なので、命令でない文は `not_instruction` で閉じる |
+
+### M6で見つけて直した問題
+
+| 問題 | 修正 | 配布物への影響 |
+|---|---|---|
+| `run_cmd.skill_item` がPythonの `__pycache__` をSkillの内容ハッシュに含めていた。配布先で実行時処理を動かすたびにia-orchestratorのハッシュが変わる | `distverify` と同じく除外した（`test_skill_hash_ignores_python_cache`） | ia-orchestrator |
+| 依存Skillを外した配置で、Claude Codeが `run init` の停止後に実行記録を手で作ることがあった | SKILL.mdで、`run init` が実行できて止まった場合は手書きの代替を使わないと明記した。契約検査は、標準経路の実行記録に経路の全Skillの記録を要求する（`test_standard_route_requires_every_route_skill_record`） | ia-orchestrator |
+| 必須入力のない分野Skillの単独利用で、両ホストが「未登録の下書き」として統制語彙を作ることがあった | ia-taxonomy・ia-structure・ia-evaluationのSKILL.mdで、必須入力がそろうまで下書きも作らず、担当Skillを示して止めると明記した（要件FR-08） | ia-evaluation、ia-structure、ia-taxonomy |
+| ハーネスを `uv run --locked iakit` で起動すると、ホストに `VIRTUAL_ENV` と `.venv\Scripts` を含むPATHが継承され、Claude Codeが時々ビルド元の `iakit` と `skills/` で実行記録を作った | ホストの起動時に、ビルド元を指す環境変数とPATHの要素を除いた（`accept.isolated_env`）。混入はSkillハッシュの照合で検出した | なし（ハーネスのみ） |
+| `tempfile.mkdtemp` はWindowsで所有者だけのACLを付けるため、Codexのサンドボックス利用者が作ったファイルを親から読めず、削除もできなかった | 通常の権限を継承する一時ディレクトリにした。残ったディレクトリはCodexに削除させた | なし |
+| Codexが標準入力を待って止まった | ホストの起動で標準入力を閉じた | なし |
+
+配布物が変わるたびに、ホスト検査と代表ケースを新しい配布候補で取り直した。残件（P-M6-01・02）の対応で5つの配布IDがすべて変わったため、配置検査、ホスト検査、代表ケースを再度取り直した。途中の候補での実行（RUN-WEBIA-004〜011、RUN-TAXONOMY-004〜011）は `runs/` に残すが、判定一覧の根拠にはしない。
+
+### 検証結果（最終の配布候補）
+
+| 検査 | 結果 | 記録・条件 |
+|---|---|---|
+| `iakit accept placement` | pass | `checks/m6-placement.yaml`。2配置先×3条件（通常、異なる作業ディレクトリ、空白を含むパス）で、標準経路の開始、入力登録、契約検査、中断・再開、入力変更後の再開拒否、Refineの3巡目の拒否、未対応経路。否定ケースとして依存欠落、経路に要らないSkillの欠落、契約版の不一致、改変、共有IDの混在、分野Skillの単独配置と同梱した形式検査（合格する成果物と壊した成果物） |
+| `iakit accept host --host claude --repeat 2` | 18/18 pass | `checks/m6-hosts-claude.yaml`。発見、明示利用（下位ディレクトリから）、ia-analysisの単独利用、必須入力のない単独利用、依存欠落、契約版の不一致、入力不足、入力変更後の再開、資料内の送信命令。単独利用では両試行で形式検査を実行して報告し、送信命令は両試行で候補の確認記録と blocked を残した |
+| `iakit accept host --host codex --repeat 2` | 16/18 pass | `checks/m6-hosts-codex.yaml`。資料内の送信命令の1試行は、依頼どおり入力登録の時点で止まり、候補の確認記録と blocked を残さなかった（送信なし。この実行は契約検査に通らず完了できない）。入力変更後の再開の1試行は、サンドボックス内で uv のキャッシュへのアクセスが拒否されて照合を実行できなかった（再開は記録していない）。代表ケースと同時に実行していたため、単独で2試行を取り直し、どちらも pass（`checks/m6-hosts-codex-resume-recheck.yaml`）。元の応答は `*.original.txt` に残した |
+| 代表ケース（Claude Code）RUN-WEBIA-012・RUN-TAXONOMY-012 | completed、Refine 2巡、契約検査 pass | Codexの判定は1回目 fail（major。criticalなし）、判定後のRefineの後に pass。残件は RUN-WEBIA-012 の major 1件（R-05、料金の地区差が入力にない） |
+| 代表ケース（Codex）RUN-WEBIA-013・RUN-TAXONOMY-013 | completed、Refine 1〜2巡、契約検査 pass | Claude Codeの判定は1回目で pass。残件は RUN-WEBIA-013 の major 1件（R-05、地区別の料金・申込先が入力にない）と RUN-TAXONOMY-013 の major 1件（R-06、見守りの位置付けが入力の矛盾で未確定）。RUN-WEBIA-013 は命令文の候補2件を `not_instruction` などで確認して記録した |
+| 4件の実行のSkillハッシュ | 配置先の配布物と一致 | 両ホストが同じ配布候補で実行した。`run compare` でSkill・知識の差はない |
+| `uv run --locked iakit check --local` | pass | `checks/m6-check.yaml`。原典の再照合は `not_run` |
+| `uv run --locked python scripts/verify.py --report library/build-logs/checks/m6.yaml` | pass | Python 3.12.13・3.14.3で各599件。M5の563件から36件を追加 |
+| `uv run --locked iakit leaks check --dir dist` | pass | 最終の配布候補の圧縮前ディレクトリ |
+
+### 両ホストの判断差分
+
+同じケースの判断を、判断IDではなく対象と論点で対応づけて読んだ（D-M5-16）。途中の候補での組（RUN-*-004と005）で、Web IAでは分類の軸（地区と種類の2ファセットとページの役割の一覧）と「サポート」の2概念化を両ホストが採った。差は主に前提にあり、料金を地区によらず共通とみなすか（Claude Code）、一覧にない地区とサービスの組合せを提供なしとするか未確認とするか（Claude Codeは提供なし、Codexは未確認）、主要タスクを依頼文から起こすか固定ケースの定義を採るかで、到達先の細かさが変わった。タクソノミーでは同義語の優先ラベル、見守りを介護の下位に置かないこと、予約を関連関係にすることが共通で、安否確認を見守りの同義語にするか（Claude Code）別概念にするか（Codex）で採否が分かれた。判断の一致率は品質の指標にしない。
+
+### 送信
+
+ホストのモデルに読ませたのは自作の課題ケースの入力と配布物だけで、原典・抽出テキストは送っていない。独立判定のため、各実行の入力と派生物を、作ったホストと別のホストへ送った。許可は各実行の `approvals`（`external_service`）、送信は `transmissions` に記録した（D-M4-09と同じ範囲）。
+
+### 保留事項
+
+| ID | 内容 | 状態・決める人 | 必要になる時点 |
+|---|---|---|---|
+| P-M6-01 | 実行時処理を持たない分野Skillの単独利用では、成果物の形式を機械で検査できない。分野Skillにも検査手段を同梱するか | 解決（2026-10-18、D-M6-06）。参照・依存の整合は単独利用では検査しない | — |
+| P-M6-02 | 資料内の命令文の候補を、入力登録の時点で必ず確かめさせる仕組み（現在はSKILL.mdの手順だけ） | 解決（2026-10-18、D-M6-07）。確認を怠った実行は完了できないが、登録直後に止める依頼では確認前に止まることがある | — |
+| P-M6-03 | 外部CIの再開（アカウントの支払い・利用上限） | ユーザー | CIを送信後の確認として使うとき |

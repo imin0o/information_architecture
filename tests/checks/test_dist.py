@@ -351,3 +351,53 @@ def test_installed_distribution_runs_and_refuses_mixed_content(checkout, tmp_pat
     shutil.rmtree(installed / "ia-structure")
     code, out = run_installed(installed, "run", "init", tmp_path / "RUN-D-003", "--run-id", "RUN-D-003", *args)
     assert code == 0, out
+
+
+def test_accept_reseal_simulates_other_library_and_is_detected(checkout, tmp_path):
+    from iakit import accept
+    installed = tmp_path / "skills"
+    shutil.copytree(checkout.parent / "base", installed)
+    accept._reseal(installed / "ia-taxonomy")
+    assert not distverify.skill_errors(installed / "ia-taxonomy")[1]
+    errors = distverify.set_errors(installed, ["ia-orchestrator", "ia-taxonomy"])
+    assert any("内容が異なる" in e for e in errors), errors
+
+
+@pytest.mark.parametrize("expect,code,text,ok", [
+    ("pass", 0, "", True), ("pass", 1, "error: x", False),
+    ("stop", 1, "error: 必要なSkillがない", True), ("stop", 1, "error: 別の理由", False), ("stop", 0, "", False)])
+def test_accept_record_requires_expected_stop_reason(expect, code, text, ok):
+    from iakit import accept
+    checks = []
+    accept._record(checks, "c", expect, code, text, "必要なSkillがない")
+    assert (checks[0]["result"] == "pass") is ok
+
+
+def test_accept_host_started_requires_hashes_from_placement(checkout, tmp_path):
+    """ホストの実行が同梱の実行時処理で始まったことを、Skillの内容ハッシュと配置先の一致で判定する。"""
+    from iakit import accept_hostenv as accept_host
+    workspace = tmp_path / "work space"
+    skills = workspace / ".agents" / "skills"
+    shutil.copytree(checkout.parent / "base", skills)
+    code, out = run_installed(skills, "run", "init", workspace / "runs" / "RUN-H-001", "--run-id", "RUN-H-001",
+                              "--task-type", "web_ia", "--host", "codex", "--model", "m")
+    assert code == 0, out
+    obs = accept_host._started(workspace, skills, "RUN-H-001", "web_ia", 0)
+    assert obs["skills_match_placement"] and obs["route_skills"] == 5 and obs["inputs_registered"], obs
+    path = workspace / "runs" / "RUN-H-001" / "run.yaml"
+    doc = yamlio.load(path)
+    doc["skills"][0]["sha256"] = "0" * 64
+    path.write_text(yamlio.dumps(doc), encoding="utf-8")
+    assert not accept_host._started(workspace, skills, "RUN-H-001", "web_ia", 0)["skills_match_placement"]
+    assert accept_host._started(workspace, skills, "RUN-H-404", "web_ia", 0) == {"run_yaml": False}
+
+
+def test_accept_isolated_env_hides_build_source(monkeypatch):
+    """配置先のホストにビルド元の仮想環境とパスを渡さない（M6でビルド元の skills/ を使う混入を検出した）。"""
+    from iakit import accept
+    from iakit.paths import ROOT
+    monkeypatch.setenv("VIRTUAL_ENV", str(ROOT / ".venv"))
+    monkeypatch.setenv("PATH", str(ROOT / ".venv" / "Scripts") + os.pathsep + "C:\tools")
+    monkeypatch.setenv("PWD", str(ROOT))
+    env = accept.isolated_env()
+    assert "VIRTUAL_ENV" not in env and "PWD" not in env and env["PATH"] == "C:\tools"

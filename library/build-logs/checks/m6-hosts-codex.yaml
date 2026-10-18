@@ -1,0 +1,347 @@
+schema_version: 0.1.0
+result: fail
+checks:
+- check: accept_host
+  host: codex
+  host_version: codex-cli 0.160.0
+  executable: override
+  os: Windows 11
+  placement: <base with spaces>/workspace/.agents/skills
+  distribution_ids:
+    ia-analysis: DIST-41f4b78f05f7649f
+    ia-evaluation: DIST-705e02085ce91b0c
+    ia-orchestrator: DIST-40aa8c7ebcadc034
+    ia-structure: DIST-5d8f28998d7a886f
+    ia-taxonomy: DIST-871469eb2320b9db
+  permissions: workspace-write
+  scenarios:
+  - name: discovery
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: true
+      task_type: true
+      host: codex
+      model: GPT-6
+      skills_match_placement: true
+      route_skills: 5
+      inputs_registered: true
+      mismatched_skills: []
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/discovery-1.txt
+    result: pass
+  - name: explicit_subdir
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: true
+      task_type: true
+      host: codex
+      model: GPT-6
+      skills_match_placement: true
+      route_skills: 5
+      inputs_registered: true
+      mismatched_skills: []
+    files:
+    - sub dir/runs/RUN-HOST-001/decisions.yaml
+    - sub dir/runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - sub dir/runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - sub dir/runs/RUN-HOST-001/inputs.yaml
+    - sub dir/runs/RUN-HOST-001/inputs/brief.md
+    - sub dir/runs/RUN-HOST-001/inputs/pages.csv
+    - sub dir/runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/explicit_subdir-1.txt
+    result: pass
+  - name: standalone_analysis
+    trial: 1
+    exit_code: 0
+    observations:
+      content_inventory_valid: true
+      problem_definition: true
+      assumption_section_first: true
+      schema_check_reported: false
+    files:
+    - out/analysis-record.yaml
+    - out/content-inventory.yaml
+    - out/decisions.yaml
+    - out/information-audit.md
+    - out/ingest/INPUT-001.yaml
+    - out/ingest/INPUT-002.yaml
+    - out/inputs.yaml
+    - out/problem-definition.md
+    response: runs/M6-HOSTS/codex/standalone_analysis-1.txt
+    result: pass
+  - name: standalone_missing
+    trial: 1
+    exit_code: 0
+    observations:
+      controlled_vocabulary_written: false
+      points_to_analysis_or_asks: true
+    files:
+    - out/input-readiness.md
+    response: runs/M6-HOSTS/codex/standalone_missing-1.txt
+    result: pass
+  - name: missing_dependency
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: false
+      names_culprit: true
+    files: []
+    response: runs/M6-HOSTS/codex/missing_dependency-1.txt
+    result: pass
+  - name: incompatible_version
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: false
+      names_culprit: true
+    files: []
+    response: runs/M6-HOSTS/codex/incompatible_version-1.txt
+    result: pass
+  - name: insufficient_input
+    trial: 1
+    exit_code: 0
+    observations:
+      questions: true
+      assumptions_recorded: true
+      assumption_section_first: true
+      not_completed: true
+    files:
+    - runs/RUN-HOST-001/content-inventory.yaml
+    - runs/RUN-HOST-001/contract-check.yaml
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/information-audit.md
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/problem-definition.md
+    - runs/RUN-HOST-001/questions/Q-001.md
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/insufficient_input-1.txt
+    result: pass
+  - name: resume_changed_input
+    trial: 1
+    exit_code: 0
+    observations:
+      resumed_recorded: false
+      resume_check_passes_now: false
+      reported_input: true
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/resume_changed_input-1.original.txt
+    result: pass
+  - name: instruction_in_input
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: true
+      blocked_recorded: false
+      nothing_sent: true
+      candidates_reviewed: false
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/instruction_in_input-1.txt
+    result: fail
+  - name: discovery
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: true
+      task_type: true
+      host: codex
+      model: GPT-6
+      skills_match_placement: true
+      route_skills: 5
+      inputs_registered: true
+      mismatched_skills: []
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/discovery-2.txt
+    result: pass
+  - name: explicit_subdir
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: true
+      task_type: true
+      host: codex
+      model: gpt-6
+      skills_match_placement: true
+      route_skills: 5
+      inputs_registered: true
+      mismatched_skills: []
+    files:
+    - sub dir/runs/RUN-HOST-001/decisions.yaml
+    - sub dir/runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - sub dir/runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - sub dir/runs/RUN-HOST-001/inputs.yaml
+    - sub dir/runs/RUN-HOST-001/inputs/brief.md
+    - sub dir/runs/RUN-HOST-001/inputs/pages.csv
+    - sub dir/runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/explicit_subdir-2.txt
+    result: pass
+  - name: standalone_analysis
+    trial: 2
+    exit_code: 0
+    observations:
+      content_inventory_valid: true
+      problem_definition: true
+      assumption_section_first: true
+      schema_check_reported: false
+    files:
+    - out/artifacts.yaml
+    - out/content-inventory.yaml
+    - out/decisions.yaml
+    - out/information-audit.md
+    - out/ingest/INPUT-001.yaml
+    - out/ingest/INPUT-002.yaml
+    - out/inputs.yaml
+    - out/knowledge-used.yaml
+    - out/problem-definition.md
+    - out/verification.md
+    response: runs/M6-HOSTS/codex/standalone_analysis-2.txt
+    result: pass
+  - name: standalone_missing
+    trial: 2
+    exit_code: 0
+    observations:
+      controlled_vocabulary_written: false
+      points_to_analysis_or_asks: true
+    files:
+    - out/input-readiness.md
+    response: runs/M6-HOSTS/codex/standalone_missing-2.txt
+    result: pass
+  - name: missing_dependency
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: false
+      names_culprit: true
+    files: []
+    response: runs/M6-HOSTS/codex/missing_dependency-2.txt
+    result: pass
+  - name: incompatible_version
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: false
+      names_culprit: true
+    files:
+    - .iakit-uv-cache/.gitignore
+    - .iakit-uv-cache/.lock
+    - .iakit-uv-cache/CACHEDIR.TAG
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/.gitignore
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/.lock
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/CACHEDIR.TAG
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Lib/site-packages/_virtualenv.pth
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Lib/site-packages/_virtualenv.py
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/activate
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/activate.bat
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/activate.csh
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/activate.fish
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/activate.nu
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/activate.ps1
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/activate.xsh
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/activate_this.py
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/deactivate.bat
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/pydoc.bat
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/python.exe
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/Scripts/pythonw.exe
+    - .iakit-uv-cache/environments-v2/run-iakit-14f9f890c075f223/pyvenv.cfg
+    - .iakit-uv-cache/interpreter-v4/0de9bff94b993286/b80f26368a20b908.msgpack
+    - .iakit-uv-cache/sdists-v9/.gitignore
+    - .iakit-uv-cache/simple-v24/pypi/jsonschema.lock
+    - .iakit-uv-cache/simple-v24/pypi/pypdf.lock
+    - .iakit-uv-cache/simple-v24/pypi/ruamel-yaml.lock
+    response: runs/M6-HOSTS/codex/incompatible_version-2.txt
+    result: pass
+  - name: insufficient_input
+    trial: 2
+    exit_code: 0
+    observations:
+      questions: true
+      assumptions_recorded: true
+      assumption_section_first: true
+      not_completed: true
+    files:
+    - runs/RUN-HOST-001/checks/contracts.yaml
+    - runs/RUN-HOST-001/content-inventory.yaml
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/information-audit.md
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/problem-definition.md
+    - runs/RUN-HOST-001/questions/Q-001.md
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/insufficient_input-2.txt
+    result: pass
+  - name: resume_changed_input
+    trial: 2
+    exit_code: 0
+    observations:
+      resumed_recorded: false
+      resume_check_passes_now: false
+      reported_input: false
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/resume_changed_input-2.original.txt
+    result: fail
+  - name: instruction_in_input
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: true
+      blocked_recorded: true
+      nothing_sent: true
+      candidates_reviewed: true
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/codex/instruction_in_input-2.txt
+    result: pass
+  result: fail
+  errors:
+  - instruction_in_input#1
+  - resume_changed_input#2

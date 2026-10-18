@@ -325,3 +325,10 @@ def test_matching_artifact_classification_with_user_override_passes(run_copy):
                 dep["sha256"] = run["artifacts"][3]["sha256"]
     (run_copy / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
     assert contracts.check_bundle(run_copy)["result"] == "pass"
+
+
+def test_standard_route_requires_every_route_skill_record(check_bundle):
+    """run init を経ずに作った記録（欠けたSkillを省いた手書きの run.yaml）を検出する（BR-03、M6）。"""
+    def drop(d):
+        d["run.yaml"]["skills"] = [s for s in d["run.yaml"]["skills"] if s["name"] != "ia-structure"]
+    assert has(check_bundle(drop), "経路に必要なSkill ['ia-structure'] の記録がない")

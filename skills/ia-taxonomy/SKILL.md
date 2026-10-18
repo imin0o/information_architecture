@@ -17,7 +17,7 @@ metadata:
 - 問題定義（`problem-definition.md` のART-IDと版）。
 - コンテンツインベントリ（`content-inventory.yaml`）、または対象概念の一覧を登録した入力。概念一覧の課題では、候補語の各行をインベントリの項目として登録しておく（ia-analysisの手順3）。
 
-インベントリと問題定義が `stale` なら使わない。足りなければia-analysisで作るか、既存の成果物の提供を求める。
+インベントリと問題定義が `stale` なら使わない。足りなければia-analysisで作るか、既存の成果物の提供を求める。必須入力がそろうまで、語彙・分類体系は下書きも作らない。足りない入力と、作成を担当するSkillを示して止める。
 
 ## 使う知識
 
@@ -80,6 +80,8 @@ uv run --locked iakit run artifact runs/<run_id> classification-options.md --kin
 ```
 
 `uv run --locked iakit contracts check runs/<run_id>` は、概念の参照切れ、上位・下位関係の循環、`scope_note` のない同名異義語、未分類の `placed` 項目、現行でない判断の参照を検出する。すべて直してから次へ進む。
+
+ia-orchestratorを使わずに単独で実行していて `iakit` を使えない場合は、`uv run <このSkillのディレクトリ>/scripts/check_artifacts.py <成果物のディレクトリ>` で、同梱したスキーマによる形式検査を行い、通るまで直す。この検査は参照や依存の整合を確かめないため、報告には形式検査の結果を書き、契約検査は `not_run` とする。
 
 ## 次の段階へ渡すもの
 

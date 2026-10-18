@@ -20,6 +20,7 @@ TERMS = "library/terms.yaml"
 CONFLICTS = "library/conflicts.yaml"
 PACKAGE = ROOT / "scripts" / "iakit"
 ENTRY = ROOT / "scripts" / "run_iakit.py"
+CHECKER = ROOT / "scripts" / "check_artifacts.py"
 SEEDS = ("cli_run", "contracts", "judgment")
 SCHEMA_REF = re.compile(r'"\$ref":\s*"([a-z0-9-]+\.schema\.json)')
 
@@ -82,6 +83,13 @@ def bundle_schemas(dest: Path, names: set[str]) -> list[str]:
         shutil.copyfile(SCHEMAS / name, dest / "schemas" / name)
         written.append(f"schemas/{name}")
     return written
+
+
+def bundle_checker(dest: Path) -> list[str]:
+    """分野Skillを単独で使うときの形式検査（P-M6-01）。同梱スキーマだけを使い、iakit を要しない。"""
+    (dest / "scripts").mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(CHECKER, dest / "scripts" / CHECKER.name)
+    return [f"scripts/{CHECKER.name}"]
 
 
 def bundle_knowledge(dest: Path, knowledge_ids: set[str] | None) -> list[str]:

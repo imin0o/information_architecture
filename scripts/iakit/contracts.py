@@ -176,6 +176,7 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
         inputs_path = directory / "inputs.yaml"
         inputs_sha = manifest.sha256_file(inputs_path) if inputs_path.is_file() else None
         errors += runs.run_errors(run, inputs_doc, inputs_sha, actual, decision_list, list(studies.values()))
+        errors += runs.review_errors(run, runs.flagged_units(directory, inputs))
     inv, vocab = docs.get("content-inventory.yaml"), docs.get("controlled-vocabulary.yaml")
     if inv:
         errors += structure.inventory_errors(inv, inputs)

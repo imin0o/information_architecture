@@ -13,8 +13,7 @@ from . import distverify, manifest, runs, yamlio
 from .decisions import artifact_inputs, latest_active, max_classification
 from .paths import SKILLS
 
-STAGE_SKILLS = {"analyze": "ia-analysis", "classify": "ia-taxonomy", "structure": "ia-structure",
-                "model": "ia-content-model", "present": "ia-presentation", "validate": "ia-evaluation"}
+STAGE_SKILLS = runs.STAGE_SKILLS
 LATER_ROUTES = {
     "corporate_document": ["analyze", "present", "validate"], "exhibition_panel": ["analyze", "present", "validate"],
     "content_model": ["analyze", "classify", "model", "validate"], "design_system": ["analyze", "classify", "model", "validate"],
@@ -56,7 +55,9 @@ def skill_item(name: str, skills_root: Path = SKILLS) -> dict | None:
     if contract != CONTRACT_VERSION:
         raise ValueError(f"{name}: 入出力契約の版 {contract!r} は非互換（必要: {CONTRACT_VERSION}）。Skillを更新してから開始する")
     digest = hashlib.sha256()
-    for path in sorted(p for p in base.rglob("*") if p.is_file()):
+    # 配布先で Python が作るキャッシュは含めない（distverify と同じ扱い）。含めると実行のたびにハッシュが変わる
+    for path in sorted(p for p in base.rglob("*")
+                       if p.is_file() and not distverify.IGNORED_PARTS & set(p.relative_to(base).parts)):
         digest.update(path.relative_to(base).as_posix().encode() + b"\0" + manifest.sha256_file(path).encode() + b"\n")
     return {"name": name, "version": str((front.get("metadata") or {}).get("version", "0.0.0")),
             "sha256": digest.hexdigest()}

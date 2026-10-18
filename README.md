@@ -60,6 +60,14 @@ uv run --locked iakit dist diff <旧> <新>        # 配布IDとファイルの�
 uv run --locked iakit run compare <実行A> <実行B> # 判断・Skill・知識の差分（NFR-02）
 ```
 
+受け入れ検査（M6）は、`dist/` をビルド元の外の一時ディレクトリへ各ホストの配置先（Claude Code: `.claude/skills`、Codex: `.agents/skills`）として写して行う。ホストの実行ファイルは `IAKIT_CLAUDE_BIN`・`IAKIT_CODEX_BIN` で指定できる。ホストにはビルド元を指す環境変数を渡さない。
+
+```sh
+uv run --locked iakit accept placement                       # 同梱の実行時処理だけで配置・開始・再開・停止条件を検査する
+uv run --locked iakit accept host --host claude|codex --repeat 2   # ホストのモデルで発見・単独利用・依存欠落などを検査する
+uv run --locked iakit accept route --host H --case webia-001 --run-id RUN-...  # 代表ケースを実行して runs/ へ回収する（--refine で判定後のRefine）
+```
+
 `dist build` は5つのSkillを新しい作業ディレクトリに生成し、検査に通った場合だけ `dist/` を丸ごと入れ替える。旧ディレクトリへの差分コピーはしないため、削除した参照資料は残らない。検査に失敗した場合は既存の `dist/` を変更しない。入れ替えには固有の退避先を作り、配置に失敗したら元に戻す。復元も失敗した場合は旧配布物を退避先に保持し、その場所をエラーに示す。
 
 各Skillには、SKILL.mdと付属ファイルに加えて、本文が参照するKN-IDの知識本文・索引・用語・矛盾記録、主張と照合状態（`library/runtime-evidence.yaml`）、使う成果物のスキーマとその参照先を同梱する。用語・矛盾記録が参照する主張と、その出典・照合記録も含める。ia-orchestratorは実行時処理を持つため、文献ノート以外の全知識と全スキーマを同梱する。文献ノート、原典、抽出テキスト、抜粋は同梱しない。Markdownの相対リンクが配布物の中で解決しなければ生成を止める。
@@ -139,6 +147,7 @@ MVPの5つのSkillのソースは `skills/` にある。入口は `ia-orchestrat
 ```sh
 uv run --locked iakit run init runs/RUN-001 --run-id RUN-001 --task-type web_ia --host claude-code --model <モデル名>
 uv run --locked iakit input add runs/RUN-001 <ファイル> --kind page_list --description <説明> [--classification internal]
+uv run --locked iakit input review runs/RUN-001 INPUT-002 --outcome ignored  # 命令文の候補を確かめた記録
 uv run --locked iakit run knowledge runs/RUN-001 KN-007 KN-008      # 段階で読んだ知識の内容ハッシュ
 uv run --locked iakit run artifact runs/RUN-001 content-inventory.yaml --kind content_inventory
 uv run --locked iakit run event runs/RUN-001 refine --note FIND-001  # Refineの巡数を進める
@@ -146,7 +155,7 @@ uv run --locked iakit run event runs/RUN-001 completed               # 契約検
 uv run --locked iakit run resume runs/RUN-001                        # 再開前のハッシュ照合
 ```
 
-`input add` は入力を `inputs/` に固定し、位置付きの取込み結果 `ingest/<input_id>.yaml` を作る。対応形式はテキスト、Markdown、PDF、DOCX、CSV、XML、JSON、YAML、SKOS（RDF/XMLのみ）で、位置子と読めない部分の扱いは `skills/ia-orchestrator/references/input-formats.md` に書いた。書籍の固定抽出（`iakit extract`）とは別の処理で、印刷ページ番号は推測しない。DOCTYPE・実体宣言を含むXMLは解析しない。資料内の命令文の候補は `instruction_like` として示すが、従わない。
+`input add` は入力を `inputs/` に固定し、位置付きの取込み結果 `ingest/<input_id>.yaml` を作る。対応形式はテキスト、Markdown、PDF、DOCX、CSV、XML、JSON、YAML、SKOS（RDF/XMLのみ）で、位置子と読めない部分の扱いは `skills/ia-orchestrator/references/input-formats.md` に書いた。書籍の固定抽出（`iakit extract`）とは別の処理で、印刷ページ番号は推測しない。DOCTYPE・実体宣言を含むXMLは解析しない。資料内の命令文の候補は `instruction_like` として示すが、従わない。候補は `input review` で位置ごとに確かめた結果（命令ではない・従わない・送信の要求を止めた）を記録し、記録のない候補が残る実行は `contracts check` に通らない。
 
 `run artifact` は成果物のハッシュ・版・依存・機密区分を記録する。依存は本体の参照から導き、本体から読めない依存は `--depends` で渡す。依存先が変わると後続の成果物を連鎖的に `stale` にする。`contracts check` は、完了した経路の全段階の成果物、Markdown成果物の最初の節「## 仮定に基づく箇所」と判断参照の版、評価の指摘（`findings.yaml`）とRefineの整合、取込み結果と入力のハッシュの対応も検査する。
 判断を参照する成果物は、その判断の観察元と調査記録の入力にも依存し、機密区分を引き継ぐ。評価一式は指摘がなくても全設計成果物に依存する。必要な依存を持たない既存の記録は `refresh` で `stale` にし、確認して再登録する。開始時には必要なSkillの `metadata.contract_version` を実行時処理の契約版と照合し、非互換・未指定なら開始しない。

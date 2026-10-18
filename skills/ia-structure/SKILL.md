@@ -18,7 +18,7 @@ metadata:
 - 統制語彙と分類体系（`controlled-vocabulary.yaml`・`taxonomy.yaml`）。
 - コンテンツインベントリ。
 
-どれかが `stale` なら使わない。
+どれかが `stale` なら使わない。足りなければ担当Skill（問題定義とインベントリはia-analysis、語彙と分類体系はia-taxonomy）で作るか、既存の成果物の提供を求める。必須入力がそろうまで、サイトマップ・構造の案は下書きも作らない。足りない入力と担当Skillを示して止める。
 
 ## 使う知識
 
@@ -62,6 +62,8 @@ uv run --locked iakit run artifact runs/<run_id> information-architecture.md --k
 ```
 
 `uv run --locked iakit contracts check runs/<run_id>` は、到達できないノード、参照切れ、親子の循環、未配置の `placed` 項目、つながっていない経路を検出する。すべて直してから次へ進む。
+
+ia-orchestratorを使わずに単独で実行していて `iakit` を使えない場合は、`uv run <このSkillのディレクトリ>/scripts/check_artifacts.py <成果物のディレクトリ>` で、同梱したスキーマによる形式検査を行い、通るまで直す。この検査は参照や依存の整合を確かめないため、報告には形式検査の結果を書き、契約検査は `not_run` とする。
 
 ## 戻す場合
 

@@ -83,6 +83,8 @@ uv run --locked iakit run artifact runs/<run_id> information-audit.md --kind inf
 
 `uv run --locked iakit contracts check runs/<run_id>` に通るまで直す。
 
+ia-orchestratorを使わずに単独で実行していて `iakit` を使えない場合は、`uv run <このSkillのディレクトリ>/scripts/check_artifacts.py <成果物のディレクトリ>` で、同梱したスキーマによる形式検査を行い、通るまで直す。この検査は参照や依存の整合を確かめないため、報告には形式検査の結果を書き、契約検査は `not_run` とする。
+
 ## 次の段階へ渡すもの
 
 問題定義（ART-IDと版）、インベントリ（ART-IDと版）、情報監査で見つけた同名異義語・同義語・矛盾の候補を、ia-taxonomyへ渡す。分類や構造の案を思い付いた場合も、ここでは確定せず、情報監査の「後の段階への申し送り」に書く。

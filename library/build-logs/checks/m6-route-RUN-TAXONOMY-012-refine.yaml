@@ -1,0 +1,32 @@
+schema_version: 0.1.0
+result: pass
+checks:
+- check: accept_route
+  mode: refine
+  host: claude
+  case: taxonomy-001
+  run_id: RUN-TAXONOMY-012
+  exit_code: 0
+  minutes: 3.7
+  placement: <base with spaces>/workspace/.claude/skills
+  distribution_ids:
+    ia-analysis: DIST-41f4b78f05f7649f
+    ia-evaluation: DIST-705e02085ce91b0c
+    ia-orchestrator: DIST-40aa8c7ebcadc034
+    ia-structure: DIST-5d8f28998d7a886f
+    ia-taxonomy: DIST-871469eb2320b9db
+  started_with_bundled_runtime:
+    run_yaml: true
+    task_type: true
+    host: claude-code
+    model: claude-opus-5-5
+    skills_match_placement: true
+    route_skills: 4
+    inputs_registered: true
+    mismatched_skills: []
+  left_behind: null
+  status: completed
+  refine_rounds: 2
+  model: claude-opus-5-5
+  contracts: pass
+  result: pass

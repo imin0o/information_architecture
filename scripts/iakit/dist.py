@@ -52,6 +52,7 @@ def build_skill(name: str, dest: Path) -> dict:
         schemas = {contracts.SCHEMAS[n] for n in YAML_NAME.findall(text) if n in contracts.SCHEMAS}
         if schemas:
             runtime.bundle_schemas(dest, schemas)
+            runtime.bundle_checker(dest)
         runtime.bundle_knowledge(dest, set(KN_REF.findall(text)))
     broken = _broken_links(dest)
     if broken:

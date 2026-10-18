@@ -17,7 +17,22 @@ environment:
   model: fixture
   model_version: null
   settings: {}
-skills: []
+skills:
+- name: ia-orchestrator
+  version: 0.1.0
+  sha256: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+- name: ia-analysis
+  version: 0.1.0
+  sha256: bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+- name: ia-taxonomy
+  version: 0.1.0
+  sha256: cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+- name: ia-structure
+  version: 0.1.0
+  sha256: dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+- name: ia-evaluation
+  version: 0.1.0
+  sha256: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 knowledge: []
 artifacts:
 - artifact_id: ART-001

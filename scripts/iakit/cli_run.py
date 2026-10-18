@@ -38,7 +38,16 @@ def add_parsers(sub) -> None:
     re_.add_argument("event", choices=["interrupted", "resumed", "rerun", "refine", "completed"])
     re_.add_argument("--note", default="")
     re_.add_argument("--status", choices=["in_progress", "interrupted", "completed", "unresolved"])
-    ia = sub.add_parser("input").add_subparsers(dest="action", required=True).add_parser("add")
+    ig = sub.add_parser("input").add_subparsers(dest="action", required=True)
+    ir = ig.add_parser("review", help="取込みで命令文の候補とされた位置を確かめた結果を記録する")
+    ir.add_argument("dir", type=Path)
+    ir.add_argument("input_id", metavar="INPUT-nnn")
+    ir.add_argument("--outcome", required=True, choices=["not_instruction", "ignored", "blocked_request"],
+                    help="not_instruction: 命令ではない / ignored: 命令だが従わない / blocked_request: 送信の要求を止めた")
+    ir.add_argument("--locator", nargs="*", help="対象の位置（省略時は未確認の候補すべて）")
+    ir.add_argument("--destination", help="blocked_request で資料が求めた送信先")
+    ir.add_argument("--note", default="")
+    ia = ig.add_parser("add")
     ia.add_argument("dir", type=Path)
     ia.add_argument("file", type=Path)
     ia.add_argument("--kind", required=True, choices=["brief", "hearing_answer", "document", "page_list", "sitemap",
@@ -54,7 +63,9 @@ def add_parsers(sub) -> None:
 def command(args) -> int:
     """run・input の各操作。成功時は結果を、失敗時はエラーを YAML で出す。"""
     try:
-        if args.group == "input":
+        if args.group == "input" and args.action == "review":
+            out = run_inputs.review(args.dir, args.input_id, args.outcome, args.locator, args.destination, args.note)
+        elif args.group == "input":
             out = run_inputs.add(args.dir, args.file, args.kind, args.description, args.format, args.classification,
                                  args.replace, args.name)
         elif args.action == "init":
