@@ -91,6 +91,28 @@ entries:
            CLAIM-0024, CLAIM-0025]
   terms: []
   conflicts: []
+- knowledge_id: KN-013
+  kind: method
+  title: 階層の循環の禁止と複数の上位概念
+  path: library/methods/hierarchy-acyclicity.md
+  claims: [CLAIM-0052, CLAIM-0053, CLAIM-0054, CLAIM-0055, CLAIM-0056, CLAIM-0057, CLAIM-0058]
+  terms: [TERM-0018, TERM-0019, TERM-0020, TERM-0021]
+  conflicts: []
+- knowledge_id: KN-014
+  kind: method
+  title: 組織化の原則の明文化と要件の対立の扱い
+  path: library/methods/conflicting-requirements.md
+  claims: [CLAIM-0059, CLAIM-0060, CLAIM-0061, CLAIM-0062, CLAIM-0063]
+  terms: []
+  conflicts: []
+- knowledge_id: KN-015
+  kind: book_note
+  title: BOOK-005 文献ノート
+  path: library/books/BOOK-005/notes.md
+  claims: [CLAIM-0052, CLAIM-0053, CLAIM-0054, CLAIM-0055, CLAIM-0056, CLAIM-0057, CLAIM-0058, CLAIM-0059, CLAIM-0060,
+           CLAIM-0061, CLAIM-0062, CLAIM-0063]
+  terms: []
+  conflicts: []
 needs:
 - need_id: NEED-01
   cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
@@ -114,8 +136,8 @@ needs:
   cases: [CASE-TAXONOMY-001]
   rubric_items: [R-02]
   description: 上位・下位関係と関連関係の区別、循環の回避、複数の上位概念を持つ場合の扱い
-  entries: [KN-004]
-  gap: 上位・下位関係の循環の禁止を直接述べた根拠は未登録（KN-004では全部と一部の規則からの導出を仮説として扱う）。候補はBOOK-005、BOOK-018
+  entries: [KN-004, KN-013]
+  gap: null
 - need_id: NEED-05
   cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
   rubric_items: [R-03]
@@ -144,8 +166,8 @@ needs:
   cases: [CASE-TAXONOMY-001]
   rubric_items: [R-06]
   description: 入力資料どうしの矛盾や、文献の適用条件と案件の条件の違いを記録して判断する方法
-  entries: []
-  gap: 判断記録の契約（M2）で手順は扱う。文献の根拠は未調査。候補はBOOK-005
+  entries: [KN-014]
+  gap: 文献の適用条件と案件の条件が異なる場合の扱いは文献の根拠が未登録。判断記録の契約（M2）の assumptions・alternatives で扱う
 - need_id: NEED-10
   cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
   rubric_items: [R-07]

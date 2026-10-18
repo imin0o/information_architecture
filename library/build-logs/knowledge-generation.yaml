@@ -71,3 +71,35 @@ generations:
   - {path: library/books/BOOK-003/notes-relationships-and-facets.md, sha256: e80371c8a435db81990c6f32600db8075158c228f59b37419e6e28f45a62051a}
   - {path: library/terms.yaml, sha256: b6e2ec9f75bf65cc292f32bb7034eedefe3532d06966cea9780c2ab7e10b03b2}
   review: {reviewed_by: null, reviewed_at: null}
+- generation_id: GEN-003
+  generated_at: "2026-10-18T12:00:00+09:00"
+  host: Claude Code（VS Code拡張）
+  model: claude-opus-5-5
+  approval: milestones.md M3「送信・公開の許可」2026-10-17の記録
+  instruction:
+    path: library/build-logs/instructions/knowledge-integration-v2.md
+    sha256: 622d935d7e9ba842b43ea24fb7591c55e8c5635a47b6202b0b2eeec889b32d3c
+  inputs:
+  - {extraction_id: EXTRACT-005-001, extracted_sha256: 5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36, start_line: 4082, end_line: 4095}
+  - {extraction_id: EXTRACT-005-001, extracted_sha256: 5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36, start_line: 7672, end_line: 7687}
+  - {extraction_id: EXTRACT-005-001, extracted_sha256: 5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36, start_line: 13110, end_line: 13171}
+  - {extraction_id: EXTRACT-005-001, extracted_sha256: 5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36, start_line: 13330, end_line: 13389}
+  - {extraction_id: EXTRACT-005-001, extracted_sha256: 5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36, start_line: 20640, end_line: 20699}
+  - {extraction_id: EXTRACT-005-001, extracted_sha256: 5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36, start_line: 24930, end_line: 24974}
+  - {extraction_id: EXTRACT-005-001, extracted_sha256: 5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36, start_line: 25010, end_line: 25029}
+  # 語句検索は行番号と件数だけを出力した。読む範囲を決めるため、候補の節の先頭行（見出し）だけを表示した
+  searches:
+  - extraction_id: EXTRACT-005-001
+    extracted_sha256: 5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+    pattern: 候補の節（ch03s03、ch04s02、ch05s03、ch06〜ch06s05、ch06s09、ch09、ch09s02、ch11、ch11s04、ch11s06）の先頭行
+    lines: [4080, 7471, 10426, 12867, 12945, 13009, 13532, 13898, 14922, 20221, 20297, 24339, 24721, 25234]
+    max_chars: 110
+    detail: complete
+    recovered_from: 作業時の出力（Claude Codeのセッション）
+  outputs:
+  - {path: library/provenance.yaml, sha256: 27b40450ecb9624fb2d36af7da9e7bf01b7b0c0f770a91f22e693fb778059494}
+  - {path: library/methods/hierarchy-acyclicity.md, sha256: 571050a2373cdf90330ed6a5ab8d18cf64c6aa660c90920b9d25c65e76936824}
+  - {path: library/methods/conflicting-requirements.md, sha256: f804430e5dfa234a34189e588aa9c8ed13a79f88db347d63fd40c304993e0075}
+  - {path: library/books/BOOK-005/notes.md, sha256: 28e8c41efbc32bbd6d39f40bf4ff0aa53616d89c88aac0a275e91d369dec39a5}
+  - {path: library/terms.yaml, sha256: 159d53b8c0225c4cff838719271e9da416f307189b189af8dc2eb1fc49244587}
+  review: {reviewed_by: null, reviewed_at: null}

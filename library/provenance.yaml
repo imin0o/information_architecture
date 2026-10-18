@@ -35,7 +35,7 @@ records:
     applicability: 用語を管理するソフトウェアや表示先が、括弧を含むラベルを扱える場合
     status: supported
     reviewed_by: Codex
-    reviewed_at: '2026-10-17T21:23:27+09:00'
+    reviewed_at: '2026-10-18T11:59:26+09:00'
   - claim_id: CLAIM-0002
     claim: 限定語は、分野で表すか種類で表すかのどちらかの形式に決め、タクソノミー全体でそろえる
     claim_sha256: 
@@ -43,7 +43,7 @@ records:
     applicability: 1つのタクソノミーで複数の同名異義語に限定語を付ける場合
     status: supported
     reviewed_by: Codex
-    reviewed_at: '2026-10-17T21:23:27+09:00'
+    reviewed_at: '2026-10-18T11:59:26+09:00'
   - claim_id: CLAIM-0003
     claim: 一方の語形だけで意味が定まる場合は、同名異義語のすべてに限定語を付ける必要はない
     claim_sha256: 
@@ -51,7 +51,7 @@ records:
     applicability: 単数形と複数形など、語形の違いで意味を判別できる言語・語彙の場合
     status: supported
     reviewed_by: Codex
-    reviewed_at: '2026-10-17T21:23:27+09:00'
+    reviewed_at: '2026-10-18T11:59:26+09:00'
 - evidence_id: EV-0002
   source_id: BOOK-003
   source_sha256: 
@@ -83,7 +83,7 @@ records:
     applicability: タクソノミー内での優先語の使い方を補う必要がある場合。自明な意味を説明する辞書的な定義には使わない
     status: supported
     reviewed_by: Codex
-    reviewed_at: '2026-10-17T21:23:27+09:00'
+    reviewed_at: '2026-10-18T11:59:26+09:00'
 - evidence_id: EV-0003
   source_id: BOOK-003
   source_sha256: 
@@ -114,7 +114,7 @@ records:
     applicability: 利用者が検索結果や一覧でラベルだけを見て語を選ぶ場合
     status: supported
     reviewed_by: Codex
-    reviewed_at: '2026-10-17T21:23:27+09:00'
+    reviewed_at: '2026-10-18T11:59:26+09:00'
 - evidence_id: EV-0004
   source_id: BOOK-003
   source_sha256: 
@@ -1576,3 +1576,274 @@ records:
     status: supported
     reviewed_by: Codex
     reviewed_at: '2026-10-17T22:32:45+09:00'
+- evidence_id: EV-0050
+  source_id: BOOK-005
+  source_sha256: 
+    660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+  extracted_sha256: 
+    5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+  extracted_ref:
+    extraction_id: EXTRACT-005-001
+    start_line: 13119
+    end_line: 13128
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: ch06s03.xhtml
+    element_id: null
+  excerpt_sha256: 
+    1ce72f5c2e99e2847f3de7d0f506cb507b51c799d3bdf2c4304e3a2296e3ac1c
+  excerpt_preview: Class inclusion is
+  support_reviews:
+  - claim_id: CLAIM-0052
+    claim: 
+      クラスの包含関係は「〜の一種である」という関係で、一方のクラスが他方に含まれ、他方より特定的である。包含関係を相互につないだ集合が階層（タクソノミー）を作る
+    claim_sha256: 
+      e69ad74c7b176f0350ea10c0f4e733cc8188e4800f0dcdb485a7e28f196481c2
+    applicability: 概念の上位・下位関係をクラスの包含として扱う場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+- evidence_id: EV-0051
+  source_id: BOOK-005
+  source_sha256: 
+    660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+  extracted_sha256: 
+    5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+  extracted_ref:
+    extraction_id: EXTRACT-005-001
+    start_line: 13337
+    end_line: 13345
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: ch06s03.xhtml
+    element_id: null
+  excerpt_sha256: 
+    1385f46b88a00b20b7dec267a20a49e872ab72cf0c8b870e96c9e458f9ce34bf
+  excerpt_preview: In most
+  support_reviews:
+  - claim_id: CLAIM-0053
+    claim: 
+      多くの関係では主語と目的語の順序が意味の中心で、XがYに対してある関係を持っても、YがXに対して同じ関係を持つとは限らない。親子関係はこの非対称な関係の例である
+    claim_sha256: 
+      17b41eae34fdf3b500f23786b94182f9dccec04bff81232517fe6efbb61ee8b5
+    applicability: 向きのある関係（上位・下位、親子など）を記述する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+- evidence_id: EV-0052
+  source_id: BOOK-005
+  source_sha256: 
+    660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+  extracted_sha256: 
+    5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+  extracted_ref:
+    extraction_id: EXTRACT-005-001
+    start_line: 13368
+    end_line: 13380
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: ch06s03.xhtml
+    element_id: null
+  excerpt_sha256: 
+    80a743c0a00815045e38a8e1c4445a51fa5047eb01218b0c511ba10c85b9eaed
+  excerpt_preview: Inclusion relationships are
+  support_reviews:
+  - claim_id: CLAIM-0054
+    claim: 包含関係（種類の関係、部分の関係）は本来的に推移的である。XがYに含まれ、YがZに含まれれば、XはZに含まれる
+    claim_sha256: 
+      e005a020534abde3651f1132e1b5eb526e0af80fd5431991e6d0d9096b190f9c
+    applicability: 種類の関係または部分の関係で階層を作る場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+  - claim_id: CLAIM-0055
+    claim: 推移的な関係を使うと、クラスの所属や属性を推論でき、暗黙の関係は必要なときだけ明示すればよい
+    claim_sha256: 
+      a243ff93ce0423334521974a4a2da09ea87b1e4747e3d575ccb47165f3576115
+    applicability: 推移的な関係で概念や資源を組織化する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+- evidence_id: EV-0053
+  source_id: BOOK-005
+  source_sha256: 
+    660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+  extracted_sha256: 
+    5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+  extracted_ref:
+    extraction_id: EXTRACT-005-001
+    start_line: 20670
+    end_line: 20685
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: ch09s02.xhtml
+    element_id: null
+  excerpt_sha256: 
+    5bf42fc07409a8c7f6660f57fbd91d1d0c735b749796c81ef3d59a2b38287eab
+  excerpt_preview: '                    The structure in Figure 9.4, “Descriptions'
+  support_reviews:
+  - claim_id: CLAIM-0056
+    claim: 有向グラフで、辺をたどって出発点に戻る経路を循環と呼び、循環のない有向グラフを非巡回グラフと呼ぶ
+    claim_sha256: 
+      e09367ff576f5a043565422e9b8df8b9ab65f08e6aa48e48c9fc8632137db687
+    applicability: 関係をノードと有向の辺の構造として扱う場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+  - claim_id: CLAIM-0057
+    claim: 
+      木構造は、親子関係が非対称なので有向グラフであり、辺をたどっても同じノードに二度出会わない非巡回グラフである。さらに根以外のすべてのノードがちょうど1つの親を持つ
+    claim_sha256: 
+      b96f9631c9d9fce1906cd163a31e174c4121dc8cfc76c497e1ebbe7668a28079
+    applicability: 階層を木構造として表す場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+- evidence_id: EV-0054
+  source_id: BOOK-005
+  source_sha256: 
+    660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+  extracted_sha256: 
+    5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+  extracted_ref:
+    extraction_id: EXTRACT-005-001
+    start_line: 20686
+    end_line: 20689
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: ch09s02.xhtml
+    element_id: null
+  excerpt_sha256: 
+    aee8542e5d45e637a73c481b8f7c1a61c47cd0dd3a7401a0200866be3c7c7e15
+  excerpt_preview: In Figure 9.4, “Descriptions Linked into
+  support_reviews:
+  - claim_id: CLAIM-0058
+    claim: 
+      原典の例（図9.4）では、2つの書誌記述の木構造を共通の値を持つ枝で結合した結果、1つのノードが2つの親を持ち、木構造ではなくなる。その結果のグラフは、有向で非巡回のままである
+    claim_sha256: 
+      12065dbb1bb94c79bf98ef517f2299c99d9044e359fd868a60fcd3e208939334
+    applicability: 1つの項目に複数の親（上位）を持たせた構造が木構造かどうかを判断する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+- evidence_id: EV-0055
+  source_id: BOOK-005
+  source_sha256: 
+    660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+  extracted_sha256: 
+    5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+  extracted_ref:
+    extraction_id: EXTRACT-005-001
+    start_line: 4082
+    end_line: 4089
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: ch03s03.xhtml
+    element_id: null
+  excerpt_sha256: 
+    99ebc996b75769d525920ae4b269ecd6553d1b3ccbc98485f84afa41d0b446e8
+  excerpt_preview: '                In libraries, museums, businesses, government'
+  support_reviews:
+  - claim_id: CLAIM-0059
+    claim: 
+      図書館、博物館、企業、行政機関など長く続く組織では、組織化の原則を目録規則や情報管理方針などの明示的で体系的な手続きとして文書化し、異なる人が長期にわたり一貫して適用できるようにする
+    claim_sha256: 
+      8c6f3eaf98ef4f1a58f70485b4107e3e3913f7b4e7dce1246c607f7a384f575b
+    applicability: 複数の人が長期にわたり同じ組織化の原則を適用する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+  - claim_id: CLAIM-0060
+    claim: 個人や小規模な組織化の仕組みでは、資源を配置する原則は非公式で、一貫しなかったり互いに矛盾したりすることが多い
+    claim_sha256: 
+      d962cc34d59073fd28289eb019abdb74121fdc4fd62f463e1884dd0109074f3a
+    applicability: 個人や小規模の組織化の仕組みを扱う場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+- evidence_id: EV-0056
+  source_id: BOOK-005
+  source_sha256: 
+    660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+  extracted_sha256: 
+    5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+  extracted_ref:
+    extraction_id: EXTRACT-005-001
+    start_line: 24946
+    end_line: 24960
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: ch11s04.xhtml
+    element_id: null
+  excerpt_sha256: 
+    6a3237598e13c2adccadba5f1a77ff46efc7538b005dd24db52ba3cde199177e
+  excerpt_preview: 11.4.4. Dealing with Conflicting Requirements
+  support_reviews:
+  - claim_id: CLAIM-0061
+    claim: 組織化の仕組みに要件の異なる2者以上が関わると、組織化の方法について対立が生じうる
+    claim_sha256: 
+      010c6ce0f874189c2ca2692396b88a5adebb147f673eebef7f773afa6f10e065
+    applicability: 複数の当事者が同じ組織化の仕組みを使う場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+- evidence_id: EV-0057
+  source_id: BOOK-005
+  source_sha256: 
+    660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+  extracted_sha256: 
+    5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+  extracted_ref:
+    extraction_id: EXTRACT-005-001
+    start_line: 24961
+    end_line: 24970
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices: []
+    printed_page_labels: []
+    epub_href: ch11s04.xhtml
+    element_id: null
+  excerpt_sha256: 
+    e3f97422553b2ffe8a54275c3ccf5a2f762a69bb50ceaa995c4f95c24951e4a5
+  excerpt_preview: A small number of people can often agree
+  support_reviews:
+  - claim_id: CLAIM-0062
+    claim: 
+      少人数なら非公式な交渉で全員の要件を満たす仕組みに合意できることが多いが、関わる人が増えると対立の可能性が高まり、すべての組み合わせで個別に交渉することは現実的でなくなる
+    claim_sha256: 
+      8bd49125602c1bc5096f83ae1ff53534b7c2e42f9292d542360901d98330d87d
+    applicability: 当事者の数が多い組織化の仕組みで要件が対立する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'
+  - claim_id: CLAIM-0063
+    claim: 
+      多くの領域では、当事者が標準を作るか標準に従うことに合意して対立を避ける。大規模な仕組みの対立は、法的権限や経済力を持つ当事者が全員に解決策を課す上からの方法で解決されることが多い
+    claim_sha256: 
+      a7026a87e85f1161170bc280b7e2cf26e507b3377a8bc32155bac4d385c0e455
+    applicability: 大規模な組織化の仕組みで要件の対立を解決する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T11:59:26+09:00'

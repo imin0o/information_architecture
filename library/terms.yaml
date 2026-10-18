@@ -104,3 +104,27 @@ terms:
   alt_ja: [ユーザビリティテスト]
   definition: 利用者に情報を探すかタスクを完了してもらい、行動と発言を観察する方法
   claims: [CLAIM-0046]
+- term_id: TERM-0018
+  en: class inclusion
+  ja: クラスの包含関係
+  alt_ja: [クラス包含, is-a関係]
+  definition: 一方のクラスが他方に含まれ、他方より特定的である「〜の一種である」関係。つなぐと階層になる
+  claims: [CLAIM-0052]
+- term_id: TERM-0019
+  en: transitivity
+  ja: 推移性
+  alt_ja: [推移律]
+  definition: XとYに関係があり、YとZに同じ関係があれば、XとZにもその関係があるという性質
+  claims: [CLAIM-0054, CLAIM-0055]
+- term_id: TERM-0020
+  en: cycle
+  ja: 循環
+  alt_ja: [閉路, サイクル]
+  definition: 有向グラフで、辺をたどって出発点のノードに戻る経路
+  claims: [CLAIM-0056]
+- term_id: TERM-0021
+  en: acyclic graph
+  ja: 非巡回グラフ
+  alt_ja: [有向非巡回グラフ, DAG]
+  definition: 循環のない有向グラフ。木構造や、複数の親を持つ階層はこれに当たる
+  claims: [CLAIM-0056, CLAIM-0057, CLAIM-0058]

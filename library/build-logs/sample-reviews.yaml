@@ -98,3 +98,32 @@ reviews:
     result: issue
     note: 
       PDF24は空白ページではなく、見出しと複数のアプリ名を含む画面画像である。抽出はno_textで、図内文字がすべて欠落する。画像ページを本文なしとして読み飛ばさないこと。
+- extraction_id: EXTRACT-005-001
+  checked_by: Codex
+  checked_at: '2026-10-18T11:59:26+09:00'
+  items:
+  - kind: body
+    pdf_page_indices: []
+    epub_href: ch06s03.xhtml
+    look_for: 根拠EV-0050〜0052の本文（6.3.1.1、6.3.2.1、6.3.2.2）。段落の欠落・順序の乱れ、例文の矢印や記号の化け
+    result: ok
+    note: null
+  - kind: body
+    pdf_page_indices: []
+    epub_href: ch09s02.xhtml
+    look_for: 根拠EV-0053・0054の本文（9.2節の木構造とグラフ）。段落の欠落・順序の乱れ
+    result: ok
+    note: null
+  - kind: figure
+    pdf_page_indices: []
+    epub_href: ch09s02.xhtml
+    look_for: Figure 9.4の図の内容が抽出に残るか。図の説明文と本文の順序が保たれているか
+    result: issue
+    note: Figure 
+      9.4の見出しと説明文は残るが、画像内のノード、ラベル、辺の接続関係が欠落する。本文と説明文の順序は保たれている。図は抽出テキストから統合しない
+  - kind: layout
+    pdf_page_indices: []
+    epub_href: ch11s04.xhtml
+    look_for: 根拠EV-0056・0057の周辺で、注（[630]〜[638]）が本文の途中に混入していないか。注番号と注の対応
+    result: ok
+    note: null

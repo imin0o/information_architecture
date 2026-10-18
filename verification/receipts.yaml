@@ -1975,3 +1975,479 @@ receipts:
     name: iakit
     version: 0.1.0
   recorded_at: '2026-10-17T22:32:45+09:00'
+- receipt_id: VR-0050
+  evidence_id: EV-0001
+  source_id: BOOK-003
+  targets:
+    record_sha256: 
+      ad64f51beda04d7126ed87c2b3420a7e9883488f238cb15e2819855900dd51e7
+    source_sha256: 
+      3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+    extracted_sha256: 
+      1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+    excerpt_sha256: 
+      1c90e1a382199bdc49ad90e5111507125b5760b440603af05325790af4185c6f
+    locations_sha256: 
+      96203862d6961303e99cc160b3dfb2d0f2a2e0a1b02e0b9c012c34bd7838ef8f
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-003/notes.md
+      sha256: e556d3ab61bd4e51ea998a68cc9407a50de1702b7362a67e2429832acf6e452a
+    - path: library/methods/homograph-disambiguation.md
+      sha256: 61780f93a0e0171e3c038e13cabc26be6e0b1389387d4894f8e43891e9edd786
+  claims:
+  - claim_id: CLAIM-0001
+    claim_sha256: 
+      ae3f6f6fc7aceb86dba52f8880791c877cc4293bd6ff3f8317e4471e6cc121c3
+    status: supported
+    applicability_sha256: 
+      0a7515f57d8a6141cd1576455fd366d4738d7f49ef9e7874e05ed7b669b0d219
+  - claim_id: CLAIM-0002
+    claim_sha256: 
+      072c4606b4e1628ad711138db719648aa21e44de9e9d7c0ed8200f132063d60c
+    status: supported
+    applicability_sha256: 
+      10a0cfdb05507d84b8175dce89ff461da320fd620baf1bdbe5a772f33a223d67
+  - claim_id: CLAIM-0003
+    claim_sha256: 
+      c06fd996dad22127ba6b1cc715fee89bd40bd6c85eec52fdbf9f7a9ee347b852
+    status: supported
+    applicability_sha256: 
+      4860a2fd5fa2feebae46595a6daa51a629376588842b38b6b0568063f953060b
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0051
+  evidence_id: EV-0002
+  source_id: BOOK-003
+  targets:
+    record_sha256: 
+      309ae3c764b55cea157fa58998dd545baae11b6f1d40c3c36c01ca4a0f93e350
+    source_sha256: 
+      3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+    extracted_sha256: 
+      1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+    excerpt_sha256: 
+      8eb31ae7de5a2dd8abb8be3a34d7784521d870a22aea8f576ed5ecffd56fefc1
+    locations_sha256: 
+      96203862d6961303e99cc160b3dfb2d0f2a2e0a1b02e0b9c012c34bd7838ef8f
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-003/notes.md
+      sha256: e556d3ab61bd4e51ea998a68cc9407a50de1702b7362a67e2429832acf6e452a
+    - path: library/methods/homograph-disambiguation.md
+      sha256: 61780f93a0e0171e3c038e13cabc26be6e0b1389387d4894f8e43891e9edd786
+  claims:
+  - claim_id: CLAIM-0004
+    claim_sha256: 
+      1b4bc760de663d4cb6ec97111b2f93cd4103b464ab80e76ac8b08b7e073856f7
+    status: supported
+    applicability_sha256: 
+      642cf28424fb120a7d4f9508e1d429d8e714d43f67d689dff445adeab48f536e
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0052
+  evidence_id: EV-0003
+  source_id: BOOK-003
+  targets:
+    record_sha256: 
+      deb768a276fe8bbbecc38ae53e28bdbd2a0bcec6b7c7edcb8e4a60e8aca61e0d
+    source_sha256: 
+      3e8f1a0087a890c3a14971ef95aee32c5f4afa1984cfd9821e6d8ea8660c311e
+    extracted_sha256: 
+      1520ec06e34a766b08c4e219611ae88f68e88e32d276fb39ab3c9fef8a97b978
+    excerpt_sha256: 
+      548db479ae872c0248255878e3899c10e38a26007505d6868a686cbb1aab6e14
+    locations_sha256: 
+      96203862d6961303e99cc160b3dfb2d0f2a2e0a1b02e0b9c012c34bd7838ef8f
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-003/notes.md
+      sha256: e556d3ab61bd4e51ea998a68cc9407a50de1702b7362a67e2429832acf6e452a
+    - path: library/methods/homograph-disambiguation.md
+      sha256: 61780f93a0e0171e3c038e13cabc26be6e0b1389387d4894f8e43891e9edd786
+  claims:
+  - claim_id: CLAIM-0005
+    claim_sha256: 
+      8b28e1a51369d9947b141a38c6fa53e901e8ce11334700bf639cb5d58aa2e5be
+    status: supported
+    applicability_sha256: 
+      dda6199cbec4ff89730408e1876f8b14f63e02a22a029a4b32b308134f7204f3
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0053
+  evidence_id: EV-0050
+  source_id: BOOK-005
+  targets:
+    record_sha256: 
+      911241af7602afec893b8939e70c9394064cfe997f420a4cfecae252da0709e8
+    source_sha256: 
+      660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+    extracted_sha256: 
+      5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+    excerpt_sha256: 
+      1ce72f5c2e99e2847f3de7d0f506cb507b51c799d3bdf2c4304e3a2296e3ac1c
+    locations_sha256: 
+      18666d5adaec930591a01c6876564cf7d8e70b03a83abb634813ce40e8e502ba
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-005/notes.md
+      sha256: 7f9cd717aa32b07772161640e1bd6151c40cd25a19a3f654d396eb71c637a11e
+    - path: library/methods/hierarchy-acyclicity.md
+      sha256: 102cd124546bf51b66e8843888cf360a46512476e09316862243736fad34499d
+  claims:
+  - claim_id: CLAIM-0052
+    claim_sha256: 
+      e69ad74c7b176f0350ea10c0f4e733cc8188e4800f0dcdb485a7e28f196481c2
+    status: supported
+    applicability_sha256: 
+      2b34bae8cafb43b154845991c39bd313b03d983fdc2f743f5758ac23f760b5d6
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0054
+  evidence_id: EV-0051
+  source_id: BOOK-005
+  targets:
+    record_sha256: 
+      30714e81787c0f5f8b6e883fdd0d7aefce5e9995c19fbf41a710a3a92c3e56e5
+    source_sha256: 
+      660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+    extracted_sha256: 
+      5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+    excerpt_sha256: 
+      1385f46b88a00b20b7dec267a20a49e872ab72cf0c8b870e96c9e458f9ce34bf
+    locations_sha256: 
+      18666d5adaec930591a01c6876564cf7d8e70b03a83abb634813ce40e8e502ba
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-005/notes.md
+      sha256: 7f9cd717aa32b07772161640e1bd6151c40cd25a19a3f654d396eb71c637a11e
+    - path: library/methods/hierarchy-acyclicity.md
+      sha256: 102cd124546bf51b66e8843888cf360a46512476e09316862243736fad34499d
+  claims:
+  - claim_id: CLAIM-0053
+    claim_sha256: 
+      17b41eae34fdf3b500f23786b94182f9dccec04bff81232517fe6efbb61ee8b5
+    status: supported
+    applicability_sha256: 
+      432cb8178f2e0329ba5882ef92ec3df139ff5e9681978e20e0a1d79d5db9a379
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0055
+  evidence_id: EV-0052
+  source_id: BOOK-005
+  targets:
+    record_sha256: 
+      c5af8725dc6e30f368f8949f0c80e9c4da3dda5dff28883bebb2594ca5dc51af
+    source_sha256: 
+      660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+    extracted_sha256: 
+      5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+    excerpt_sha256: 
+      80a743c0a00815045e38a8e1c4445a51fa5047eb01218b0c511ba10c85b9eaed
+    locations_sha256: 
+      18666d5adaec930591a01c6876564cf7d8e70b03a83abb634813ce40e8e502ba
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-005/notes.md
+      sha256: 7f9cd717aa32b07772161640e1bd6151c40cd25a19a3f654d396eb71c637a11e
+    - path: library/methods/hierarchy-acyclicity.md
+      sha256: 102cd124546bf51b66e8843888cf360a46512476e09316862243736fad34499d
+  claims:
+  - claim_id: CLAIM-0054
+    claim_sha256: 
+      e005a020534abde3651f1132e1b5eb526e0af80fd5431991e6d0d9096b190f9c
+    status: supported
+    applicability_sha256: 
+      74549439796ad130242842c37577ed093d9455f9101590cf7a7430dca2209cc8
+  - claim_id: CLAIM-0055
+    claim_sha256: 
+      a243ff93ce0423334521974a4a2da09ea87b1e4747e3d575ccb47165f3576115
+    status: supported
+    applicability_sha256: 
+      d0c4bc1332245e175193f937cc7251dc076d588716a86ddfda4c47c324655f47
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0056
+  evidence_id: EV-0053
+  source_id: BOOK-005
+  targets:
+    record_sha256: 
+      0d2f78fcbe0f66cb11429cc0d04d1094d39701a3a12f486cf0760d0322d426ed
+    source_sha256: 
+      660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+    extracted_sha256: 
+      5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+    excerpt_sha256: 
+      5bf42fc07409a8c7f6660f57fbd91d1d0c735b749796c81ef3d59a2b38287eab
+    locations_sha256: 
+      18666d5adaec930591a01c6876564cf7d8e70b03a83abb634813ce40e8e502ba
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-005/notes.md
+      sha256: 7f9cd717aa32b07772161640e1bd6151c40cd25a19a3f654d396eb71c637a11e
+    - path: library/methods/hierarchy-acyclicity.md
+      sha256: 102cd124546bf51b66e8843888cf360a46512476e09316862243736fad34499d
+  claims:
+  - claim_id: CLAIM-0056
+    claim_sha256: 
+      e09367ff576f5a043565422e9b8df8b9ab65f08e6aa48e48c9fc8632137db687
+    status: supported
+    applicability_sha256: 
+      0987695bc6e2b81fea87294cee366b0eb7ee1029c4739743651027890a8cb712
+  - claim_id: CLAIM-0057
+    claim_sha256: 
+      b96f9631c9d9fce1906cd163a31e174c4121dc8cfc76c497e1ebbe7668a28079
+    status: supported
+    applicability_sha256: 
+      c23d6dcd23d930e39d4b5615701a924aedca7d9dd907d4e60e71b8bd08abb15e
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0057
+  evidence_id: EV-0054
+  source_id: BOOK-005
+  targets:
+    record_sha256: 
+      804b0d28ff2ddb4ebc899d592627d8efec303b1f208d5e0fa1e33e9bf22c5303
+    source_sha256: 
+      660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+    extracted_sha256: 
+      5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+    excerpt_sha256: 
+      aee8542e5d45e637a73c481b8f7c1a61c47cd0dd3a7401a0200866be3c7c7e15
+    locations_sha256: 
+      18666d5adaec930591a01c6876564cf7d8e70b03a83abb634813ce40e8e502ba
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-005/notes.md
+      sha256: 7f9cd717aa32b07772161640e1bd6151c40cd25a19a3f654d396eb71c637a11e
+    - path: library/methods/hierarchy-acyclicity.md
+      sha256: 102cd124546bf51b66e8843888cf360a46512476e09316862243736fad34499d
+  claims:
+  - claim_id: CLAIM-0058
+    claim_sha256: 
+      12065dbb1bb94c79bf98ef517f2299c99d9044e359fd868a60fcd3e208939334
+    status: supported
+    applicability_sha256: 
+      37611e5a7d9e25a788d59a757943f2a36db58feaaefba166403c2892eeedbb71
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0058
+  evidence_id: EV-0055
+  source_id: BOOK-005
+  targets:
+    record_sha256: 
+      1c1a4493d334fa76f6d703b7d24f92f83effb4f24758761ad433d49c90ab1bd3
+    source_sha256: 
+      660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+    extracted_sha256: 
+      5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+    excerpt_sha256: 
+      99ebc996b75769d525920ae4b269ecd6553d1b3ccbc98485f84afa41d0b446e8
+    locations_sha256: 
+      18666d5adaec930591a01c6876564cf7d8e70b03a83abb634813ce40e8e502ba
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-005/notes.md
+      sha256: 7f9cd717aa32b07772161640e1bd6151c40cd25a19a3f654d396eb71c637a11e
+    - path: library/methods/conflicting-requirements.md
+      sha256: 7e76a4692c055e44b818c588fdd9a26e0bc931de00c760df8e3def26df746f97
+  claims:
+  - claim_id: CLAIM-0059
+    claim_sha256: 
+      8c6f3eaf98ef4f1a58f70485b4107e3e3913f7b4e7dce1246c607f7a384f575b
+    status: supported
+    applicability_sha256: 
+      ea310127ca230cbec5c00bac82b2545665f3cc7efeaa9444634154742ef43842
+  - claim_id: CLAIM-0060
+    claim_sha256: 
+      d962cc34d59073fd28289eb019abdb74121fdc4fd62f463e1884dd0109074f3a
+    status: supported
+    applicability_sha256: 
+      4fb5b92eb790232e936621941078d5bb172c2a9327385264f982bbe0a2dd41c6
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0059
+  evidence_id: EV-0056
+  source_id: BOOK-005
+  targets:
+    record_sha256: 
+      08baa1a20e102810591320df163d59f1188885454743cf7e4846cd7aad1cb601
+    source_sha256: 
+      660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+    extracted_sha256: 
+      5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+    excerpt_sha256: 
+      6a3237598e13c2adccadba5f1a77ff46efc7538b005dd24db52ba3cde199177e
+    locations_sha256: 
+      18666d5adaec930591a01c6876564cf7d8e70b03a83abb634813ce40e8e502ba
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-005/notes.md
+      sha256: 7f9cd717aa32b07772161640e1bd6151c40cd25a19a3f654d396eb71c637a11e
+    - path: library/methods/conflicting-requirements.md
+      sha256: 7e76a4692c055e44b818c588fdd9a26e0bc931de00c760df8e3def26df746f97
+  claims:
+  - claim_id: CLAIM-0061
+    claim_sha256: 
+      010c6ce0f874189c2ca2692396b88a5adebb147f673eebef7f773afa6f10e065
+    status: supported
+    applicability_sha256: 
+      df7183a2535954eaa21e62613448e378a2ba6a98d1f8188a3b0d73714c844a5a
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'
+- receipt_id: VR-0060
+  evidence_id: EV-0057
+  source_id: BOOK-005
+  targets:
+    record_sha256: 
+      840f34d43571dc6b483b2155a0a78e9e9d1065aa836d9135c786fb3e285f88cf
+    source_sha256: 
+      660ff303b270e6594cf67664072b05f9aa9f7897e8349e6560aa2c0250a838ea
+    extracted_sha256: 
+      5a7f5ede02feed99274c7673fcf9508192847e6d3317d058f8938bdfb0c10e36
+    excerpt_sha256: 
+      e3f97422553b2ffe8a54275c3ccf5a2f762a69bb50ceaa995c4f95c24951e4a5
+    locations_sha256: 
+      18666d5adaec930591a01c6876564cf7d8e70b03a83abb634813ce40e8e502ba
+    bundle_manifest_sha256: null
+    knowledge_files:
+    - path: library/books/BOOK-005/notes.md
+      sha256: 7f9cd717aa32b07772161640e1bd6151c40cd25a19a3f654d396eb71c637a11e
+    - path: library/methods/conflicting-requirements.md
+      sha256: 7e76a4692c055e44b818c588fdd9a26e0bc931de00c760df8e3def26df746f97
+  claims:
+  - claim_id: CLAIM-0062
+    claim_sha256: 
+      8bd49125602c1bc5096f83ae1ff53534b7c2e42f9292d542360901d98330d87d
+    status: supported
+    applicability_sha256: 
+      9f7042d7f9df55dcd855ee81ecffe5faa5c5a81b2c21ddac218f61ca40a6eaa0
+  - claim_id: CLAIM-0063
+    claim_sha256: 
+      a7026a87e85f1161170bc280b7e2cf26e507b3377a8bc32155bac4d385c0e455
+    status: supported
+    applicability_sha256: 
+      a93a6cbb433a95a92bb302492336062625972da8d2e2352ac6ac137e0ccb44eb
+  machine_checks:
+    reference: pass
+    excerpt: pass
+    original_hash: pass
+  human_checks:
+    source_location:
+      result: confirmed
+      checked_by: Codex
+      checked_at: '2026-10-18T11:59:26+09:00'
+  tool:
+    name: iakit
+    version: 0.1.0
+  recorded_at: '2026-10-18T11:59:26+09:00'

@@ -18,7 +18,12 @@ books:
     抽出品質の確認で表・図・コード例を復元できないと分かったため、これらは抽出テキストから統合しない（D-M3-20）
   mvp_impact: NEED-02・03・04・05・07の根拠（確認済み）
 - {book_id: BOOK-004, status: not_started, remaining: 全体未統合, mvp_impact: NEED-06の候補文献}
-- {book_id: BOOK-005, status: not_started, remaining: 全体未統合, mvp_impact: NEED-04（循環の禁止の根拠）とNEED-09の候補文献。M5の文献追加試験で統合する（D-M3-22）}
+- book_id: BOOK-005
+  status: partial
+  remaining: >-
+    EXTRACT-005-001の3.3節（組織化の原則の明文化）、6.3節（包含関係と関係の性質）、9.2節（木構造とグラフ）、11.4節（要件の対立）の一部を
+    M5の文献追加試験で統合した（D-M3-22）。精読範囲外は全体未統合。図は抽出に内容がないため統合しない
+  mvp_impact: NEED-04（循環の禁止）とNEED-09（矛盾する資料の扱い）の前半の根拠。NEED-09の後半（文献と案件の適用条件の違い）は未登録
 - {book_id: BOOK-006, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
 - {book_id: BOOK-007, status: not_started, remaining: 全体未統合, mvp_impact: NEED-01の候補文献}
 - {book_id: BOOK-008, status: not_received, remaining: 未受領のため未統合, mvp_impact: NEED-08の候補文献。BOOK-001で代替できるかは未確認}
