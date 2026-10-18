@@ -46,13 +46,15 @@ runnerはPython 3.12・3.14の一時環境で回帰テストを実行し、`.git
 
 `git commit -a` でもフックは動作する。`--no-verify`、フック設定の無効化、別のGit操作では回避できるため、誤操作防止の検査であり、任意の操作を強制的に制限する仕組みではない。
 
-GitHub Actionsの定義は `.github/workflows/checks.yml`。Python両版でlock整合・回帰テスト・index全件を検査する。原典をアップロードせず、原典再照合は `not_run` とする。外部CIは送信後の確認であり、送信前検査の代わりにはならない。CIの実行・必須チェック設定・公開範囲の変更はローカル実装とは別の操作で、今回実施していない。
+`pre-push` は漏えい検査の後に `iakit check --local`（CIと同じ全項目。配布検査を含む）を実行し、失敗すれば送信を中止する。ブランチ保護は使わず、この送信前検査を必須の検査とする。回帰テストは送信前に `scripts/verify.py` で実行する。
+
+GitHub Actionsの定義は `.github/workflows/checks.yml`。Python両版でlock整合・回帰テスト・index全件を検査する。原典をアップロードせず、原典再照合は `not_run` とする。外部CIは送信後の確認であり、送信前検査の代わりにはならない。
 
 ## 配布物の生成と検査
 
 ```sh
 uv run --locked iakit dist build                 # dist/<skill>/ を生成し、verification/distributions.yaml を更新する
-uv run --locked iakit dist check                 # 一時ディレクトリで再生成し、記録と照合する（iakit check にも含む）
+uv run --locked iakit dist check                 # 一時ディレクトリで再生成し、記録と照合する（iakit check・pre-push にも含む）
 uv run --locked iakit dist check <配置先>        # 移設・配置した配布物の検査
 uv run --locked iakit dist diff <旧> <新>        # 配布IDとファイルの差分
 uv run --locked iakit run compare <実行A> <実行B> # 判断・Skill・知識の差分（NFR-02）
