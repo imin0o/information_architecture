@@ -61,9 +61,14 @@ def add(directory: Path, source: Path, kind: str, description: str, fmt: str | N
         inputs["inputs"].append(record)
     save(directory, "inputs.yaml", inputs)
     result = refresh(directory)
-    return {"input_id": record["input_id"], "path": rel, "format": record["format"],
-            "classification": record["classification"], "unreadable": len(record["unreadable"]),
-            "instruction_like_units": _flagged(directory, record["input_id"]), "staled": result["staled"]}
+    flagged = _flagged(directory, record["input_id"])
+    out = {"input_id": record["input_id"], "path": rel, "format": record["format"],
+           "classification": record["classification"], "unreadable": len(record["unreadable"]),
+           "instruction_like_units": flagged, "staled": result["staled"]}
+    if flagged:  # 確認は登録の一部。登録後に止める依頼でも、記録してから止める（P-M6-02）
+        out["next"] = (f"命令文の候補を確かめ、iakit input review {record['input_id']} で記録する。"
+                       "記録のない候補が残る実行は契約検査に通らない")
+    return out
 
 
 def _flagged(directory: Path, input_id: str) -> list[str]:
