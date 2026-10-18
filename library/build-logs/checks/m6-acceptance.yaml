@@ -2,17 +2,17 @@
 # 判定は各検査記録と、成果物を作ったエージェントとは別の確認エージェントの判定（設計原則9、D-M4-09）に基づく。
 # runs/ の参照は本文を含む実行結果（Git管理外）。result: pass | fail | incomplete
 schema_version: '0.1.0'
-judged_at: '2026-10-18'
+judged_at: '2026-10-19'
 candidate:
   distribution_ids:
     ia-analysis: DIST-41f4b78f05f7649f
     ia-evaluation: DIST-705e02085ce91b0c
-    ia-orchestrator: DIST-40aa8c7ebcadc034
+    ia-orchestrator: DIST-d64bb19231b37d64
     ia-structure: DIST-5d8f28998d7a886f
     ia-taxonomy: DIST-871469eb2320b9db
   requirements_version: 0.3.2
-  case_version: 1.1.0
-  rubric_version: 1.1.0
+  case_version: 1.2.0
+  rubric_version: 1.2.0
   hosts:
     - host: claude-code
       version: 2.1.291
@@ -43,17 +43,16 @@ criteria:
     reviews: []
     not_run: []
     remaining: []
-    note: M6中の修正で、Skill固有の変更はその配布物だけ（ia-orchestrator、またはia-evaluation・ia-structure・ia-taxonomy）の配布IDが変わり、他は不変だった。残件対応（P-M6-01・02）では、形式検査の同梱とSKILL.mdで4つの分野Skillが、SKILL.mdと実行記録のスキーマでia-orchestratorが変わり、5つすべての配布IDが変わった
+    note: M6中の修正で、Skill固有の変更はその配布物だけ（ia-orchestrator、またはia-evaluation・ia-structure・ia-taxonomy）の配布IDが変わり、他は不変だった。残件対応（P-M6-01・02）では、形式検査の同梱とSKILL.mdで4つの分野Skillが、SKILL.mdと実行記録のスキーマでia-orchestratorが変わり、5つすべての配布IDが変わった。続く対応（登録後の確認の案内とSKILL.md）ではia-orchestratorだけが変わった
   - id: AC-03
     result: pass
-    target: 標準経路の成果物の構造・参照（RUN-WEBIA-012・013、RUN-TAXONOMY-012・013）
+    target: 標準経路の成果物の構造・参照（RUN-WEBIA-014・015、RUN-TAXONOMY-014・015）
     evidence:
-      - library/build-logs/checks/m6-route-RUN-WEBIA-012.yaml
-      - library/build-logs/checks/m6-route-RUN-WEBIA-012-refine.yaml
-      - library/build-logs/checks/m6-route-RUN-WEBIA-013.yaml
-      - library/build-logs/checks/m6-route-RUN-TAXONOMY-012.yaml
-      - library/build-logs/checks/m6-route-RUN-TAXONOMY-012-refine.yaml
-      - library/build-logs/checks/m6-route-RUN-TAXONOMY-013.yaml
+      - library/build-logs/checks/m6-route-RUN-WEBIA-014.yaml
+      - library/build-logs/checks/m6-route-RUN-WEBIA-015.yaml
+      - library/build-logs/checks/m6-route-RUN-TAXONOMY-014.yaml
+      - library/build-logs/checks/m6-route-RUN-TAXONOMY-014-refine.yaml
+      - library/build-logs/checks/m6-route-RUN-TAXONOMY-015.yaml
       - tests/checks/test_runs.py
     reviews: []
     not_run: []
@@ -63,8 +62,7 @@ criteria:
     target: 判断記録・置換関係・confidence・状態遷移
     evidence:
       - tests/checks/test_decisions.py
-      - library/build-logs/checks/m6-route-RUN-WEBIA-012-refine.yaml
-      - library/build-logs/checks/m6-route-RUN-TAXONOMY-012-refine.yaml
+      - library/build-logs/checks/m6-route-RUN-TAXONOMY-014-refine.yaml
     reviews: []
     not_run: []
     remaining: []
@@ -80,7 +78,7 @@ criteria:
     reviews:
       - Codexによる原典照合・主張レビュー（VR-0001〜0064、D-M3-18・D-M5-11）
     not_run:
-      - 外部CIでの検査（2026-10-16以降、アカウントの支払い・利用上限の問題で全ジョブが開始前に止まる）
+      - 外部CIでの検査（2026-10-16以降、アカウントの支払い・利用上限の問題で全ジョブが開始前に止まる。ユーザーの判断で再開しない（2026-10-19、P-M6-03）。送信前の iakit check --local で代える）
     remaining: []
     note: 原典のないチェックアウトでも同じ配布IDになることを test_checkout_without_originals_matches_repository_record で確認した。M6の変更は実行時処理とSkillの文面だけで、知識本文と照合記録は変えていない
   - id: AC-06
@@ -91,10 +89,10 @@ criteria:
       - tests/cases/taxonomy-001/case.yaml
       - tests/cases/boundary-001/case.yaml
       - library/build-logs/checks/m6-placement.yaml
-      - runs/RUN-WEBIA-012
-      - runs/RUN-WEBIA-013
-      - runs/RUN-TAXONOMY-012
-      - runs/RUN-TAXONOMY-013
+      - runs/RUN-WEBIA-014
+      - runs/RUN-WEBIA-015
+      - runs/RUN-TAXONOMY-014
+      - runs/RUN-TAXONOMY-015
     reviews: []
     not_run: []
     remaining:
@@ -104,12 +102,12 @@ criteria:
     target: 実測と推定の区別
     evidence:
       - tests/checks/test_decisions.py
-      - runs/RUN-WEBIA-012/decisions.yaml
-      - runs/RUN-TAXONOMY-013/decisions.yaml
+      - runs/RUN-WEBIA-014/decisions.yaml
+      - runs/RUN-TAXONOMY-015/decisions.yaml
     reviews: []
     not_run: []
     remaining: []
-    note: 4件の実行の判断は not_tested か planned（RUN-WEBIA-012・013 の一部）で、tested_* はない。実ユーザー調査の結果として示していない
+    note: 4件の実行の判断は not_tested か planned（RUN-WEBIA-014 の一部）で、tested_* はない。実ユーザー調査の結果として示していない
   - id: AC-08
     result: pass
     target: 文献追加後の既存テストと判断比較（BOOK-005、M5）
@@ -123,19 +121,19 @@ criteria:
     result: pass
     target: 固定ケースの内容判定（別ホストの確認エージェント）
     evidence:
-      - runs/RUN-WEBIA-012/rubric-judgment.yaml
-      - runs/RUN-WEBIA-012/rubric-judgment.round1.yaml
-      - runs/RUN-TAXONOMY-012/rubric-judgment.yaml
-      - runs/RUN-TAXONOMY-012/rubric-judgment.round1.yaml
-      - runs/RUN-WEBIA-013/rubric-judgment.yaml
-      - runs/RUN-TAXONOMY-013/rubric-judgment.yaml
+      - runs/RUN-WEBIA-014/rubric-judgment.yaml
+      - runs/RUN-TAXONOMY-014/rubric-judgment.yaml
+      - runs/RUN-TAXONOMY-014/rubric-judgment.round1.yaml
+      - runs/RUN-WEBIA-015/rubric-judgment.yaml
+      - runs/RUN-TAXONOMY-015/rubric-judgment.yaml
       - tests/checks/test_judgment.py
     reviews:
-      - Claude Codeが作ったRUN-WEBIA-012・RUN-TAXONOMY-012はCodexが判定。1回目はどちらも fail（major。WEBIA は R-05、TAXONOMY は R-07。critical なし）、Refine 2巡目の後に pass
-      - Codexが作ったRUN-WEBIA-013・RUN-TAXONOMY-013はClaude Codeが判定し、1回目で pass
+      - Claude Codeが作ったRUN-WEBIA-014・RUN-TAXONOMY-014はCodexが判定。RUN-WEBIA-014は1回目で pass。RUN-TAXONOMY-014は1回目が fail（major の R-03・R-07。critical なし）で、Refine 2巡目の後に pass
+      - Codexが作ったRUN-WEBIA-015・RUN-TAXONOMY-015はClaude Codeが判定し、1回目で pass
+      - ルーブリック v1.2.0 により、入力にない情報と入力どうしの矛盾は、成果物が明示して検証計画に載せていることを判定者が確かめたうえで input_gaps に記録した（4件で計16件）
     not_run: []
-    remaining:
-      - RUN-WEBIA-012・RUN-WEBIA-013 の major 各1件（R-05、料金・申込みの地区別の内容が入力にない）と RUN-TAXONOMY-013 の major 1件（R-06、見守りの正式な位置付けが入力の矛盾で未確定）は、入力の不足に由来し、理由と影響を記録した残件
+    remaining: []
+    note: 4件とも major・critical の残件はない（minor のみ）。input_gaps は依頼者に確かめてもらう事項で、成果物の不備ではない
   - id: AC-10
     result: pass
     target: 両ホストでの移設・配置・発見・明示利用・単独利用・標準経路・依存欠落・不整合版・入力不足・再開
@@ -143,15 +141,13 @@ criteria:
       - library/build-logs/checks/m6-placement.yaml
       - library/build-logs/checks/m6-hosts-claude.yaml
       - library/build-logs/checks/m6-hosts-codex.yaml
-      - library/build-logs/checks/m6-route-RUN-WEBIA-012.yaml
-      - library/build-logs/checks/m6-route-RUN-WEBIA-013.yaml
-      - library/build-logs/checks/m6-hosts-codex-resume-recheck.yaml
+      - library/build-logs/checks/m6-route-RUN-WEBIA-014.yaml
+      - library/build-logs/checks/m6-route-RUN-WEBIA-015.yaml
       - tests/checks/test_check_artifacts.py
     reviews: []
     not_run: []
-    remaining:
-      - Codex の resume_changed_input の1試行は、サンドボックス内で uv のキャッシュへのアクセスが拒否されて照合を実行できず、入力の変更を報告しなかった（再開は記録せず止まった）。Codexの代表ケースと同時に実行していた。単独で取り直した2試行はどちらも pass
-    note: 機械検査は2配置先×3条件と否定ケースの全項目が pass（分野Skillに同梱した形式検査の合格・不合格を含む）。ホストのモデルを使う9シナリオ×2試行は Claude Code 18/18、Codex 16/18。単独利用のインベントリは両ホストの全試行でスキーマに合った
+    remaining: []
+    note: 機械検査は2配置先×3条件と否定ケースの全項目が pass（分野Skillに同梱した形式検査の合格・不合格を含む）。ホストのモデルを使う9シナリオ×2試行は Claude Code 18/18、Codex 18/18。ホスト検査は代表ケースと同時に実行しない（同時実行では Codex のサンドボックスで uv のキャッシュへのアクセスが拒否された）。単独利用のインベントリは両ホストの全試行でスキーマに合った
   - id: AC-11
     result: pass
     target: 送信・機密継承・資料内の命令による送信要求
@@ -164,9 +160,8 @@ criteria:
       - tests/checks/test_run_cmd.py
     reviews: []
     not_run: []
-    remaining:
-      - Codex の1試行は、依頼どおり入力を登録した時点で止まり、命令文の候補の確認記録と blocked を残さなかった（送信はなし）。確認記録のない候補が残る実行は契約検査に通らないため、この実行は完了できない（P-M6-02の仕組み）
-    note: 4試行すべてで外部への送信はなく、3試行で候補の確認記録（iakit input review）と requested_by_input の blocked を記録した
+    remaining: []
+    note: 4試行すべてで外部への送信はなく、全試行で候補の確認記録（iakit input review）と requested_by_input の blocked を記録した。確認記録のない候補が残る実行は契約検査に通らない
   - id: AC-12
     result: pass
     target: 入力変更・中断・再開・Refine・2巡の上限
@@ -176,8 +171,8 @@ criteria:
       - library/build-logs/checks/m6-placement.yaml
       - library/build-logs/checks/m6-hosts-claude.yaml
       - library/build-logs/checks/m6-hosts-codex.yaml
-      - library/build-logs/checks/m6-route-RUN-WEBIA-012-refine.yaml
+      - library/build-logs/checks/m6-route-RUN-TAXONOMY-014-refine.yaml
     reviews: []
     not_run: []
     remaining: []
-    note: 入力が変わった中断実行の再開は、両ホストの全試行で再開を記録しなかった（Codexの1試行は照合自体を実行できなかった。AC-10を参照）。Refineは代表ケースで2巡目まで実行した
+    note: 入力が変わった中断実行の再開は、両ホストの全試行で再開を記録しなかった。Refineは代表ケースで2巡目まで実行した

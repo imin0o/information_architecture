@@ -10,7 +10,7 @@ checks:
   distribution_ids:
     ia-analysis: DIST-41f4b78f05f7649f
     ia-evaluation: DIST-705e02085ce91b0c
-    ia-orchestrator: DIST-40aa8c7ebcadc034
+    ia-orchestrator: DIST-d64bb19231b37d64
     ia-structure: DIST-5d8f28998d7a886f
     ia-taxonomy: DIST-871469eb2320b9db
   permissions: Bash(uv run:*) Bash(uv:*) Read Glob Grep Write Edit
@@ -260,9 +260,11 @@ checks:
     - runs/RUN-HOST-001/information-audit.md
     - runs/RUN-HOST-001/ingest/INPUT-001.yaml
     - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-003.yaml
     - runs/RUN-HOST-001/inputs.yaml
     - runs/RUN-HOST-001/inputs/brief.md
     - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/inputs/user-request.md
     - runs/RUN-HOST-001/problem-definition.md
     - runs/RUN-HOST-001/questions/Q-001.md
     - runs/RUN-HOST-001/run.yaml

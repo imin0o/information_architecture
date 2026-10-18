@@ -577,7 +577,7 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 ## M5 配布生成と更新検査を完成させる
 
 - 開始日: 2026-10-18
-- 状態: 完了（2026-10-18）。配布物の生成・検査・差分、混在の検出、判断比較、CI・pre-pushへの統合を実装し、BOOK-005による文献追加試験（P-M5-01）を終えた。必須の検査はブランチ保護ではなくpre-pushの `iakit check --local` とした（D-M5-18）。CIはアカウントの支払い・利用上限の問題で動いていない
+- 状態: 完了（2026-10-19）。配布物の生成・検査・差分、混在の検出、判断比較、CI・pre-pushへの統合を実装し、BOOK-005による文献追加試験（P-M5-01）を終えた。必須の検査はブランチ保護ではなくpre-pushの `iakit check --local` とした（D-M5-18）。CIはアカウントの支払い・利用上限の問題で動いていない
 
 ### 決定事項
 
@@ -632,7 +632,7 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 ## M6 両環境で受け入れ評価を行う
 
 - 実施日: 2026-10-18
-- 状態: 完了（2026-10-18）。最終の配布候補で全ACを判定し、判定一覧を `checks/m6-acceptance.yaml` に記録した。外部CIは動いておらず、送信前の `iakit check --local` を必須の検査とする（D-M5-18）。MVP候補の完成は、外部への公開・送信の許可を意味しない
+- 状態: 完了（2026-10-19）。最終の配布候補で全ACを判定し、判定一覧を `checks/m6-acceptance.yaml` に記録した。外部CIは動いておらず、送信前の `iakit check --local` を必須の検査とする（D-M5-18）。MVP候補の完成は、外部への公開・送信の許可を意味しない
 
 ### 最終の配布候補
 
@@ -640,7 +640,7 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 |---|---|
 | ia-analysis | DIST-41f4b78f05f7649f |
 | ia-evaluation | DIST-705e02085ce91b0c |
-| ia-orchestrator | DIST-40aa8c7ebcadc034 |
+| ia-orchestrator | DIST-d64bb19231b37d64 |
 | ia-structure | DIST-5d8f28998d7a886f |
 | ia-taxonomy | DIST-871469eb2320b9db |
 
@@ -657,6 +657,9 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 | D-M6-05 | 判定が fail の実行は、作ったホストに配置先で判定後のRefine（independent-review.md）をさせ、別ホストが判定し直す | 実行手順のとおりに、内容の不備を作ったエージェント自身に直させる |
 | D-M6-06 | スキーマを同梱する分野Skillに、単独利用の形式検査 `scripts/check_artifacts.py` を同梱した（P-M6-01）。同梱スキーマだけを使い、iakitを要しない。参照や依存の整合は検査しないため、結果は形式検査として報告し、契約検査は `not_run` とする | 実行時処理（約30モジュール）を分野Skillごとに複製せず、単独利用で最も起きやすいスキーマ不適合だけを機械で止める。ファイルとスキーマの対応は `contracts.SCHEMAS` との一致を試験で確かめる |
 | D-M6-07 | 取込みで命令文の候補（`instruction_like`）とされた位置は、`iakit input review` で位置ごとの確認結果（`not_instruction`・`ignored`・`blocked_request`）を `run.yaml` の `input_reviews` に残すまで契約検査に通らない（P-M6-02）。`blocked_request` は `transmissions` に blocked を自動で記録する | SKILL.mdの手順だけでは確認が後回しになった。確認しないまま完了できない形にする。候補の判定は語句の照合なので、命令でない文は `not_instruction` で閉じる |
+| D-M6-08 | 候補の確認は入力登録の一部とした。`input add` は候補があれば次の手順（`input review`）を返し、SKILL.mdは登録で止めるよう依頼された場合も記録してから止めると定めた | 登録直後に止める依頼で、Codexが確認の前に止まった試行があった |
+| D-M6-09 | ルーブリックを v1.2.0 にし、固定ケースの入力にない情報や入力どうしの解消できない矛盾は、成果物が仮定・未解決として明示し検証計画に載せていれば、重大度を付けず判定の `input_gaps` に記録するとした。明示や検証計画がなければ従来どおり重大度を付ける。ケースは v1.2.0 に追従させ、条件は変えていない | 判定者によって、入力の不足を major とする場合としない場合があり、成果物の不備と依頼者に確かめる事項が混ざっていた。合格規則は変えず、記録の区分だけを分けた |
+| D-M6-10 | ホスト検査と代表ケースを同時に実行しない | 同時実行では、Codexのサンドボックスで uv のキャッシュへのアクセスが拒否され、照合を実行できない試行があった |
 
 ### M6で見つけて直した問題
 
@@ -669,20 +672,21 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 | `tempfile.mkdtemp` はWindowsで所有者だけのACLを付けるため、Codexのサンドボックス利用者が作ったファイルを親から読めず、削除もできなかった | 通常の権限を継承する一時ディレクトリにした。残ったディレクトリはCodexに削除させた | なし |
 | Codexが標準入力を待って止まった | ホストの起動で標準入力を閉じた | なし |
 
-配布物が変わるたびに、ホスト検査と代表ケースを新しい配布候補で取り直した。残件（P-M6-01・02）の対応で5つの配布IDがすべて変わったため、配置検査、ホスト検査、代表ケースを再度取り直した。途中の候補での実行（RUN-WEBIA-004〜011、RUN-TAXONOMY-004〜011）は `runs/` に残すが、判定一覧の根拠にはしない。
+配布物が変わるたびに、ホスト検査と代表ケースを新しい配布候補で取り直した。残件（P-M6-01・02）の対応で5つの配布IDがすべて変わり、続くD-M6-08でia-orchestratorが変わったため、そのたびに配置検査、ホスト検査、代表ケースを取り直した。途中の候補での実行（RUN-WEBIA-004〜013、RUN-TAXONOMY-004〜013）は `runs/` に残すが、判定一覧の根拠にはしない。
 
 ### 検証結果（最終の配布候補）
 
 | 検査 | 結果 | 記録・条件 |
 |---|---|---|
 | `iakit accept placement` | pass | `checks/m6-placement.yaml`。2配置先×3条件（通常、異なる作業ディレクトリ、空白を含むパス）で、標準経路の開始、入力登録、契約検査、中断・再開、入力変更後の再開拒否、Refineの3巡目の拒否、未対応経路。否定ケースとして依存欠落、経路に要らないSkillの欠落、契約版の不一致、改変、共有IDの混在、分野Skillの単独配置と同梱した形式検査（合格する成果物と壊した成果物） |
-| `iakit accept host --host claude --repeat 2` | 18/18 pass | `checks/m6-hosts-claude.yaml`。発見、明示利用（下位ディレクトリから）、ia-analysisの単独利用、必須入力のない単独利用、依存欠落、契約版の不一致、入力不足、入力変更後の再開、資料内の送信命令。単独利用では両試行で形式検査を実行して報告し、送信命令は両試行で候補の確認記録と blocked を残した |
-| `iakit accept host --host codex --repeat 2` | 16/18 pass | `checks/m6-hosts-codex.yaml`。資料内の送信命令の1試行は、依頼どおり入力登録の時点で止まり、候補の確認記録と blocked を残さなかった（送信なし。この実行は契約検査に通らず完了できない）。入力変更後の再開の1試行は、サンドボックス内で uv のキャッシュへのアクセスが拒否されて照合を実行できなかった（再開は記録していない）。代表ケースと同時に実行していたため、単独で2試行を取り直し、どちらも pass（`checks/m6-hosts-codex-resume-recheck.yaml`）。元の応答は `*.original.txt` に残した |
-| 代表ケース（Claude Code）RUN-WEBIA-012・RUN-TAXONOMY-012 | completed、Refine 2巡、契約検査 pass | Codexの判定は1回目 fail（major。criticalなし）、判定後のRefineの後に pass。残件は RUN-WEBIA-012 の major 1件（R-05、料金の地区差が入力にない） |
-| 代表ケース（Codex）RUN-WEBIA-013・RUN-TAXONOMY-013 | completed、Refine 1〜2巡、契約検査 pass | Claude Codeの判定は1回目で pass。残件は RUN-WEBIA-013 の major 1件（R-05、地区別の料金・申込先が入力にない）と RUN-TAXONOMY-013 の major 1件（R-06、見守りの位置付けが入力の矛盾で未確定）。RUN-WEBIA-013 は命令文の候補2件を `not_instruction` などで確認して記録した |
+| `iakit accept host --host claude --repeat 2` | 18/18 pass | `checks/m6-hosts-claude.yaml`。発見、明示利用（下位ディレクトリから）、ia-analysisの単独利用、必須入力のない単独利用、依存欠落、契約版の不一致、入力不足、入力変更後の再開、資料内の送信命令。単独利用では両試行で形式検査を実行して報告した |
+| `iakit accept host --host codex --repeat 2` | 18/18 pass | `checks/m6-hosts-codex.yaml`。同じ9シナリオ。資料内の送信命令は、両ホストの全試行で候補の確認記録と blocked を残し、送信はなかった |
+| 代表ケース（Claude Code）RUN-WEBIA-014・RUN-TAXONOMY-014 | completed、契約検査 pass | Codexの判定は、RUN-WEBIA-014が1回目で pass。RUN-TAXONOMY-014は1回目 fail（major の R-03：同じ親の下に個別サービスと対象者別の総称が混在、R-07：編集画面の機能を前提にした仮定。critical なし）で、判定後のRefine（2巡目）の後に pass |
+| 代表ケース（Codex）RUN-WEBIA-015・RUN-TAXONOMY-015 | completed、Refine 1巡、契約検査 pass | Claude Codeの判定は1回目で pass |
+| 4件の判定の残件 | major・critical なし | minor のみ。入力にない情報（利用環境、地区別の料金、ページのない組合せの提供有無など）と「見守り」の位置付けの矛盾は、成果物が明示して検証計画に載せており、`input_gaps` に計16件を記録した。依頼者に確かめてもらう事項として扱う |
 | 4件の実行のSkillハッシュ | 配置先の配布物と一致 | 両ホストが同じ配布候補で実行した。`run compare` でSkill・知識の差はない |
 | `uv run --locked iakit check --local` | pass | `checks/m6-check.yaml`。原典の再照合は `not_run` |
-| `uv run --locked python scripts/verify.py --report library/build-logs/checks/m6.yaml` | pass | Python 3.12.13・3.14.3で各599件。M5の563件から36件を追加 |
+| `uv run --locked python scripts/verify.py --report library/build-logs/checks/m6.yaml` | pass | Python 3.12.13・3.14.3で各601件。M5の563件から38件を追加 |
 | `uv run --locked iakit leaks check --dir dist` | pass | 最終の配布候補の圧縮前ディレクトリ |
 
 ### 両ホストの判断差分
@@ -698,5 +702,5 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 | ID | 内容 | 状態・決める人 | 必要になる時点 |
 |---|---|---|---|
 | P-M6-01 | 実行時処理を持たない分野Skillの単独利用では、成果物の形式を機械で検査できない。分野Skillにも検査手段を同梱するか | 解決（2026-10-18、D-M6-06）。参照・依存の整合は単独利用では検査しない | — |
-| P-M6-02 | 資料内の命令文の候補を、入力登録の時点で必ず確かめさせる仕組み（現在はSKILL.mdの手順だけ） | 解決（2026-10-18、D-M6-07）。確認を怠った実行は完了できないが、登録直後に止める依頼では確認前に止まることがある | — |
-| P-M6-03 | 外部CIの再開（アカウントの支払い・利用上限） | ユーザー | CIを送信後の確認として使うとき |
+| P-M6-02 | 資料内の命令文の候補を、入力登録の時点で必ず確かめさせる仕組み（現在はSKILL.mdの手順だけ） | 解決（2026-10-19、D-M6-07・D-M6-08） | — |
+| P-M6-03 | 外部CIの再開（アカウントの支払い・利用上限） | 対応しない（ユーザーの判断、2026-10-19）。GitHub Actionsは使わず、送信前の `iakit check --local` を必須の検査とする（D-M5-18） | — |

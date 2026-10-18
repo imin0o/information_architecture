@@ -4,15 +4,15 @@ checks:
 - check: accept_route
   mode: full
   host: codex
-  case: webia-001
-  run_id: RUN-WEBIA-013
+  case: taxonomy-001
+  run_id: RUN-TAXONOMY-015
   exit_code: 0
-  minutes: 19.2
+  minutes: 16.6
   placement: <base with spaces>/workspace/.agents/skills
   distribution_ids:
     ia-analysis: DIST-41f4b78f05f7649f
     ia-evaluation: DIST-705e02085ce91b0c
-    ia-orchestrator: DIST-40aa8c7ebcadc034
+    ia-orchestrator: DIST-d64bb19231b37d64
     ia-structure: DIST-5d8f28998d7a886f
     ia-taxonomy: DIST-871469eb2320b9db
   started_with_bundled_runtime:
@@ -21,7 +21,7 @@ checks:
     host: codex
     model: GPT-6
     skills_match_placement: true
-    route_skills: 5
+    route_skills: 4
     inputs_registered: false
     mismatched_skills: []
   left_behind: null
