@@ -60,6 +60,12 @@ def add(directory: Path, source: Path, kind: str, description: str, fmt: str | N
     else:
         inputs["inputs"].append(record)
     save(directory, "inputs.yaml", inputs)
+    if old and any(old[key] != record[key] for key in ("sha256", "path", "format")):
+        # 同じ入力ID・位置でも内容が変われば確認し直す。送信の履歴は証跡として残す。
+        run = load(directory, "run.yaml")
+        if "input_reviews" in run:
+            run["input_reviews"] = [r for r in run["input_reviews"] if r["input_id"] != replace]
+            save(directory, "run.yaml", run)
     result = refresh(directory)
     flagged = _flagged(directory, record["input_id"])
     out = {"input_id": record["input_id"], "path": rel, "format": record["format"],
