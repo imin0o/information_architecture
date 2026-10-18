@@ -1,0 +1,12 @@
+schema_version: 0.1.0
+result: pass
+checks:
+- check: review-record
+  result: pass
+  receipts_added:
+  - VR-0061
+  - VR-0062
+  - VR-0063
+  - VR-0064
+  sample_items: 0
+  errors: []

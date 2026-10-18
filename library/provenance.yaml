@@ -788,7 +788,7 @@ records:
     applicability: ウェブサイト、イントラネット、アプリなどの情報環境の設計を始める場合
     status: supported
     reviewed_by: Codex
-    reviewed_at: '2026-10-17T22:32:45+09:00'
+    reviewed_at: '2026-10-18T12:53:09+09:00'
 - evidence_id: EV-0025
   source_id: BOOK-001
   source_sha256: 
@@ -820,7 +820,7 @@ records:
     applicability: 問題定義で前提を記録する場合
     status: supported
     reviewed_by: Codex
-    reviewed_at: '2026-10-17T22:32:45+09:00'
+    reviewed_at: '2026-10-18T12:53:09+09:00'
 - evidence_id: EV-0026
   source_id: BOOK-001
   source_sha256: 
@@ -1847,3 +1847,65 @@ records:
     status: supported
     reviewed_by: Codex
     reviewed_at: '2026-10-18T11:59:26+09:00'
+- evidence_id: EV-0058
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 1428
+    end_line: 1438
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 50
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    c46229e0f8d75d3a6953599b6c3567b67ccd5b4fe74f81601b935e54eeac4e36
+  excerpt_preview: "If\tthere’s\tone\tthing\tthat\tmany"
+  support_reviews:
+  - claim_id: CLAIM-0064
+    claim: 
+      情報設計の状況はそれぞれ固有である。業界のベストプラクティスの定義や他社の模倣が広がっても、個々の情報システムはそれぞれ独自のものになる。利用者・コンテンツ・文脈のモデルは、個別の案件に固有の要求と機会を知るための道具である
+    claim_sha256: 
+      edf49f43f94feca25bfbdedd8f9f8f4f34f5e82d16912a8bc498c82b960cf2e8
+    applicability: 一般的な手法、ベストプラクティス、他の事例を個別の案件に当てはめる場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T12:53:09+09:00'
+- evidence_id: EV-0059
+  source_id: BOOK-001
+  source_sha256: 
+    1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  extracted_sha256: 
+    c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e
+  extracted_ref:
+    extraction_id: EXTRACT-001-001
+    start_line: 1396
+    end_line: 1403
+  locator:
+    chapter: null
+    section: null
+    pdf_page_indices:
+    - 49
+    printed_page_labels: []
+    epub_href: null
+    element_id: null
+  excerpt_sha256: 
+    873a285eb50523ea67998e9a8ecd6002ad6a65617c0e36212f9f9978339eb6f2
+  excerpt_preview: "Even\tso,\tthis\tis\tan\toversimplified"
+  support_reviews:
+  - claim_id: CLAIM-0065
+    claim: 
+      利用者・コンテンツ・文脈のモデルは現実を単純化したものだが有用である。難しい問いには「場合による」と答えたうえで、問いを利用者・コンテンツ・文脈の3つに分けて答えを組み立てる
+    claim_sha256: 
+      cdf4ea9d176dcdbaa7738a8cedd5f361543dbb4fe68b5eb73e02c1b0dea359e0
+    applicability: 一般的な答えが決まらない設計上の問いを判断する場合
+    status: supported
+    reviewed_by: Codex
+    reviewed_at: '2026-10-18T12:53:09+09:00'

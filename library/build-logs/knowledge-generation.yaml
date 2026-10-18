@@ -103,3 +103,21 @@ generations:
   - {path: library/books/BOOK-005/notes.md, sha256: 28e8c41efbc32bbd6d39f40bf4ff0aa53616d89c88aac0a275e91d369dec39a5}
   - {path: library/terms.yaml, sha256: 159d53b8c0225c4cff838719271e9da416f307189b189af8dc2eb1fc49244587}
   review: {reviewed_by: null, reviewed_at: null}
+- generation_id: GEN-004
+  generated_at: "2026-10-18T14:00:00+09:00"
+  host: Claude Code（VS Code拡張）
+  model: claude-opus-5-5
+  approval: milestones.md M3「送信・公開の許可」2026-10-17の記録
+  instruction:
+    path: library/build-logs/instructions/knowledge-integration-v2.md
+    sha256: 622d935d7e9ba842b43ea24fb7591c55e8c5635a47b6202b0b2eeec889b32d3c
+  # NEED-09の後半の根拠を探すため、GEN-002で読んだ2章の範囲を読み直し、語句検索の該当箇所を読んだ。検索は行番号と件数だけを出力した
+  inputs:
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 1395, end_line: 1439}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 1700, end_line: 1721}
+  - {extraction_id: EXTRACT-001-001, extracted_sha256: c9b054e4bcc4e9f7ecc54bb954a1849b7ddb68d597a9af3f1e6e4fcc57a3c01e, start_line: 1995, end_line: 2010}
+  searches: []
+  outputs:
+  - {path: library/provenance.yaml, sha256: f419343f25b14f7b930d68117210a863f87c14c2652765a2e8ffad14c0cf6ccd}
+  - {path: library/methods/applicability-check.md, sha256: dc520131adb934cb6be089aea7a688afa5ecfa956f86feea1efa82c760b8abe1}
+  review: {reviewed_by: null, reviewed_at: null}

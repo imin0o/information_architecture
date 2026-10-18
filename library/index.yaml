@@ -113,6 +113,13 @@ entries:
            CLAIM-0061, CLAIM-0062, CLAIM-0063]
   terms: []
   conflicts: []
+- knowledge_id: KN-016
+  kind: method
+  title: 文献の適用条件と案件の条件の照合
+  path: library/methods/applicability-check.md
+  claims: [CLAIM-0026, CLAIM-0027, CLAIM-0064, CLAIM-0065]
+  terms: []
+  conflicts: []
 needs:
 - need_id: NEED-01
   cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
@@ -166,8 +173,8 @@ needs:
   cases: [CASE-TAXONOMY-001]
   rubric_items: [R-06]
   description: 入力資料どうしの矛盾や、文献の適用条件と案件の条件の違いを記録して判断する方法
-  entries: [KN-014]
-  gap: 文献の適用条件と案件の条件が異なる場合の扱いは文献の根拠が未登録。判断記録の契約（M2）の assumptions・alternatives で扱う
+  entries: [KN-014, KN-016]
+  gap: null
 - need_id: NEED-10
   cases: [CASE-WEBIA-001, CASE-TAXONOMY-001]
   rubric_items: [R-07]

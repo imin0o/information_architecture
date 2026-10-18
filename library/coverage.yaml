@@ -8,7 +8,7 @@ books:
     EXTRACT-001-001の2章（3領域）、6章（組織化）、7章（ラベル）、8章（ナビゲーションの種類）、11章（コンテンツ分析、カードソート、ユーザーテスト）、
     13章（図による文書化）の一部を統合した。精読範囲内の正確な方式の各種類、ナビゲーションの設計論、インタビューの質問例は未統合。
     9章（検索）、10章（統制語彙）、12章（戦略）ほかは全体未統合。図と画像だけのページは抽出に内容がないため統合しない（D-M3-21）
-  mvp_impact: NEED-01・05〜08・10の根拠（確認済み）
+  mvp_impact: NEED-01・05〜08・10の根拠と、NEED-09の後半（文献と案件の適用条件の違い）の根拠（確認済み）
 - {book_id: BOOK-002, status: not_started, remaining: 全体未統合, mvp_impact: NEED-01の候補文献}
 - book_id: BOOK-003
   status: partial
@@ -23,7 +23,7 @@ books:
   remaining: >-
     EXTRACT-005-001の3.3節（組織化の原則の明文化）、6.3節（包含関係と関係の性質）、9.2節（木構造とグラフ）、11.4節（要件の対立）の一部を
     M5の文献追加試験で統合した（D-M3-22）。精読範囲外は全体未統合。図は抽出に内容がないため統合しない
-  mvp_impact: NEED-04（循環の禁止）とNEED-09（矛盾する資料の扱い）の前半の根拠。NEED-09の後半（文献と案件の適用条件の違い）は未登録
+  mvp_impact: NEED-04（循環の禁止）とNEED-09（矛盾する資料の扱い）の前半の根拠（確認済み）
 - {book_id: BOOK-006, status: not_received, remaining: 未受領のため未統合, mvp_impact: 必要知識の候補文献に挙げていない}
 - {book_id: BOOK-007, status: not_started, remaining: 全体未統合, mvp_impact: NEED-01の候補文献}
 - {book_id: BOOK-008, status: not_received, remaining: 未受領のため未統合, mvp_impact: NEED-08の候補文献。BOOK-001で代替できるかは未確認}
