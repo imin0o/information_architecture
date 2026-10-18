@@ -31,7 +31,7 @@ checks:
   result: pass
   targets:
   - git:index
-  files_scanned: 209
+  files_scanned: 214
   known_original_hashes: 10
   violations: []
   errors: []
@@ -80,8 +80,11 @@ checks:
   local_excerpt_check: skipped
   human_source_check: not_run
   existing_receipts:
-    valid: 49
-    stale: []
+    valid: 57
+    stale:
+    - VR-0001
+    - VR-0002
+    - VR-0003
   errors: []
 - check: library
   result: pass
@@ -100,24 +103,27 @@ checks:
     - KN-010
     - KN-011
     - KN-012
+    - KN-013
+    - KN-014
+    - KN-015
     hypothesis: []
     not_supported: []
   needs:
     NEED-01: adopted
     NEED-02: adopted
     NEED-03: adopted
-    NEED-04: pending
+    NEED-04: adopted
     NEED-05: adopted
     NEED-06: adopted
     NEED-07: adopted
     NEED-08: adopted
-    NEED-09: gap
+    NEED-09: pending
     NEED-10: adopted
   coverage:
     status_counts:
       not_received: 9
-      not_started: 7
-      partial: 2
+      not_started: 6
+      partial: 3
     extractions:
       EXTRACT-001-001:
         read:
@@ -247,9 +253,40 @@ checks:
           - 10083
         - - 10103
           - 10108
+      EXTRACT-005-001:
+        read:
+        - - 4082
+          - 4095
+        - - 7672
+          - 7687
+        - - 13110
+          - 13171
+        - - 13330
+          - 13389
+        - - 20640
+          - 20699
+        - - 24930
+          - 24974
+        - - 25010
+          - 25029
+        displayed_lines: 14
+        integrated:
+        - - 4082
+          - 4089
+        - - 13119
+          - 13128
+        - - 13337
+          - 13345
+        - - 13368
+          - 13380
+        - - 20670
+          - 20689
+        - - 24946
+          - 24970
   sample_reviews:
     EXTRACT-001-001: issue
     EXTRACT-003-001: issue
+    EXTRACT-005-001: issue
   quote_ledger:
     BOOK-001:
       previews: 26
@@ -263,7 +300,17 @@ checks:
       words_total: 232
       words_unique_spans: 232
       overlap_undetermined: 0
+    BOOK-005:
+      previews: 8
+      quotes: 0
+      words_total: 38
+      words_unique_spans: 38
+      overlap_undetermined: 0
   edited_after_generation:
+  - library/books/BOOK-005/notes.md
+  - library/methods/conflicting-requirements.md
+  - library/methods/hierarchy-acyclicity.md
+  - library/methods/homograph-disambiguation.md
   - library/provenance.yaml
   - library/terms.yaml
   human_review: not_run
@@ -272,7 +319,7 @@ checks:
   target: regenerated
   result: pass
   errors: []
-  existing_receipts_checked: 119
+  existing_receipts_checked: 141
   distributions:
   - skill: ia-analysis
     distribution_id: DIST-2e5a16c0f1d552f2
@@ -285,17 +332,17 @@ checks:
       27f029b1c5411be7384ac65675c791bdcd2614799dc48a9f24a9669d64249129
     files: 20
   - skill: ia-orchestrator
-    distribution_id: DIST-6f666de07e455b50
+    distribution_id: DIST-1afe928010395c27
     bundle_receipt_sha256: 
-      a8f5a6683e6790dacd620990d1363e1a1c16061f20a04fef477659276ae5a534
-    files: 78
+      a70980678c6abe22774f67f56ec62b608d251c47d9741b33d19ad024ba078775
+    files: 80
   - skill: ia-structure
     distribution_id: DIST-2ea40107d1032f43
     bundle_receipt_sha256: 
       156a7fc8f515e1f366ed108d8b1b43da11d2fe3577c4dfaf9d42d267732e9cb2
     files: 22
   - skill: ia-taxonomy
-    distribution_id: DIST-ffa02d2ebf688d7a
+    distribution_id: DIST-5c241d90fd7769cb
     bundle_receipt_sha256: 
-      b3cd55c260d2600f19e8f13e865079b80326476ee02a9a0bd9617e1bc46a4974
-    files: 24
+      72fdb08787156a26d989c1cfba35d51e1fc5e469eb69e3460ae788e90a7feedb
+    files: 26
