@@ -43,6 +43,8 @@ uv run --locked iakit run init runs/<run_id> --run-id <run_id> --task-type <web_
 
 依頼を処理するために入力をホストのモデルへ読ませる場合も、ユーザーの許可を `approvals` に記録する（`destination_kind: host_llm`）。
 
+ユーザーがプロファイルに常設の許可（`IAKIT_PROFILE`、なければ `~/.iakit/approvals.yaml`）を置いている場合は、入力を登録するたびに `iakit run approvals runs/<run_id>` で `approvals` へ写す。写せるのは、作業中のホストのLLMと独立判定の相手（Claude CodeとCodexの相互）への送信、区分 `internal` まで、入力と派生物だけである。範囲外の項目は写されず、その送信はこれまでどおり送る前に止める。
+
 ### 3. 入力を登録する
 
 依頼の説明、ヒアリングの回答、資料をすべて入力として登録する。回答は会話のまま残さず、ファイルに保存して `kind: hearing_answer` で登録する。
@@ -78,7 +80,17 @@ uv run --locked iakit input review runs/<run_id> <入力ID> --outcome <not_instr
 1. 担当Skill（[routing.md](routing.md)）のSKILL.mdを読み、その手順に従う。前段階の成果物はIDと版を確かめて入力に使う。
 2. 段階で読んだ知識を `iakit run knowledge runs/<run_id> <KN-ID> ...` で記録する（コマンドを使えない環境では、名前をKN-ID、版をライブラリの版、ハッシュを本文ファイルのsha256として `run.yaml` の `knowledge` に書く）。知識本文の「## 仮説・補完」節は文献の主張ではないため、採用理由の根拠に使わない。
 3. 判断は `iakit decision add`、指摘は `iakit finding add` で書き、成果物を `iakit run artifact` で登録する。`decisions.yaml`・`findings.yaml`・成果物の版の表記をテキスト編集しない。依存の変化で後続の成果物は自動で `stale` になる。
-4. `uv run --locked iakit contracts check runs/<run_id>` を実行し、失敗をすべて直してから次の段階に進む。コマンドを使えない環境では [references/checklist.md](references/checklist.md) で点検し、機械検査は `not_run` として報告する。
+4. `iakit run gate runs/<run_id> --stage <段階>` で契約検査を行い、失敗をすべて直してから次の段階に進む。失敗した場合は、エラーの内容から記録や成果物を直して同じコマンドを再実行する。同じ段階で同じ誤りが3回続くと、コマンドが中断（`interrupted`）を記録する。その場合は直す試みをやめ、手順8の報告に進む。コマンドを使えない環境では [references/checklist.md](references/checklist.md) で点検し、機械検査は `not_run` として報告する。
+
+### 5a. 一括実行
+
+ユーザーが段階ごとの確認を求めていない限り、手順4から9までを止めずに続けて実行する。Analyze→Classify→Structure（Web IAのみ）→Validate→Refine（最大2巡）→終了→独立判定（固定ケースのみ）の順に進み、段階の区切りでユーザーの返事を待たない。止めるのは次の場合だけである。
+
+- 許可の範囲外の送信が必要になった（送らずに `transmissions` へ `blocked` を記録して進める。送信なしで進められない作業は報告に回す）。
+- 費用が発生する操作、要件・MVP範囲の変更が必要になった（実行せず、報告の「人の判断が必要な事項」に回す）。
+- `iakit run gate` が中断を記録した。
+
+模擬評価（ia-evaluation）を行う場合も、評価者の起動と回答の登録を一括実行に含める。`iakit simulation kit` の材料だけを渡したサブエージェントを評価者として起動し、回答を `iakit simulation add` で登録する。ホストが評価者の起動を拒否した場合は、得られた試行だけを登録し、拒否されたことを検証計画の実行状況に書く。
 
 ### 6. 未対応の経路
 
@@ -98,13 +110,17 @@ Validate（ia-evaluation）の指摘は `findings.yaml` に記録される。重
 
 ### 8. 終える
 
-重大な指摘がなく、契約検査に通れば `iakit run event runs/<run_id> completed` で終える。コマンドは終了前に契約検査を再実行し、失敗があれば終了させない。ユーザーへの報告には、成果物の一覧と版、仮定、未検証の判断と検証計画、残る指摘、独立判定の結果を含める。実ユーザー調査をしていない判断を検証済みとして報告しない。
+重大な指摘がなく、契約検査に通れば `iakit run event runs/<run_id> completed` で終える。コマンドは終了前に契約検査を再実行し、失敗があれば終了させない。
+
+独立判定（手順9）の後、または判定を行わない実行では終了の後に、`iakit run report runs/<run_id>` で終了報告 `report.md` を作る。報告は、成果物の一覧と版、仮定、検証の区別（実測・模擬評価・未検証）、残る指摘、独立判定の結果、人の判断が必要な事項（未回答の質問、止めた送信、未解決の重大な指摘、中断、人が行う検証）を記録から導く。ユーザーへの報告はこの内容に沿って書く。実ユーザー調査をしていない判断を検証済みとして報告しない。
 
 ### 9. 独立判定を受ける
 
 固定した課題ケース（`tests/cases/<case>/case.yaml`）で実行した場合は、成果物を作ったエージェントとは別の判定エージェントに、ルーブリックで内容を判定させる（AC-09）。自分で自分の成果物を合格と判定しない。依頼の文と判定の記録形式は [references/independent-review.md](references/independent-review.md) にある。
 
-判定の記録 `rubric-judgment.yaml` は `iakit run judgment runs/<run_id> --case <case>` で検査する。`fail` で重大（`critical`）な問題が挙がった場合は、その問題を `findings.yaml` の指摘として加え、Refineの上限（2巡）の範囲で修正し、再び判定を受ける。
+リポジトリで実行する場合は `uv run --locked iakit run judge runs/<run_id> --case <case>` を使う。コマンドは常設の許可を写し、判定の相手への送信の許可を確かめてから相手のホストを起動し、判定の記録を `iakit run judgment` と同じ検査にかけ、判定者のホストとモデルを履歴に残す。許可がなければ起動せず `not_run` を返す。`fail` の場合は、判定の問題と `fail` の項目をコマンドが `findings.yaml` の指摘に加えて登録し、実行を `in_progress` に戻す。Refineの上限（2巡）の範囲で修正し、再び終えてから判定を受け直す。上限に達していれば手順7のとおり `unresolved` で終える。
+
+判定者を手で起動した場合は、判定の記録 `rubric-judgment.yaml` を `iakit run judgment runs/<run_id> --case <case>` で検査し、`fail` で重大（`critical`）な問題を `findings.yaml` の指摘として加える。
 
 ## 中断と再開
 

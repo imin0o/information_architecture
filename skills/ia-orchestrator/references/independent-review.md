@@ -11,6 +11,8 @@
 
 `run.yaml` の `environment` と同じホスト・モデルの組は、`iakit run judgment` が自己評価として拒否する。
 
+`iakit run judge runs/<run_id> --case <case>` は、この表のとおりに相手のホストを起動し、次の「依頼文」節の文を埋めて渡す。依頼文を変えるときはこの節を直す（コマンドはこの節を読む）。
+
 ## 送信の許可
 
 判定エージェントに成果物を読ませることは、そのエージェントの提供元への送信になる。
@@ -18,6 +20,8 @@
 1. `run.yaml` の `approvals` に、送信先（`destination`）、`destination_kind: external_service`、データの種類（`input`・`derived`）、入力ID、上限の機密区分が含まれる許可があることを確かめる。なければ判定を依頼せず、`not_run` として報告する。
 2. `confidential` の入力または派生物を含む実行は、判定を依頼しない。
 3. 依頼したら `transmissions` に `outcome: sent` で記録する。
+
+`iakit run judge` は、1の許可を常設の許可（`iakit run approvals`）も含めて確かめ、2の区分を照合し、起動できた場合に3を記録する。
 
 ## 依頼文
 
@@ -58,5 +62,5 @@ judge には agent・host・model を正しく書いてください。
 ## 判定の後
 
 - `pass`: 実行の報告に判定者、判定日時、ルーブリックの版、`major`・`minor` の問題と、それぞれを残す理由と影響（判定の `residual`）を載せる。`input_gaps` は、ユーザーに確かめてもらう事項として載せる。残置の了承（`accepted`）は解消ではないため、`critical` の指摘を `accepted` にしても `pass` にはならない。
-- `fail`: 判定の問題と `fail` の項目を `findings.yaml` の指摘として加え（`basis` に判定ファイルと項目を書く）、Refineの上限内で修正して再び判定を受ける。上限に達しても重大な問題が残れば `unresolved` として報告する。重大でない問題だけが残った場合は、理由と影響をia-review.mdに書いて完了とし、判定の `fail` を報告に載せる。
+- `fail`: 判定の問題と `fail` の項目を `findings.yaml` の指摘として加え（`basis` に判定ファイルと項目を書く。`iakit run judge` はこれを自動で行う）、Refineの上限内で修正して再び判定を受ける。上限に達しても重大な問題が残れば `unresolved` として報告する。重大でない問題だけが残った場合は、理由と影響をia-review.mdに書いて完了とし、判定の `fail` を報告に載せる。
 - 判定の後に成果物の版が変わった場合、旧い判定は現行版を対象にしていないため、`iakit run judgment` が失敗する。判定を受け直す。
