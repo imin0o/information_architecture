@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-from . import decisions, ingest, manifest, provenance, provenance_local, run_outputs, runs, simulations, structure, yamlio
+from . import analytics, decisions, ingest, manifest, provenance, provenance_local, run_outputs, runs, simulations, structure, yamlio
 from .paths import CHECKOUT, EXTRACTED, FIXTURES, ORIGINALS, ROOT
 
 SCHEMAS = {
@@ -163,7 +163,8 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
     decision_list = docs.get("decisions.yaml", {"decisions": []})["decisions"]
     studies, study_errors = decisions.study_index(docs.get("observations.yaml", {"studies": []})["studies"], inputs)
     errors += study_errors
-    sims = {s["simulation_id"]: s for s in docs.get("simulations.yaml", {"simulations": []})["simulations"]}
+    errors += analytics.study_errors(directory, list(studies.values()), inputs)
+    sims ={s["simulation_id"]: s for s in docs.get("simulations.yaml", {"simulations": []})["simulations"]}
     if "simulations.yaml" in docs:
         errors += [f"simulations.yaml: {e}" for e in simulations.record_errors(docs["simulations.yaml"], arts,
                                                                             docs.get("sitemap.yaml"))]

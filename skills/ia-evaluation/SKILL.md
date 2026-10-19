@@ -88,6 +88,22 @@ uv run --locked iakit simulation add runs/<run_id> <ファイル|-> | --json '<J
 
 ツリーテストでは、タスクに `target_content_ids` があれば全件を載せる全ノードと、それぞれの主階層の入口を正解として集計する。省略時は従来どおり経路の末端を正解にする。正解と入口の一覧は評価者へ渡さない。新しい記録には、対象版のサイトマップ本文とハッシュも保存され、契約検査が正解・集計を再導出する。旧形式の記録は現行版のサイトマップで照合できる場合だけ証跡として使える。照合できない過去版は履歴として保持する。模擬評価と、それを参照する判断は、参照元より機密区分を下げられない。
 
+### 3b. 解析データで判断を検証する（任意）
+
+ユーザーがアクセス解析のエクスポート（GA4・Search ConsoleのCSV）を提供した場合は、流入元・端末比率・ページ遷移の構成比で判断を検証できる。解析サービスへ直接接続せず、提供されたファイルだけを使う。
+
+```text
+uv run --locked iakit analytics import runs/<run_id> <CSV> --source ga4|search_console|other \
+  --aspect traffic_source|device|page_transition|other --description <説明> \
+  --period-start YYYY-MM-DD --period-end YYYY-MM-DD --target ART-nnn \
+  --dimension <列> --metric <列> --value <値> [--filter <列>=<値> ...] \
+  --op ge|le --threshold <0〜1> [--min-total 100]
+```
+
+コマンドはCSVを `research_record` として登録し、`--filter` で絞った行のうち `--dimension` が `--value` の行の `--metric` の構成比を求める。構成比が基準を満たせば `supported`、満たさなければ `refuted`、母数が `--min-total` 未満なら `inconclusive` とし、`observations.yaml` に `method: analytics` の調査記録を追加する。期間、取得元、対象の版、基準、観測値も記録する。契約検査は登録済みのCSVから構成比を再計算し、記録の値や結果と異なれば拒否する。
+
+解析データが検証するのは、基準に書いた構成比だけである。たとえば端末比率はスマートフォン優先の判断の根拠になるが、ラベルが理解されるかの根拠にはならない。判断を `tested_*` にする場合は、基準がその判断の仮説を直接表すことを確かめてから、`iakit decision revise` で `validation_record_ids` に `STUDY-nnn` を入れる。判断を使う成果物は、調査記録の入力を依存に加えて登録し直す。
+
 ### 4. 指摘を記録する
 
 `findings.yaml` に指摘を書く（スキーマ `findings.schema.json`）。ファイルをテキスト編集せず、1件ずつ次のコマンドで追加する。コマンドは `finding_id`（`FIND-001` から順）、`round`（現在の巡数）、`status: open` を決め、`target` の `version` を省けば対象の現行版を補う。スキーマや指摘ごとの整合性に合わなければ書き込まない。再評価で同じ問題を見つけた場合は新しく追加せず、既存の指摘の状態を更新する。

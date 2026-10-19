@@ -1,11 +1,11 @@
-"""iakit decision・finding・question・simulation・measure の引数と実行（記録の書き込み、P1-2・P1-3・P2）。"""
+"""iakit decision・finding・question・simulation・measure・analytics の引数と実行（記録の書き込み、P1〜P4）。"""
 
 import sys
 from pathlib import Path
 
-from . import decision_cmd, finding_cmd, measure, question_cmd, simulation_cmd, yamlio
+from . import analytics_cmd, decision_cmd, finding_cmd, measure, question_cmd, simulation_cmd, yamlio
 
-GROUPS = ("decision", "finding", "question", "simulation", "measure")
+GROUPS = ("decision", "finding", "question", "simulation", "measure", "analytics")
 
 
 def _data_args(p) -> None:
@@ -49,6 +49,25 @@ def add_parsers(sub) -> None:
     sa = sc.add_parser("add", help="試行の記録から到達率を導いて simulations.yaml に追加する")
     sa.add_argument("dir", type=Path)
     _data_args(sa)
+    ai = sub.add_parser("analytics").add_subparsers(dest="action", required=True).add_parser(
+        "import", help="解析データのCSVエクスポートを登録し、構成比を基準と比べた調査記録を observations.yaml に追加する")
+    ai.add_argument("dir", type=Path)
+    ai.add_argument("file", type=Path)
+    ai.add_argument("--source", required=True, choices=["ga4", "search_console", "other"])
+    ai.add_argument("--aspect", required=True, choices=["traffic_source", "device", "page_transition", "other"])
+    ai.add_argument("--description", required=True)
+    ai.add_argument("--period-start", required=True, metavar="YYYY-MM-DD")
+    ai.add_argument("--period-end", required=True, metavar="YYYY-MM-DD")
+    ai.add_argument("--target", required=True, metavar="ART-nnn", help="検証する判断の対象成果物（現行版を記録する）")
+    ai.add_argument("--dimension", required=True, help="値を数える列")
+    ai.add_argument("--metric", required=True, help="指標の列（セッション数・クリック数など）")
+    ai.add_argument("--value", required=True, help="構成比を測る次元の値")
+    ai.add_argument("--filter", nargs="*", default=[], metavar="列=値", help="母集団を絞る条件（ページ遷移の遷移元など）")
+    ai.add_argument("--op", required=True, choices=["ge", "le"], help="ge: 構成比が基準以上で supported")
+    ai.add_argument("--threshold", required=True, type=float, help="基準の構成比（0〜1）")
+    ai.add_argument("--min-total", type=float, default=analytics_cmd.DEFAULT_MIN_TOTAL,
+                    help="母数がこれ未満なら inconclusive")
+    ai.add_argument("--classification", choices=["public", "internal", "confidential"])
     ms = sub.add_parser("measure").add_subparsers(dest="action", required=True).add_parser(
         "structure", help="サイトマップ（とビルド済みサイト）の導線を測り、measurements/structure.yaml に書く")
     ms.add_argument("dir", type=Path)
@@ -85,6 +104,16 @@ def command(args) -> int:
         elif args.group == "simulation":
             out = (simulation_cmd.kit(args.dir, args.method) if args.action == "kit"
                    else simulation_cmd.add(args.dir, _data(args)))
+        elif args.group == "analytics":
+            filters = dict(f.split("=", 1) for f in args.filter if "=" in f)
+            if len(filters) != len(args.filter):
+                raise ValueError("--filter は 列=値 の形で指定する")
+            out = analytics_cmd.import_export(args.dir, args.file, {
+                "source": args.source, "aspect": args.aspect, "description": args.description,
+                "period_start": args.period_start, "period_end": args.period_end, "target": args.target,
+                "dimension": args.dimension, "metric": args.metric, "value": args.value, "filters": filters,
+                "op": args.op, "threshold": args.threshold, "min_total": args.min_total,
+                "classification": args.classification})
         else:
             out = measure.structure(args.dir, args.site, args.baseline, args.max_clicks)
     except (ValueError, OSError, yamlio.DataError) as exc:

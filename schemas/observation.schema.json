@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "observation.schema.json",
   "title": "実ユーザー調査の記録 runs/<run_id>/observations.yaml（FR-07、AC-07）",
-  "description": "ユーザーが提供した調査記録だけを登録する。LLMの模擬評価や専門家の点検は登録できない。個人情報は記録しない",
+  "description": "ユーザーが提供した調査記録と、許可された解析データのエクスポートから導いた記録だけを登録する。LLMの模擬評価や専門家の点検は登録できない。個人情報は記録しない",
   "type": "object",
   "required": ["schema_version", "run_id", "studies"],
   "additionalProperties": false,
@@ -28,7 +28,42 @@
         "input_id": {"description": "調査記録を登録した入力", "$ref": "common.schema.json#/$defs/input_id"},
         "locator": {"$ref": "common.schema.json#/$defs/locator"},
         "summary": {"$ref": "common.schema.json#/$defs/nonempty"},
-        "classification": {"$ref": "common.schema.json#/$defs/classification"}
+        "classification": {"$ref": "common.schema.json#/$defs/classification"},
+        "analytics": {"$ref": "#/$defs/analytics"}
+      },
+      "if": {"properties": {"method": {"const": "analytics"}}},
+      "then": {"required": ["analytics"]},
+      "else": {"not": {"required": ["analytics"]}}
+    },
+    "analytics": {
+      "description": "解析データの検証条件と観測値（P4-1）。iakit analytics import が書き、契約検査が入力から再計算する",
+      "type": "object",
+      "required": ["source", "aspect", "period", "dimension", "metric", "value", "filters", "op", "threshold",
+                   "min_total", "observed"],
+      "additionalProperties": false,
+      "properties": {
+        "source": {"enum": ["ga4", "search_console", "other"]},
+        "aspect": {"enum": ["traffic_source", "device", "page_transition", "other"]},
+        "period": {
+          "type": "object",
+          "required": ["start", "end"],
+          "additionalProperties": false,
+          "properties": {"start": {"type": "string", "format": "date"}, "end": {"type": "string", "format": "date"}}
+        },
+        "dimension": {"description": "値を数える列", "$ref": "common.schema.json#/$defs/nonempty"},
+        "metric": {"description": "数える指標の列（セッション数・クリック数など）", "$ref": "common.schema.json#/$defs/nonempty"},
+        "value": {"description": "構成比を測る次元の値", "$ref": "common.schema.json#/$defs/nonempty"},
+        "filters": {"description": "母集団を絞る列と値（ページ遷移の遷移元など）", "type": "object",
+                    "additionalProperties": {"type": "string"}},
+        "op": {"description": "ge: 構成比が threshold 以上で supported、le: 以下で supported", "enum": ["ge", "le"]},
+        "threshold": {"type": "number", "minimum": 0, "maximum": 1},
+        "min_total": {"description": "母数がこれ未満なら inconclusive", "type": "number", "minimum": 0},
+        "observed": {
+          "type": "object",
+          "required": ["matched", "total", "share"],
+          "additionalProperties": false,
+          "properties": {"matched": {"type": "number"}, "total": {"type": "number"}, "share": {"type": "number"}}
+        }
       }
     }
   }
