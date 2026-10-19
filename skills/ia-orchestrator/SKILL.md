@@ -118,7 +118,7 @@ Validate（ia-evaluation）の指摘は `findings.yaml` に記録される。重
 
 固定した課題ケース（`tests/cases/<case>/case.yaml`）で実行した場合は、成果物を作ったエージェントとは別の判定エージェントに、ルーブリックで内容を判定させる（AC-09）。自分で自分の成果物を合格と判定しない。依頼の文と判定の記録形式は [references/independent-review.md](references/independent-review.md) にある。
 
-リポジトリで実行する場合は `uv run --locked iakit run judge runs/<run_id> --case <case>` を使う。コマンドは常設の許可を写し、判定の相手への送信の許可を確かめてから相手のホストを起動し、判定の記録を `iakit run judgment` と同じ検査にかけ、判定者のホストとモデルを履歴に残す。許可がなければ起動せず `not_run` を返す。`fail` の場合は、判定の問題と `fail` の項目をコマンドが `findings.yaml` の指摘に加えて登録し（解決していない同じ指摘は加えない）、実行を `in_progress` に戻す。Refineの上限（2巡）の範囲で修正し、再び終えてから判定を受け直す。上限に達していれば、コマンドが指摘を `unresolved` にして実行を `unresolved` で終えるので、判定を受け直さずに報告する。判定者が判定の記録以外のファイルを変えた場合、コマンドは判定を採らずに `fail` を返す。変わったファイルを人の判断が必要な事項として報告する。
+リポジトリで実行する場合は `uv run --locked iakit run judge runs/<run_id> --case <case>` を使う。コマンドは常設の許可を写し、判定の相手への送信の許可を確かめてから相手のホストを起動し、判定の記録を `iakit run judgment` と同じ検査にかけ、判定者のホストとモデルを履歴に残す。許可がなければ起動せず `not_run` を返す。`fail` の場合は、判定の問題と `fail` の項目をコマンドが `findings.yaml` の指摘に加えて登録し（解決していない同じ指摘は加えない）、実行を `in_progress` に戻す。Refineの上限（2巡）の範囲で修正し、再び終えてから判定を受け直す。上限に達していれば、コマンドが指摘を `unresolved` にして実行を `unresolved` で終えるので、判定を受け直さずに報告する。判定を受け直すと、判定に由来する `open` の指摘のうち、項目が `fail` でなく問題が挙がらず、対象が指摘より新しい版になったものを、コマンドが `resolved` にする。その記録で stale になった成果物は影響なしとして登録し直し、実行の状態を保つ。判定者が判定の記録以外のファイルを変えた場合、コマンドは判定を採らずに `fail` を返す。変わったファイルを人の判断が必要な事項として報告する。
 
 判定者を手で起動した場合は、判定の記録 `rubric-judgment.yaml` を `iakit run judgment runs/<run_id> --case <case>` で検査し、`fail` で重大（`critical`）な問題を `findings.yaml` の指摘として加える。
 

@@ -158,6 +158,27 @@ def test_judge_after_refine_limit_ends_unresolved_without_duplicates(run_dir, tm
     assert yamlio.load(run_dir / "run.yaml")["refine"]["reported_to_user"] is True
 
 
+def test_passing_rejudgment_resolves_judge_findings_on_newer_version(run_dir, tmp_path):
+    from iakit import judge_findings
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+    fid = judge_cmd.judge(run_dir, "webia-001", call=fake_judge(run_dir, fail_change))["findings_added"][0]
+    passing = record(yamlio.load(run_dir / "run.yaml"))
+    # 対象の版が進んでいなければ、判定が pass でも resolved にできない（resolved_in は新しい版に限る）
+    assert judge_findings.settle(run_dir, passing) == []
+    run = yamlio.load(run_dir / "run.yaml")
+    next(a for a in run["artifacts"] if a["artifact_id"] == "ART-006")["version"] = 2
+    (run_dir / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+    # 同じ問題が再び挙がれば解消しない
+    raised = record(yamlio.load(run_dir / "run.yaml"))
+    fail_change(raised)
+    assert judge_findings.settle(run_dir, raised) == []
+    run_inputs.event(run_dir, "completed", "Refineを終えた")
+    assert judge_findings.settle(run_dir, passing) == [fid]
+    assert yamlio.load(run_dir / "run.yaml")["status"] == "completed"
+    found = next(f for f in yamlio.load(run_dir / "findings.yaml")["findings"] if f["finding_id"] == fid)
+    assert found["status"] == "resolved" and found["resolved_in"] == {"artifact_id": "ART-006", "version": 2}
+
+
 def test_judge_rejects_changes_outside_judgment(run_dir, tmp_path):
     write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
     inner = fake_judge(run_dir)

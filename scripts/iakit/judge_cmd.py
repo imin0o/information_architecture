@@ -13,10 +13,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from . import finding_cmd, judgment, manifest, run_cmd, run_inputs, runs, standing, yamlio
+from . import judge_findings, judgment, manifest, standing, yamlio
 from .decisions import RANK, max_classification
 from .paths import SKILLS
-from .run_outputs import STAGE_KINDS
 from .run_store import load, now, save
 
 REFERENCE = SKILLS / "ia-orchestrator" / "references" / "independent-review.md"
@@ -28,8 +27,6 @@ COMMANDS = {
     "codex": lambda cwd, prompt: ["codex", "exec", "--skip-git-repo-check", "-s", "workspace-write", "-C", str(cwd),
                                   prompt],
 }
-STAGE_OF = {k: s for s, kinds in STAGE_KINDS.items() for k in kinds}
-ART = re.compile(r"(?<![0-9A-Za-z_-])(ART-[0-9]{3})(?![0-9])")
 
 
 def request_text(run_path: str, run_id: str, case: str) -> str:
@@ -78,64 +75,8 @@ def _history(directory: Path, note: str) -> None:
     save(directory, "run.yaml", run)
 
 
-def _target(run: dict, basis: list[str]) -> dict:
-    """根拠に挙がった最初の登録済み成果物。なければ評価の記録（ia_review）を対象にする。"""
-    arts = {a["artifact_id"]: a for a in run["artifacts"] if a["status"] == "current"}
-    for b in basis:
-        for aid in ART.findall(b):
-            if aid in arts:
-                return arts[aid]
-    return next(a for a in run["artifacts"] if a["kind"] == "ia_review")
-
-
 def _snapshot(directory: Path) -> dict[str, str]:
     return {p.relative_to(directory).as_posix(): manifest.sha256_file(p) for p in directory.rglob("*") if p.is_file()}
-
-
-def _open_findings(directory: Path) -> dict[tuple[str, str], str]:
-    """解決していない指摘を（対象, 問題）で引く。判定を受け直しても同じ指摘を二重に加えない。"""
-    path = directory / finding_cmd.NAME
-    found = yamlio.load(path)["findings"] if path.is_file() else []
-    return {(f["target"]["artifact_id"], f["problem"]): f["finding_id"] for f in found if f["status"] != "resolved"}
-
-
-def to_findings(directory: Path, j: dict) -> dict:
-    """判定の問題と、問題に挙がっていない fail の項目を指摘として加え、findings.yaml を登録し直す。
-
-    解決していない同じ指摘は加えずに挙げる。Refineが上限に達していれば、指摘を unresolved にして未解決で終える。
-    """
-    run = load(directory, "run.yaml")
-    known = _open_findings(directory)
-    covered = {i["item"] for i in j["issues"]}
-    entries = [(i["severity"], i["item"], i["problem"], i["basis"], i["residual"]) for i in j["issues"]]
-    entries += [("major", i["item"], f"独立判定で {i['item']} が fail: {i['note'] or '基準を満たさない'}", i["basis"], None)
-                for i in j["items"] if i["result"] == "fail" and i["item"] not in covered]
-    added, existing = [], []
-    for severity, item, problem, basis, residual in entries:
-        art = _target(run, basis)
-        if (art["artifact_id"], problem) in known:
-            existing.append(known[(art["artifact_id"], problem)])
-            continue
-        locator = next((b for b in basis if art["artifact_id"] in b), item)
-        added.append(finding_cmd.add(directory, {
-            "severity": severity, "target": {"artifact_id": art["artifact_id"]}, "locator": locator,
-            "problem": problem, "basis": [f"rubric-judgment.yaml {item}", *basis],
-            "recommendation": f"独立判定の {item} の基準を満たすよう修正する" + (f"（判定の residual: {residual}）" if residual else ""),
-            "resolution_condition": f"再判定で {item} が fail にならず、この問題が issues に挙がらない",
-            "return_to": STAGE_OF[art["kind"]]}, j["rubric_version"])["finding_id"])
-    ids = added + sorted(set(existing) - set(added))
-    exhausted = run["refine"]["rounds"] >= runs.MAX_REFINE_ROUNDS
-    if run["status"] in ("completed", "unresolved"):
-        run_inputs.event(directory, "rerun", f"独立判定 fail の指摘 {ids} をRefineで扱う")
-    if exhausted:
-        for fid in ids:
-            finding_cmd.resolve(directory, fid, "unresolved", note=f"Refineは{runs.MAX_REFINE_ROUNDS}巡を終えている（独立判定）")
-    if added or exhausted:
-        run_cmd.artifact(directory, "findings.yaml", "review_findings", [], [])
-    if exhausted:
-        run_inputs.event(directory, "completed", f"Refineは{runs.MAX_REFINE_ROUNDS}巡を終えている。独立判定 fail の"
-                         f"指摘 {ids} を未解決として報告する", status="unresolved")
-    return {"added": added, "existing": sorted(set(existing)), "status": load(directory, "run.yaml")["status"]}
 
 
 def _record_sent(directory: Path, judge_host: str, inputs: list[dict], approval: dict) -> int:
@@ -212,7 +153,9 @@ def judge(directory: Path, case: str, timeout: int = 3600, call=_call) -> dict:
     if changed:
         result["changed"] = changed
     if j:
-        moved = {"added": [], "existing": []} if j["verdict"] == "pass" else to_findings(directory, j)
+        settled = judge_findings.settle(directory, j)
+        moved = {"added": [], "existing": []} if j["verdict"] == "pass" else judge_findings.to_findings(directory, j)
         result.update(verdict=j["verdict"], judge=j["judge"], findings_added=moved["added"],
-                      findings_existing=moved["existing"], status=load(directory, "run.yaml")["status"])
+                      findings_existing=moved["existing"], findings_resolved=settled,
+                      status=load(directory, "run.yaml")["status"])
     return result
