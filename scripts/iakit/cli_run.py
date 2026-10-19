@@ -22,6 +22,7 @@ def add_parsers(sub) -> None:
     ra.add_argument("--kind", required=True)
     ra.add_argument("--depends", nargs="*", default=[], help="本体から読み取れない依存（INPUT-nnn・ART-nnn）")
     ra.add_argument("--decision", nargs="*", default=[], metavar="IA-nnn:REV")
+    ra.add_argument("--no-impact", metavar="理由", help="stale の成果物を内容を変えずに再登録する。理由は判断として記録する")
     rk = rn.add_parser("knowledge")
     rk.add_argument("dir", type=Path)
     rk.add_argument("ids", nargs="+", metavar="KN-nnn")
@@ -72,7 +73,7 @@ def command(args) -> int:
             out = run_cmd.init(args.dir, args.run_id, args.task_type, args.host, args.model, args.host_version,
                                args.model_version)
         elif args.action == "artifact":
-            out = run_cmd.artifact(args.dir, args.path, args.kind, args.depends, args.decision)
+            out = run_cmd.artifact(args.dir, args.path, args.kind, args.depends, args.decision, args.no_impact)
         elif args.action == "knowledge":
             out = run_inputs.knowledge(args.dir, args.ids)
         elif args.action == "refresh":

@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from iakit import cli_run, contracts, yamlio  # noqa: E402
+from iakit import cli_records, cli_run, contracts, yamlio  # noqa: E402
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -25,6 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="run_iakit")
     sub = parser.add_subparsers(dest="group", required=True)
     cli_run.add_parsers(sub)
+    cli_records.add_parsers(sub)
     check = sub.add_parser("contracts").add_subparsers(dest="action", required=True).add_parser("check")
     check.add_argument("dir", type=Path)
     args = parser.parse_args(argv)
@@ -32,6 +33,8 @@ def main(argv: list[str] | None = None) -> int:
         out = contracts.check_bundle(args.dir)
         sys.stdout.write(yamlio.dumps(out))
         return 0 if out["result"] == "pass" else 1
+    if args.group in cli_records.GROUPS:
+        return cli_records.command(args)
     return cli_run.command(args)
 
 

@@ -184,14 +184,17 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
         errors += structure.inventory_errors(inv, inputs)
     if vocab:
         errors += structure.vocabulary_errors(vocab, inputs)
+    # stale の成果物は作り直すまで使わないため、参照先の版や判断が現行かは問わない（判断の改訂を妨げない）
+    stale = {a["kind"] for a in run["artifacts"] if a["status"] == "stale"} if run else set()
     if "taxonomy.yaml" in docs:
-        errors += structure.taxonomy_errors(docs["taxonomy.yaml"], vocab, inv)
+        current = "taxonomy" not in stale
+        errors += structure.taxonomy_errors(docs["taxonomy.yaml"], vocab, inv, check_refs=current)
         active = decisions.latest_active(decision_list)
         errors += [f"taxonomy.yaml: {s['scheme_id']} が現行でない判断 {s['decision_ref']['decision_id']} を参照している"
-                   for s in docs["taxonomy.yaml"]["schemes"]
-                   if (s["decision_ref"]["decision_id"], s["decision_ref"]["decision_revision"]) not in active]
+                   for s in docs["taxonomy.yaml"]["schemes"] if current
+                   and (s["decision_ref"]["decision_id"], s["decision_ref"]["decision_revision"]) not in active]
     if "sitemap.yaml" in docs:
-        errors += structure.sitemap_errors(docs["sitemap.yaml"], inv, vocab)
+        errors += structure.sitemap_errors(docs["sitemap.yaml"], inv, vocab, check_refs="sitemap" not in stale)
     for name, doc in docs.items():
         if run and "run_id" in doc and doc["run_id"] != run["run_id"]:
             errors.append(f"{name}: run_id が実行記録と一致しない")

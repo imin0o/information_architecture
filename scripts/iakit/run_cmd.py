@@ -1,100 +1,19 @@
-"""実行ディレクトリの作成・入力登録・成果物登録・stale化・再開（4.4、FR-08、IN-02、AC-12）。
+"""成果物登録・stale化（4.4、FR-08、IN-02、AC-12）。実行ディレクトリの作成は run_init、記録の読み書きは run_store。
 
-ハッシュ・版・依存・機密区分の継承は手で書かず、このコマンドで更新する。判断・承認・送信の記録は
-エージェントが YAML に書き、iakit contracts check で検査する。
+ハッシュ・版・依存・機密区分の継承は手で書かず、このコマンドで更新する。判断と指摘は iakit decision・
+iakit finding で書き、承認・送信の記録はエージェントが YAML に書いて iakit contracts check で検査する。
 """
 
-import hashlib
-import re
-from datetime import datetime, timezone
 from pathlib import Path
 
-from . import distverify, manifest, runs, yamlio
+from . import artifact_checks, decision_build, manifest, runs, stamps, yamlio
 from .decisions import artifact_inputs, latest_active, max_classification
-from .paths import SKILLS
+# init・skill_item などは呼出側（cli_run、テスト）の互換のため run_cmd からも参照できるようにする
+from .run_init import CONTRACT_VERSION, LATER_ROUTES, STAGE_SKILLS, init, skill_item  # noqa: F401
+from .run_store import load, now, save
 
-STAGE_SKILLS = runs.STAGE_SKILLS
-LATER_ROUTES = {
-    "corporate_document": ["analyze", "present", "validate"], "exhibition_panel": ["analyze", "present", "validate"],
-    "content_model": ["analyze", "classify", "model", "validate"], "design_system": ["analyze", "classify", "model", "validate"],
-    "rag_knowledge": ["analyze", "classify", "model", "validate"],
-}
 YAML_KINDS = {"content_inventory", "controlled_vocabulary", "taxonomy", "sitemap", "review_findings"}
-DECISION_REF = re.compile(r"\b(IA-[0-9]{3}) r([0-9]+)\b")
-CONTRACT_VERSION = "1.0"
-
-
-def now() -> str:
-    return datetime.now(timezone.utc).astimezone().isoformat(timespec="seconds")
-
-
-def load(directory: Path, name: str) -> dict:
-    path = directory / name
-    if not path.is_file():
-        raise ValueError(f"{path} がない。先に iakit run init を実行する")
-    return yamlio.load(path)
-
-
-def save(directory: Path, name: str, doc: dict) -> None:
-    schema = {"run.yaml": "run.schema.json", "inputs.yaml": "input.schema.json",
-              "decisions.yaml": "decision.schema.json"}[name]
-    errors = yamlio.schema_errors(doc, schema)
-    if errors:
-        raise ValueError(f"{name} がスキーマに合わない: {errors[:3]}")
-    (directory / name).write_text(yamlio.dumps(doc), encoding="utf-8", newline="\n")
-
-
-def skill_item(name: str, skills_root: Path = SKILLS) -> dict | None:
-    """Skillディレクトリ全体の内容ハッシュと、SKILL.md の metadata.version。"""
-    base = skills_root / name
-    if not (base / "SKILL.md").is_file():
-        return None
-    text = (base / "SKILL.md").read_text(encoding="utf-8")
-    front = yamlio.loads(text.split("---", 2)[1]) if text.startswith("---") else {}
-    contract = (front.get("metadata") or {}).get("contract_version")
-    if contract != CONTRACT_VERSION:
-        raise ValueError(f"{name}: 入出力契約の版 {contract!r} は非互換（必要: {CONTRACT_VERSION}）。Skillを更新してから開始する")
-    digest = hashlib.sha256()
-    # 配布先で Python が作るキャッシュは含めない（distverify と同じ扱い）。含めると実行のたびにハッシュが変わる
-    for path in sorted(p for p in base.rglob("*")
-                       if p.is_file() and not distverify.IGNORED_PARTS & set(p.relative_to(base).parts)):
-        digest.update(path.relative_to(base).as_posix().encode() + b"\0" + manifest.sha256_file(path).encode() + b"\n")
-    return {"name": name, "version": str((front.get("metadata") or {}).get("version", "0.0.0")),
-            "sha256": digest.hexdigest()}
-
-
-def init(directory: Path, run_id: str, task_type: str, host: str, model: str, host_version: str | None = None,
-         model_version: str | None = None, skills_root: Path = SKILLS) -> dict:
-    if (directory / "run.yaml").exists():
-        raise ValueError(f"{directory} には実行記録がある。再開は iakit run resume を使う")
-    supported = task_type in runs.ROUTES
-    stages = runs.ROUTES.get(task_type) or LATER_ROUTES[task_type]
-    needed = ["ia-orchestrator"] + [STAGE_SKILLS[s] for s in stages]
-    items = {n: skill_item(n, skills_root) for n in needed}
-    missing = [n for n, item in items.items() if item is None]
-    if supported and missing:
-        raise ValueError(f"標準経路に必要なSkillがない: {missing}。段階を省略せず、配置してから開始する")
-    found = distverify.set_errors(skills_root, needed, require_all=False)
-    if found:
-        raise ValueError(f"配布物の検査に失敗した: {found[:5]}。配布物をディレクトリ単位で入れ替えてから開始する")
-    note = None if supported else (
-        f"MVP未対応の経路（{' → '.join(stages)}）。不足Skill: {missing}。"
-        "対応できる範囲はAnalyzeまでの分析で、残る段階は未実施として報告する")
-    directory.mkdir(parents=True, exist_ok=True)
-    save(directory, "inputs.yaml", {"schema_version": "1.0", "run_id": run_id, "inputs": []})
-    save(directory, "decisions.yaml", {"schema_version": "1.0", "run_id": run_id, "decisions": []})
-    run = {
-        "schema_version": "1.0", "run_id": run_id, "task_type": task_type,
-        "route": {"stages": stages, "supported": supported, "unsupported_note": note},
-        "status": "in_progress", "inputs_sha256": manifest.sha256_file(directory / "inputs.yaml"),
-        "environment": {"host": host, "host_version": host_version, "model": model, "model_version": model_version,
-                        "settings": {}},
-        "skills": [i for i in items.values() if i], "knowledge": [], "artifacts": [], "decision_refs": [],
-        "approvals": [], "transmissions": [], "refine": {"rounds": 0, "unresolved_critical": [], "reported_to_user": False},
-        "history": [{"event": "started", "at": now(), "note": f"{task_type}（supported: {supported}）"}],
-    }
-    save(directory, "run.yaml", run)
-    return {"run_id": run_id, "stages": stages, "supported": supported, "missing_skills": missing}
+EVIDENCE_KINDS = {"ia_review", "review_findings"}
 
 
 def _current_hashes(run: dict, inputs: dict) -> dict[str, str]:
@@ -152,47 +71,45 @@ def refresh(directory: Path, changed_inputs: tuple[str, ...] = ()) -> dict:
     return {"inputs_sha256": sha, "staled": staled}
 
 
-def _body_refs(kind: str, body, text: str) -> tuple[set[str], list[tuple[str, int]]]:
-    """本体が参照する入力・成果物IDと判断参照。"""
-    # 指摘の basis は評価した時点の判断の版を示す証跡で、現行の判断への参照として扱わない
-    refs, decisions = set(), ([] if kind == "review_findings" else
-                              [(m.group(1), int(m.group(2))) for m in DECISION_REF.finditer(text)])
-    if kind == "content_inventory":
-        refs.update(i["input_id"] for i in body["items"])
-    elif kind == "controlled_vocabulary":
-        refs.update(s["input_id"] for c in body["concepts"] for s in c["sources"])
-    elif kind in ("taxonomy", "sitemap"):
-        refs.add(body["inventory"]["artifact_id"])
-        if kind == "taxonomy":
-            refs.add(body["vocabulary"]["artifact_id"])
-            decisions += [(s["decision_ref"]["decision_id"], s["decision_ref"]["decision_revision"])
-                          for s in body["schemes"]]
-    elif kind == "review_findings":
-        refs.update(f["target"]["artifact_id"] for f in body["findings"])
-    return refs, decisions
+def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_refs: list[str],
+             no_impact: str | None = None) -> dict:
+    """成果物を登録する。本体の版・機密区分と、依存先の参照版（評価の記録を除く）はこのコマンドが書き換える。
 
-
-def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_refs: list[str]) -> dict:
+    no_impact は stale の成果物を内容を変えずに再登録するときの確認の理由で、判断として記録する。
+    """
     run, inputs = load(directory, "run.yaml"), load(directory, "inputs.yaml")
-    path = directory / rel
-    if not path.is_file():
+    if not (directory / rel).is_file() and not Path(rel).is_file():
         raise ValueError(f"{rel} がない")
+    rel = stamps.run_relative(directory, rel)
+    path = directory / rel
     text = path.read_text(encoding="utf-8")
     body = yamlio.load(path) if kind in YAML_KINDS else None
     existing = next((a for a in run["artifacts"] if a["kind"] == kind), None)
     sha = manifest.sha256_file(path)
     if existing and existing["path"] != rel:
         raise ValueError(f"{kind} は {existing['path']} で登録済み。同じ型の成果物は1つにする")
+    unchanged = bool(existing) and existing["sha256"] == sha
+    if no_impact and not (existing and existing["status"] == "stale"):
+        raise ValueError("--no-impact は stale の成果物を再登録するときだけ使う")
+    if existing and existing["status"] == "stale" and unchanged and not no_impact:
+        raise ValueError(f"{existing['artifact_id']} は stale で、内容が登録時と同じ。作り直すか、"
+                         f"影響がないことを確かめて --no-impact <理由> で再登録する（理由は判断として記録する）")
     if existing:
-        version = existing["version"] if existing["sha256"] == sha and existing["status"] == "current" else existing["version"] + 1
+        version = existing["version"] if unchanged and existing["status"] == "current" else existing["version"] + 1
         aid = existing["artifact_id"]
     else:
         version = 1
         aid = f"ART-{len(run['artifacts']) + 1:03d}"
-    refs, found = _body_refs(kind, body, text)
+    original = text
+    decisions = load(directory, "decisions.yaml")["decisions"]
+    if kind != "review_findings":
+        # 置き換えられた判断の参照は現行版へ書き換える。指摘の basis は評価時点の証跡なので対象外
+        text = stamps.rewrite_decisions(text, decisions)
+        body = yamlio.loads(text) if kind in YAML_KINDS else None
+    artifact_checks.ref_kind_check(kind, body, run["artifacts"])
+    refs, found = artifact_checks.body_refs(kind, body, text)
     explicit = [(r.split(":")[0], int(r.split(":")[1])) for r in decision_refs]
     decision_items = [{"decision_id": d, "decision_revision": r} for d, r in sorted(set(explicit + found))]
-    decisions = load(directory, "decisions.yaml")["decisions"]
     active = latest_active(decisions)
     if any((r["decision_id"], r["decision_revision"]) not in active for r in decision_items):
         raise ValueError("登録する成果物が未知または現行でない判断を参照している")
@@ -216,23 +133,48 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
     level = max_classification([levels[r] for r in refs] + decision_levels)
     if existing and "classification_override" in existing:
         level = existing["classification"]
-    if body is not None and isinstance(body, dict) and "artifact_id" in body:
-        expected = {"artifact_id": aid, "version": version, "classification": level}
-        wrong = {k: v for k, v in expected.items() if body.get(k) != v}
-        if wrong:
-            raise ValueError(f"{rel}: 本体の {', '.join(f'{k} を {v}' for k, v in wrong.items())} にしてから登録する")
-    entry = {
-        "artifact_id": aid, "kind": kind, "path": rel, "version": version, "sha256": sha, "status": "current",
-        "stale_reason": None, "classification": level,
-        "depends_on": [{"ref": r, "sha256": current[r]} for r in sorted(refs)],
-        "decision_refs": decision_items,
-    }
-    if existing and "classification_override" in existing:
-        entry["classification_override"] = existing["classification_override"]
+    own = {"artifact_id": aid, "version": version, "classification": level}
+    # 評価の記録が示す対象の版は評価した時点の証跡で、現行版へ書き換えない
+    versions = {} if kind in EVIDENCE_KINDS else {a["artifact_id"]: a["version"] for a in run["artifacts"]}
+    stamped = stamps.rewrite(text, kind not in YAML_KINDS,
+                             own if body is None or (isinstance(body, dict) and "artifact_id" in body) else None,
+                             versions)
+    saved = path.read_bytes()
+    if stamped != original:
+        path.write_text(stamped, encoding="utf-8", newline="")
+        sha = manifest.sha256_file(path)
+    try:
+        if body is not None and isinstance(body, dict) and "artifact_id" in body:
+            body = yamlio.load(path)
+            wrong = {k: v for k, v in own.items() if body.get(k) != v}
+            if wrong:
+                raise ValueError(f"{rel}: 本体の {', '.join(f'{k} を {v}' for k, v in wrong.items())} に書き換えられない。"
+                                 "最上位の行に artifact_id・version・classification を1行ずつ書く")
+        entry = {
+            "artifact_id": aid, "kind": kind, "path": rel, "version": version, "sha256": sha, "status": "current",
+            "stale_reason": None, "classification": level,
+            "depends_on": [{"ref": r, "sha256": current[r]} for r in sorted(refs)],
+            "decision_refs": decision_items,
+        }
+        if existing and "classification_override" in existing:
+            entry["classification_override"] = existing["classification_override"]
+        artifact_checks.contract_check(directory, run, entry, decisions)
+    except ValueError:
+        path.write_bytes(saved)  # 登録しない場合は書き換えを戻し、次の試行で内容の変更と誤認させない
+        raise
+    out = {"artifact_id": aid, "version": version, "classification": level}
+    if no_impact:
+        doc = load(directory, "decisions.yaml")
+        record = decision_build.no_impact(run, doc["decisions"], existing, no_impact, now())
+        doc["decisions"].append(record)
+        save(directory, "decisions.yaml", doc)
+        out["no_impact_decision"] = f"{record['decision_id']} r1"
     if existing:
         run["artifacts"][run["artifacts"].index(existing)] = entry
     else:
         run["artifacts"].append(entry)
     save(directory, "run.yaml", run)
-    result = refresh(directory)
-    return {"artifact_id": aid, "version": version, "classification": level, "staled": result["staled"]}
+    out["staled"] = refresh(directory)["staled"]
+    if stamped != original:
+        out["rewritten"] = True
+    return out

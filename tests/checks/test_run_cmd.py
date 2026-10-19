@@ -136,7 +136,7 @@ def test_accepted_critical_cannot_complete_normal_route(tmp_path):
     doc["findings"][0].update(severity="critical", status="accepted")
     (directory / "findings.yaml").write_text(yamlio.dumps(doc), encoding="utf-8")
     run_cmd.artifact(directory, "findings.yaml", "review_findings", [], [])
-    run_cmd.artifact(directory, "ia-review.md", "ia_review", ["ART-009"], [])
+    run_cmd.artifact(directory, "ia-review.md", "ia_review", ["ART-009"], [], no_impact="指摘の状態だけが変わった")
     assert yamlio.load(directory / "run.yaml")["refine"]["unresolved_critical"] == ["FIND-001"]
     assert cli.main(["run", "event", str(directory), "completed"]) == 1
     assert yamlio.load(directory / "run.yaml")["status"] == "in_progress"
@@ -210,12 +210,12 @@ def test_unchanged_input_registration_preserves_instruction_review(run_dir, tmp_
 
 
 def test_artifact_registration_derives_dependencies_and_versions(run_dir):
+    # 本体の版はコマンドが書き換える
     inventory(run_dir, version=2)
-    with pytest.raises(ValueError, match="version を 1"):
-        run_cmd.artifact(run_dir, "content-inventory.yaml", "content_inventory", [], [])
-    inventory(run_dir)
     out = run_cmd.artifact(run_dir, "content-inventory.yaml", "content_inventory", [], [])
-    assert out == {"artifact_id": "ART-001", "version": 1, "classification": "internal", "staled": []}
+    assert out == {"artifact_id": "ART-001", "version": 1, "classification": "internal", "staled": [],
+                   "rewritten": True}
+    assert yamlio.load(run_dir / "content-inventory.yaml")["version"] == 1
     audit(run_dir)
     run_cmd.artifact(run_dir, "information-audit.md", "information_audit", ["ART-001"], [])
     run = yamlio.load(run_dir / "run.yaml")
@@ -249,16 +249,15 @@ def test_classification_is_inherited_from_inputs(run_dir, tmp_path):
     secret.write_text("page_id,title\nP-01,トップ\n", encoding="utf-8")
     run_inputs.add(run_dir, secret, "page_list", "社外秘の一覧", classification="confidential", replace="INPUT-002")
     inventory(run_dir)
-    with pytest.raises(ValueError, match="classification を confidential"):
-        run_cmd.artifact(run_dir, "content-inventory.yaml", "content_inventory", [], [])
+    assert run_cmd.artifact(run_dir, "content-inventory.yaml", "content_inventory", [], [])["classification"] == "confidential"
+    assert yamlio.load(run_dir / "content-inventory.yaml")["classification"] == "confidential"
 
 
 def test_markdown_artifact_rules(run_dir):
     audit(run_dir, "## 概要\n\nIA-001 を参照\n")
-    run_cmd.artifact(run_dir, "information-audit.md", "information_audit", ["INPUT-001"], [])
-    errors = contracts.check_bundle(run_dir)["errors"]
-    assert any("最初の節を「## 仮定に基づく箇所」" in e for e in errors)
-    assert any("IA-001 を版なしで参照" in e for e in errors)
+    # 契約に合わないMarkdownは登録の時点で拒否する
+    with pytest.raises(ValueError, match="最初の節を「## 仮定に基づく箇所」.*IA-001 を版なしで参照"):
+        run_cmd.artifact(run_dir, "information-audit.md", "information_audit", ["INPUT-001"], [])
 
 
 def test_completion_requires_all_stage_artifacts(run_dir):
@@ -371,7 +370,7 @@ def test_new_design_after_evaluation_requires_reevaluation(run_dir):
            "classification": "internal", "rubric_version": None, "findings": []}
     (run_dir / "findings.yaml").write_text(yamlio.dumps(doc), encoding="utf-8")
     run_cmd.artifact(run_dir, "findings.yaml", "review_findings", [], [])
-    (run_dir / "problem-definition.md").write_text("# 問題定義\n\n## 仮定に基づく箇所\n\nなし\n", encoding="utf-8")
+    markdown(run_dir, "problem-definition.md", "problem_definition")
     assert run_cmd.artifact(run_dir, "problem-definition.md", "problem_definition", ["INPUT-001"], [])["staled"] == ["ART-002"]
 
 
@@ -415,7 +414,8 @@ def test_second_refine_can_be_checked_and_finalized(tmp_path, resolved):
     run_cmd.artifact(directory, "findings.yaml", "review_findings", [], [])
     for a in yamlio.load(directory / "run.yaml")["artifacts"]:
         if a["status"] == "stale":
-            run_cmd.artifact(directory, a["path"], a["kind"], [d["ref"] for d in a["depends_on"]], [])
+            run_cmd.artifact(directory, a["path"], a["kind"], [d["ref"] for d in a["depends_on"]], [],
+                             no_impact="再評価の結果に影響しない")
     assert contracts.check_bundle(directory)["result"] == "pass"
     status = "completed" if resolved else "unresolved"
     assert cli.main(["run", "event", str(directory), "completed", "--status", status]) == 0

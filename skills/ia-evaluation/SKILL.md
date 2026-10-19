@@ -63,17 +63,18 @@ ia-orchestratorを使わずに単独で実行していて `iakit` を使えな�
 
 ### 4. 指摘を記録する
 
-`findings.yaml` に指摘を書く（スキーマ `findings.schema.json`）。指摘IDは `FIND-001` から順に付け、再評価で同じ問題を見つけた場合は同じIDを使う。
+`findings.yaml` に指摘を書く（スキーマ `findings.schema.json`）。ファイルをテキスト編集せず、1件ずつ次のコマンドで追加する。コマンドは `finding_id`（`FIND-001` から順）、`round`（現在の巡数）、`status: open` を決め、`target` の `version` を省けば対象の現行版を補う。スキーマや指摘ごとの整合性に合わなければ書き込まない。再評価で同じ問題を見つけた場合は新しく追加せず、既存の指摘の状態を更新する。
+
+```text
+uv run --locked iakit finding add runs/<run_id> <ファイル|-> | --json '<JSON>' [--rubric-version <版>]
+```
 
 - `severity`: `critical` は主要タスクを妨げる問題、根拠の不正な断定（未照合・未レビュー・`not_supported` の主張や未実測の内容を確定事項として扱う）、機密情報の不適切な扱い。`major` は局所的な誤解や不整合。`minor` は意味を変えない表記上の問題。
 - `target`: 指摘した成果物のART-IDと版。`locator` に成果物内の位置（ID、見出し）。
 - `basis`: ルーブリック項目、検査結果、判断・入力・主張のID。
 - `recommendation`・`resolution_condition`: 推奨する修正と、解消したと判定できる条件。
 - `return_to`: 修正を担当する段階。
-- `round`: 初回評価は0、Refine後の再評価は巡数（1・2）。
-- `status`: 新しい指摘は `open`。
-
-問題が見つからない観点も、ia-review.mdに確かめた範囲を書く。指摘がない場合は `findings: []` とする。
+問題が見つからない観点も、ia-review.mdに確かめた範囲を書く。指摘がない場合も `findings.yaml` を `findings: []` で作る（`iakit finding add` を使わずに作る場合は、本体の版と機密区分は登録時にコマンドが書き換える）。
 
 ### 5. 評価報告を書く
 
@@ -100,6 +101,6 @@ uv run --locked iakit run refresh runs/<run_id>
 担当Skillが修正した後に呼ばれた場合は、次を行う。
 
 1. 修正された成果物の新しい版を対象に、手順1〜3をやり直す。
-2. 解消した指摘は `status: resolved` にし、`resolved_in` に解消を確かめた版を書く。解消していなければ `open` のままにする。新たに見つけた問題は、次の番号で `round` を現在の巡数にして追加する。
-3. 2巡目の再評価でも残る重大な指摘は `status: unresolved` にし、ia-review.mdの「未解決の指摘」にユーザーが判断するための情報（影響、選択肢、必要な追加情報）を書く。
-4. findings.yaml、ia-review.md、validation-plan.mdの版を上げて登録し直す。
+2. 解消した指摘は `iakit finding resolve runs/<run_id> FIND-nnn` で `resolved` にする（`resolved_in` には対象の現行版が入る。別の版で確かめた場合は `--version N`）。解消していなければ `open` のままにする。新たに見つけた問題は `iakit finding add` で追加する。
+3. 2巡目の再評価でも残る重大な指摘は `iakit finding resolve runs/<run_id> FIND-nnn --status unresolved --note <要点>` にし、ia-review.mdの「未解決の指摘」にユーザーが判断するための情報（影響、選択肢、必要な追加情報）を書く。
+4. findings.yaml、ia-review.md、validation-plan.mdを登録し直す（版はコマンドが上げる）。内容を変えない成果物は `--no-impact <理由>` で再登録する。

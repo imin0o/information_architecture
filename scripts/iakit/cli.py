@@ -14,8 +14,14 @@
   iakit run init DIR --run-id ID --task-type TYPE --host HOST --model MODEL   実行ディレクトリと経路・Skillの記録を作る
   iakit input add DIR FILE --kind KIND --description TEXT [--format F] [--classification C] [--replace INPUT-nnn]
                                    入力を固定・登録し、位置付きの取込み結果 ingest/<ID>.yaml を作る
-  iakit run artifact DIR PATH --kind KIND [--depends ID ...] [--decision IA-nnn:REV ...]
-                                   成果物のハッシュ・版・依存・機密区分を登録する（依存先が変われば後続をstaleにする）
+  iakit run artifact DIR PATH --kind KIND [--depends ID ...] [--decision IA-nnn:REV ...] [--no-impact 理由]
+                                   成果物のハッシュ・版・依存・機密区分を登録し、本体の版・区分と依存先の参照版を書き換える
+                                   （依存先が変われば後続をstaleにする。--no-impact は影響なしの確認を判断として記録する）
+  iakit decision add|revise|withdraw DIR [IA-nnn] [FILE|- | --json TEXT]
+                                   判断を追加・改訂・撤回する。導出値を補い、契約検査に新しい誤りが出れば書き込まない
+  iakit finding add DIR [FILE|- | --json TEXT] | resolve DIR FIND-nnn [--status S] [--version N]
+                                   評価の指摘を findings.yaml に追加・更新する（登録は run artifact）
+  iakit question answer DIR Q-nnn FILE   回答を hearing_answer として登録し、影響する判断と成果物を示す
   iakit run knowledge DIR KN-nnn ...   段階で読んだ知識本文の内容ハッシュを記録する
   iakit run refresh DIR            入力登録簿のハッシュ・判断参照・未解決の重大な指摘を同期し、依存が変わった成果物をstaleにする
   iakit run event DIR EVENT [--note TEXT] [--status S]   履歴を追加する。resumed は再開前の照合に通った場合だけ
@@ -38,7 +44,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import (accept, accept_host, accept_route, cases, cli_run, contracts, dist, extract_cmd, fixtures, hostprobe, leak_history, leaks, library,
+from . import (accept, accept_host, accept_route, cases, cli_records, cli_run, contracts, dist, extract_cmd, fixtures, hostprobe, leak_history, leaks, library,
                manifest, paths, push_check, review, yamlio)
 
 
@@ -129,6 +135,7 @@ def _parser() -> argparse.ArgumentParser:
     ar.add_argument("--refine", action="store_true", help="fail の独立判定を受けた実行を配置先へ戻してRefineさせる")
 
     cli_run.add_parsers(sub)
+    cli_records.add_parsers(sub)
     ck = with_report(sub.add_parser("check")).add_mutually_exclusive_group()
     ck.add_argument("--local", action="store_true")
     ck.add_argument("--pre-push", action="store_true", help="標準入力の送信予定コミットを一時checkoutで全件検査する")
@@ -144,6 +151,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(str(exc))
     if args.group in ("run", "input"):
         return cli_run.command(args)
+    if args.group in cli_records.GROUPS:
+        return cli_records.command(args)
     if args.group == "fixtures" and args.action == "build":
         for name in fixtures.build():
             print(f"wrote {name}")

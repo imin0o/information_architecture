@@ -4,6 +4,7 @@ import shutil
 from pathlib import Path
 
 from . import ingest, manifest, runs, yamlio
+from .decision_build import LIBRARY_VERSION
 from .paths import ROOT
 from .run_cmd import load, now, refresh, save
 
@@ -156,9 +157,6 @@ def event(directory: Path, name: str, note: str, status: str | None = None) -> d
         run["refine"]["rounds"] += 1
     save(directory, "run.yaml", run)
     return {"event": name, "status": run["status"], "refine_rounds": run["refine"]["rounds"]}
-
-
-LIBRARY_VERSION = "0.1.0"
 
 
 def knowledge(directory: Path, ids: list[str], index_path: Path = ROOT / "library/index.yaml") -> dict:

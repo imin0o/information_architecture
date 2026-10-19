@@ -83,8 +83,10 @@ def _ancestors(cid: str, concepts: dict) -> set[str]:
     return seen
 
 
-def taxonomy_errors(tax: dict, vocab: dict | None, inv: dict | None) -> list[str]:
-    errors = _ref_errors("vocabulary", tax["vocabulary"], vocab) + _ref_errors("inventory", tax["inventory"], inv)
+def taxonomy_errors(tax: dict, vocab: dict | None, inv: dict | None, check_refs: bool = True) -> list[str]:
+    """check_refs=False は stale の分類体系。作り直すまで参照先の版の一致を問わない。"""
+    errors = (_ref_errors("vocabulary", tax["vocabulary"], vocab) + _ref_errors("inventory", tax["inventory"], inv)
+              if check_refs else [])
     if errors:
         return errors
     concepts = {c["concept_id"]: c for c in vocab["concepts"]}
@@ -113,8 +115,8 @@ def taxonomy_errors(tax: dict, vocab: dict | None, inv: dict | None) -> list[str
     return errors
 
 
-def sitemap_errors(site: dict, inv: dict | None, vocab: dict | None) -> list[str]:
-    errors = _ref_errors("inventory", site["inventory"], inv)
+def sitemap_errors(site: dict, inv: dict | None, vocab: dict | None, check_refs: bool = True) -> list[str]:
+    errors = _ref_errors("inventory", site["inventory"], inv) if check_refs else []
     if errors:
         return errors
     nodes = {n["node_id"]: n for n in site["nodes"]}

@@ -1,0 +1,121 @@
+"""判断の追加・改訂・撤回（P1-2、FR-07）。
+
+導出できる値（ID・版・記録日時・Skillとライブラリの版・照合状態・confidence・機密区分）はコマンドが補う。
+書き込んだ後に契約検査を行い、書き込む前になかった誤りが出れば元に戻して拒否する。
+"""
+
+from collections import Counter
+from copy import deepcopy
+from pathlib import Path
+
+from . import contracts, decision_build, provenance, yamlio
+from .decisions import derive_confidence, max_classification
+from .run_cmd import load, now, refresh, save
+
+AUTO = ("decision_id", "decision_revision", "run_id", "status", "supersedes", "recorded_at")
+
+
+def _state(directory: Path) -> tuple[list[str], dict, dict, dict]:
+    """契約検査の誤り一覧と、補完に使う照合状態・入力・調査記録。"""
+    docs, errors = contracts.load_bundle(directory)
+    states = {}
+    if not errors:
+        found, derived = contracts.consistency_errors(directory, docs, provenance.registered_sources())
+        errors, states = errors + found, derived.get("states", {})
+    inputs = {i["input_id"]: i for i in docs.get("inputs.yaml", {"inputs": []})["inputs"]}
+    studies = {s["study_id"]: s for s in docs.get("observations.yaml", {"studies": []})["studies"]}
+    return errors, states, inputs, studies
+
+
+def _derive(d: dict, given: dict, states: dict, inputs: dict, studies: dict) -> dict:
+    """照合状態・機密区分・confidence を記録から導く。指定があればその値を残し、検査で照合する。"""
+    for s in d["sources"]:
+        state = states.get((s.get("evidence_id"), s.get("claim_id")), {})
+        for key in ("source_verification", "support_status"):
+            if key not in s and key in state:
+                s[key] = state[key]
+    used = [inputs[o["input_id"]]["classification"] for o in d["input_observations"] if o.get("input_id") in inputs]
+    used += [studies[sid]["classification"] for sid in d["validation_record_ids"] if sid in studies]
+    if "classification" not in given:
+        d["classification"] = max_classification(used or ["internal"])
+    errors = yamlio.schema_errors({"schema_version": "1.0", "run_id": d["run_id"], "decisions": [d]},
+                                  "decision.schema.json")
+    if "confidence" not in given:
+        d.pop("confidence", None)
+        if not [e for e in errors if not e.startswith("decisions/0: required: confidence")]:
+            d["confidence"] = derive_confidence(d, states)
+    return d
+
+
+def _commit(directory: Path, doc: dict, before: list[str]) -> list[str]:
+    """判断を書き込み、依存をstaleにする。新しい誤りが出れば元に戻す。"""
+    saved = {name: (directory / name).read_bytes() for name in ("decisions.yaml", "run.yaml")}
+    try:
+        save(directory, "decisions.yaml", doc)
+        staled = refresh(directory)["staled"]
+        added = Counter(_state(directory)[0]) - Counter(before)
+        if added:
+            raise ValueError("契約検査に通らないため書き込まない: " + " / ".join(list(added)[:5]))
+    except (ValueError, yamlio.DataError):
+        for name, data in saved.items():
+            (directory / name).write_bytes(data)
+        raise
+    return staled
+
+
+def add(directory: Path, data: dict) -> dict:
+    run, doc = load(directory, "run.yaml"), load(directory, "decisions.yaml")
+    fixed = sorted(set(AUTO) & set(data))
+    if fixed:
+        raise ValueError(f"{fixed} はコマンドが決める。改訂は iakit decision revise を使う")
+    before, states, inputs, studies = _state(directory)
+    stage = data.get("stage", "")
+    d = {"decision_id": decision_build.next_id(doc["decisions"]), "decision_revision": 1, "run_id": run["run_id"],
+         "status": "active", "supersedes": None, **decision_build.DEFAULTS, **data, "recorded_at": now(),
+         "skill_version": data.get("skill_version") or decision_build.skill_version(run, stage),
+         "library_version": data.get("library_version") or decision_build.LIBRARY_VERSION}
+    doc["decisions"].append(_derive(d, data, states, inputs, studies))
+    staled = _commit(directory, doc, before)
+    return {"decision": f"{d['decision_id']} r1", "confidence": d.get("confidence"),
+            "classification": d["classification"], "staled": staled}
+
+
+def _latest(doc: dict, decision_id: str) -> dict:
+    revs = [d for d in doc["decisions"] if d["decision_id"] == decision_id]
+    if not revs:
+        raise ValueError(f"{decision_id} は判断記録にない")
+    latest = max(revs, key=lambda d: d["decision_revision"])
+    if latest["status"] != "active":
+        raise ValueError(f"{decision_id} r{latest['decision_revision']} は {latest['status']} で、改訂できない")
+    return latest
+
+
+def revise(directory: Path, decision_id: str, changes: dict) -> dict:
+    """最新版を写して変更を当て、版を上げる。旧版は superseded にする。"""
+    doc = load(directory, "decisions.yaml")
+    fixed = sorted(set(AUTO) & set(changes))
+    if fixed:
+        raise ValueError(f"{fixed} はコマンドが決める")
+    before, states, inputs, studies = _state(directory)
+    old = _latest(doc, decision_id)
+    # 導出値は変更後の記録から導き直す。指定した場合だけその値を使う
+    d = {k: v for k, v in deepcopy(old).items() if k not in ("confidence", "classification")}
+    for s in d["sources"]:
+        s.pop("source_verification", None)
+        s.pop("support_status", None)
+    d.update(changes, decision_revision=old["decision_revision"] + 1, status="active", recorded_at=now(),
+             supersedes={"decision_id": decision_id, "decision_revision": old["decision_revision"]})
+    old["status"] = "superseded"
+    doc["decisions"].append(_derive(d, changes, states, inputs, studies))
+    staled = _commit(directory, doc, before)
+    return {"decision": f"{decision_id} r{d['decision_revision']}", "superseded": f"{decision_id} r{old['decision_revision']}",
+            "confidence": d.get("confidence"), "classification": d["classification"], "staled": staled}
+
+
+def withdraw(directory: Path, decision_id: str) -> dict:
+    doc = load(directory, "decisions.yaml")
+    before = _state(directory)[0]
+    latest = _latest(doc, decision_id)
+    latest["status"] = "withdrawn"
+    staled = _commit(directory, doc, before)
+    return {"withdrawn": f"{decision_id} r{latest['decision_revision']}", "staled": staled}

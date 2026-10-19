@@ -26,8 +26,11 @@ MARKDOWN_HEADINGS = {
                   "改善の優先度と修正理由", "未解決の指摘", "模擬評価の扱い"],
     "validation_plan": ["未検証の判断と検証方法", "方法の適用可否", "実施の条件", "結果の記録"],
 }
-DECISION_ID = re.compile(r"\bIA-[0-9]{3}\b(?! r[0-9])")
-DECISION_REF = re.compile(r"\b(IA-[0-9]{3}) r([0-9]+)\b")
+# 前後が英数字・ハイフンでないIA-nnnだけを判断IDとみなす。RUN-X-IA-001 のような実行IDの一部には一致させない。
+# 日本語の文字に隣接したID（「判断IA-001の」）は判断IDとして扱う
+_EDGE = r"(?<![0-9A-Za-z_-])"
+DECISION_ID = re.compile(_EDGE + r"IA-[0-9]{3}(?![0-9A-Za-z_-])(?! r[0-9])")
+DECISION_REF = re.compile(_EDGE + r"(IA-[0-9]{3}) r([0-9]+)(?![0-9A-Za-z_])")
 
 
 def _markdown_lines(text: str) -> list[str]:
@@ -121,7 +124,8 @@ def assumption_errors(directory: Path, run: dict, decisions: list[dict]) -> list
     return errors
 
 
-def findings_errors(doc: dict, run: dict) -> list[str]:
+def finding_item_errors(doc: dict, run: dict) -> list[str]:
+    """指摘ごとの検査。実行記録の未解決一覧との同期は登録時に行うため含めない。"""
     errors, seen = [], set()
     arts = {a["artifact_id"]: a for a in run["artifacts"]}
     for f in doc["findings"]:
@@ -140,6 +144,11 @@ def findings_errors(doc: dict, run: dict) -> list[str]:
             errors.append(f"{fid}: resolved_in は対象と同じ成果物の、指摘より新しい登録済みの版にする")
         if f["status"] == "unresolved" and run["refine"]["rounds"] < 2 and f["severity"] == "critical":
             errors.append(f"{fid}: 2巡に達する前の重大な指摘は open のまま修正する")
+    return errors
+
+
+def findings_errors(doc: dict, run: dict) -> list[str]:
+    errors = finding_item_errors(doc, run)
     open_critical = runs.unresolved_critical(doc["findings"])
     if open_critical != sorted(run["refine"]["unresolved_critical"]):
         errors.append(f"refine.unresolved_critical {run['refine']['unresolved_critical']} が指摘の状態 {open_critical} と一致しない")

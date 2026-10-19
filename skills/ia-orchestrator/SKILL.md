@@ -67,7 +67,7 @@ uv run --locked iakit input review runs/<run_id> <入力ID> --outcome <not_instr
 
 - 同じ応答の中で回答が得られた場合は、ファイルに保存して入力として登録し、観察（`input_observations`）として使う。
 - 回答がその場で得られない場合は、ただちに仮定を置いて進める。仮定は判断の `assumptions` に書き、採用理由に欠かせない仮定は `critical: true` にする。仮定に基づく箇所は、各Markdown成果物の最初の節「## 仮定に基づく箇所」に示す。
-- 後から回答が届いた場合は、入力として登録し、その仮定を使った判断を新しい版に置き換える。依存する成果物は自動で `stale` になるので、該当段階から再実行する。
+- 後から回答が届いた場合は、ファイルに保存して `iakit question answer runs/<run_id> Q-nnn <回答ファイル>` で登録する。コマンドは回答を `hearing_answer` として登録し、質問ファイルが `IA-nnn rN` で挙げた判断のうち現行のものと、それを参照する成果物の一覧を出す。挙がった判断を `iakit decision revise` で新しい版に置き換える（回答を `input_observations` に加え、外れた仮定を除く）。依存する成果物は自動で `stale` になるので、該当段階から再実行する。質問ファイルでは、仮定を使った判断を `IA-nnn rN` で示しておく。
 
 仮定の置き方は、入力に最も近い解釈を選び、外れた場合の影響が小さい案を優先する。影響が大きい仮定ほど、検証計画で先に確かめる対象にする。
 
@@ -77,7 +77,7 @@ uv run --locked iakit input review runs/<run_id> <入力ID> --outcome <not_instr
 
 1. 担当Skill（[routing.md](routing.md)）のSKILL.mdを読み、その手順に従う。前段階の成果物はIDと版を確かめて入力に使う。
 2. 段階で読んだ知識を `iakit run knowledge runs/<run_id> <KN-ID> ...` で記録する（コマンドを使えない環境では、名前をKN-ID、版をライブラリの版、ハッシュを本文ファイルのsha256として `run.yaml` の `knowledge` に書く）。知識本文の「## 仮説・補完」節は文献の主張ではないため、採用理由の根拠に使わない。
-3. 成果物を `iakit run artifact` で登録する。依存の変化で後続の成果物は自動で `stale` になる。
+3. 判断は `iakit decision add`、指摘は `iakit finding add` で書き、成果物を `iakit run artifact` で登録する。`decisions.yaml`・`findings.yaml`・成果物の版の表記をテキスト編集しない。依存の変化で後続の成果物は自動で `stale` になる。
 4. `uv run --locked iakit contracts check runs/<run_id>` を実行し、失敗をすべて直してから次の段階に進む。コマンドを使えない環境では [references/checklist.md](references/checklist.md) で点検し、機械検査は `not_run` として報告する。
 
 ### 6. 未対応の経路
@@ -89,7 +89,7 @@ MVP未対応の課題の種類では、`iakit run init` が `route.supported: fa
 Validate（ia-evaluation）の指摘は `findings.yaml` に記録される。重大（`critical`）な指摘が残る場合は、指摘の `return_to` が示す段階を再実行する。
 
 1. 修正を始める前に `iakit run event runs/<run_id> refine --note <対象の指摘ID>` で巡数を進める。
-2. 担当Skillで成果物を修正し、変わった判断は `decision_id` を保ったまま `decision_revision` を上げ、旧版を `superseded` にする。撤回する判断は `withdrawn` にする。
+2. 担当Skillで成果物を修正し、変わった判断は `iakit decision revise` で新しい版にする（旧版は `superseded` になる）。撤回する判断は `iakit decision withdraw` で `withdrawn` にする。
 3. ia-evaluationで再評価し、指摘の状態（`resolved`・`open`）と `resolved_in` を更新する。
 
 2巡目の作業中も段階ごとの契約検査を実行する。巡数が2でも、作業中は終了後の未解決報告を要求しない。3巡目の開始はコマンドが拒否する。
@@ -111,7 +111,7 @@ Validate（ia-evaluation）の指摘は `findings.yaml` に記録される。重
 中断するときは `iakit run event runs/<run_id> interrupted --note <理由>` を記録する。再開するときは `iakit run event runs/<run_id> resumed` を実行する。コマンドは入力登録簿、入力の実体、取込み結果、成果物のハッシュを照合し、不一致があれば再開を止める。取込み結果の内容ハッシュは `inputs.yaml` の `ingest_sha256` に記録する。旧実行で未登録の場合は入力を `input add --replace` で再登録し、命令候補の確認と、`stale` になった成果物の点検をやり直す。
 
 - 入力の実体が変わっていた場合は `iakit input add --replace <input_id>` で再登録する。依存する成果物が `stale` になる。
-- `stale` の成果物は、再生成するか、影響がないことを確かめて再登録するまで現行版として使わない。影響なしとする場合は、その確認を判断として記録する。
+- `stale` の成果物は、再生成するか、影響がないことを確かめて再登録するまで現行版として使わない。影響なしとする場合は `iakit run artifact ... --no-impact <理由>` で再登録する。理由は判断として記録され、版と参照の書き換えはコマンドが行う。
 - ユーザーの調査記録（ツリーテストなど）の対象成果物が変わった場合は、旧調査の適用可否を確かめる。適用できなければ、判断の新しい版を `not_tested` に戻す。
 
 ## 単独の段階実行

@@ -21,7 +21,7 @@ CONFLICTS = "library/conflicts.yaml"
 PACKAGE = ROOT / "scripts" / "iakit"
 ENTRY = ROOT / "scripts" / "run_iakit.py"
 CHECKER = ROOT / "scripts" / "check_artifacts.py"
-SEEDS = ("cli_run", "contracts", "judgment")
+SEEDS = ("cli_records", "cli_run", "contracts", "judgment")
 SCHEMA_REF = re.compile(r'"\$ref":\s*"([a-z0-9-]+\.schema\.json)')
 
 

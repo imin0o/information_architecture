@@ -16,7 +16,19 @@ ia-analysis・ia-taxonomy・ia-structure・ia-evaluationで共通の規則であ
 
 `decisions.yaml` に、構造・分類・方法の採否、適用条件の変更、重要な仮定、評価による修正を記録する。ラベルの転記など判断を伴わない処理は記録しない。同じ理由で行う複数の変更は1つの判断にまとめ、対象IDを `target_ids` に列挙する。
 
+`decisions.yaml` をテキスト編集せず、次のコマンドで書く。内容は1件分のJSONかYAMLで、ファイル、標準入力（`-`）、`--json` のいずれかで渡す。コマンドはスキーマに合わない記録や、契約検査に新しい誤りを生む記録を書き込まない。
+
+```text
+uv run --locked iakit decision add runs/<run_id> <ファイル|-> | --json '<JSON>'
+uv run --locked iakit decision revise runs/<run_id> IA-nnn <変更する項目だけのJSON|YAML>
+uv run --locked iakit decision withdraw runs/<run_id> IA-nnn
+```
+
+`revise` は最新版を写して変更を当て、版を上げて旧版を `superseded` にする。版が変わった判断を参照する成果物は `stale` になる。
+
 ## 判断の項目
+
+`decision_id`・`decision_revision`・`run_id`・`status`・`supersedes`・`recorded_at` はコマンドが決めるため渡さない。`skill_version`・`library_version`、文献根拠の `source_verification`・`support_status`、`confidence`、`classification` は、省けば記録から導く。`sources`・`input_observations`・`alternatives`・`assumptions`・`counter_evidence`・`validation_record_ids` は省けば空、`validation_status` は `not_tested` になる。
 
 | 項目 | 書き方 |
 |---|---|
@@ -54,11 +66,19 @@ ia-analysis・ia-taxonomy・ia-structure・ia-evaluationで共通の規則であ
 
 ## 成果物の登録
 
-成果物を書いたら、実行ディレクトリで登録する。YAML成果物は本体の `artifact_id`・`version`・`classification` を、コマンドが示す値に合わせる。
+成果物を書いたら、実行ディレクトリで登録する。パスは実行ディレクトリからの相対パスでも絶対パスでもよい（記録は相対パスになる）。
 
 ```text
-uv run --locked iakit run artifact runs/<run_id> <パス> --kind <kind> [--depends <ID> ...]
+uv run --locked iakit run artifact runs/<run_id> <パス> --kind <kind> [--depends <ID> ...] [--no-impact <理由>]
 ```
+
+版と参照の書き換えはコマンドが行い、手で直さない。
+
+- YAML成果物の最上位の `artifact_id`・`version`・`classification` と、Markdown成果物の冒頭の `機密区分:` を、登録する値に書き換える。
+- 依存先の参照版（YAMLの `{artifact_id: ART-nnn, version: N}`、Markdownの最初の節より前の `ART-nnn vN`）を現行版に書き換える。評価の記録（findings.yaml、ia-review.md）が示す対象の版は、評価した時点の証跡なので書き換えない。
+- 置き換えられた（`superseded`）判断の参照（`IA-nnn rN`、YAMLの `decision_ref`）を、同じIDの現行版に書き換える。findings.yaml の `basis` は書き換えない。撤回した判断は書き換えないので、参照を外す。
+- 登録時に、分類体系・サイトマップの `inventory`・`vocabulary` が正しい型の成果物を指すか、Markdownの必須見出し・機密区分・判断の版付き参照・仮定の明示を検査する。合わなければ登録せず、書き換えも戻す。
+- `stale` の成果物を内容を変えずに再登録するときは、依存の変更が内容に影響しないことを確かめ、`--no-impact <理由>` を付ける。理由は判断として記録される。内容を変えた場合は付けない。
 
 Markdown成果物の依存（読んだ入力・成果物）は `--depends` で渡す。本文中の `IA-nnn rN` は判断の参照として自動で記録される。登録後に `uv run --locked iakit contracts check runs/<run_id>` を実行し、失敗をすべて直す。
 参照する判断の観察元と調査記録の入力は、依存と機密区分の継承に自動で含める。評価一式は全設計成果物にも依存する。依存を省略した登録簿は契約検査で拒否し、`refresh` では `stale` にする。
