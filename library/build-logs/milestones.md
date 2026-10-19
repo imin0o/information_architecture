@@ -632,7 +632,7 @@ SKILL.mdは72〜102行で、500行の上限内にある。付属資料は記録�
 ## M6 両環境で受け入れ評価を行う
 
 - 実施日: 2026-10-18
-- 状態: 完了（2026-10-19）。最終の配布候補で全ACを判定し、判定一覧を `checks/m6-acceptance.yaml` に記録した。外部CIは動いておらず、送信前の `iakit check --local` を必須の検査とする（D-M5-18）。MVP候補の完成は、外部への公開・送信の許可を意味しない
+- 状態: 完了（2026-10-19）。最終の配布候補で全ACを判定し、判定一覧を `checks/m6-acceptance.yaml` に記録した。実装精査後の修正版で両ホストの受け入れを取り直し、現行の判定は `checks/m6-review-acceptance.yaml` とした（下の「修正版での再受け入れ」）。外部CIは動いておらず、送信前の `iakit check --local` を必須の検査とする（D-M5-18）。MVP候補の完成は、外部への公開・送信の許可を意味しない
 
 ### 最終の配布候補
 
@@ -725,4 +725,34 @@ M6の実装精査で再現した3件を修正した。
 | `scripts/verify.py` | Python 3.12.13・3.14.3で各617件成功（回帰テスト16件を追加）、一時indexでの `iakit check --local` も pass |
 | `iakit accept placement` | 8配置条件、94項目すべて pass。記録済みの修正版の配布IDと一致 |
 
-修正版での両ホストのモデルを使う検査・代表ケース・独立判定は未実施。上の完了判定、`checks/m6-acceptance.yaml` と既存のホスト・代表ケースの結果は修正前の配布候補の履歴として保持する。一時の調査用プログラムと検証ログは回収し、再実行に必要な回帰テスト・既存runnerと、本文を含まない検査記録を残した。
+上の完了判定、`checks/m6-acceptance.yaml` と既存のホスト・代表ケースの結果は修正前の配布候補の履歴として保持する。一時の調査用プログラムと検証ログは回収し、再実行に必要な回帰テスト・既存runnerと、本文を含まない検査記録を残した。
+
+### 修正版での再受け入れ（2026-10-19）
+
+修正版の配布候補（ia-orchestrator `DIST-b350228f223e4c40`、他の4つは上の表と同じ）で、両ホストのモデルを使う検査、代表ケース、独立判定を取り直した。ACごとの判定は [m6-review-acceptance.yaml](checks/m6-review-acceptance.yaml) にあり、`m6-acceptance.yaml` に代わる判定とする。
+
+| ID | 決定 | 理由 |
+|---|---|---|
+| D-M6-11 | Codexのホスト検査・代表ケース・判定は、`IAKIT_CODEX_BIN` でデスクトップ版同梱の codex-cli 0.160.0 を指定して行う | 指定しない1回目は、PATH上の0.135.0が使われ、18試行すべてが終了コード1で失敗した。0.135.0は利用者の設定を読めない（D-M1-11）。この1回目の結果は同じ記録ファイルへの取り直しで置き換えた |
+| D-M6-12 | 独立判定の依頼文は independent-review.md の文を使い、判定者を読み取り専用で動かすため、書き込みの指示を「最終メッセージにYAMLだけで出力」に置き換えた。保存と `iakit run judgment` は親が行い、判定の中身は変えていない | D-M5-15・D-M6-04と同じ。4件とも判定者の出力をそのまま保存して形式検査に通った |
+
+| 検査 | 結果 | 記録・条件 |
+|---|---|---|
+| `iakit accept host --host claude --repeat 2` | 18/18 pass | `checks/m6-review-hosts-claude.yaml`。Claude Code 2.1.291 |
+| `iakit accept host --host codex --repeat 2` | 18/18 pass | `checks/m6-review-hosts-codex.yaml`。codex-cli 0.160.0 |
+| 代表ケース（Claude Code）RUN-WEBIA-016・RUN-TAXONOMY-016 | completed、Refine 1巡、契約検査 pass | Codexの判定は、RUN-TAXONOMY-016が1回目で pass。RUN-WEBIA-016は1回目 fail（major の R-05：固定ケースの主要タスクTASK-01〜03を別の課題に置き換え、ケースのタスクの経路を記録・点検していない。到達自体はできる。critical なし）で、判定後のRefine（2巡目）の後に pass |
+| 代表ケース（Codex）RUN-WEBIA-017・RUN-TAXONOMY-017 | completed、Refine 1巡、契約検査 pass | Claude Codeの判定は1回目で pass |
+| 4件の判定の残件 | major・critical なし | minor 3件（RUN-WEBIA-017に2件、RUN-TAXONOMY-017に1件）。`input_gaps` は計19件 |
+| 4件の実行のSkillハッシュ | 配置先の配布物と一致 | `accept route` の照合。`run compare` で両ホストのSkill・知識の差はない |
+| `uv run --locked python scripts/verify.py --report library/build-logs/checks/m6-rerun.yaml` | pass | Python 3.12.13・3.14.3で各618件（下の回帰テスト1件を追加） |
+| `uv run --locked iakit leaks check --dir dist` | pass | 修正版の配布候補 |
+
+#### 再受け入れで見つけて直した問題
+
+| 問題 | 修正 | 配布物への影響 |
+|---|---|---|
+| `accept route --refine` の回収が退避先を `tempfile.mkdtemp` で作っていた。WindowsではOWNER RIGHTSだけのACLが付き、入れ替えた実行ディレクトリに残るため、Codexの判定者が `run.yaml` を読めなかった（M6で一時ディレクトリについて直した問題と同じ） | 退避先を親の権限を継承する通常のディレクトリにした（`test_refine_collection_does_not_use_owner_only_tempdir`）。回収済みのRUN-WEBIA-016は `icacls /reset` で継承に戻し、読めないまま返った判定の出力は捨てて判定し直した | なし（ハーネスのみ） |
+
+独立判定のため、各実行の入力と派生物を作ったホストと別のホストへ送った。許可は各実行の `approvals`（`external_service`）にあり、送信は `transmissions` に `input`・`derived` の `sent` として記録した。原典・抽出テキストは送っていない。
+
+これで、修正版の配布候補で両ホストの受け入れを終え、M6を完了とした。MVP候補の完成は、外部への公開・送信の許可を意味しない。

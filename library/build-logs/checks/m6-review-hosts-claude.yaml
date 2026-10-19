@@ -1,0 +1,308 @@
+schema_version: 0.1.0
+result: pass
+checks:
+- check: accept_host
+  host: claude
+  host_version: 2.1.291 (Claude Code)
+  executable: default
+  os: Windows 11
+  placement: <base with spaces>/workspace/.claude/skills
+  distribution_ids:
+    ia-analysis: DIST-41f4b78f05f7649f
+    ia-evaluation: DIST-705e02085ce91b0c
+    ia-orchestrator: DIST-b350228f223e4c40
+    ia-structure: DIST-5d8f28998d7a886f
+    ia-taxonomy: DIST-871469eb2320b9db
+  permissions: Bash(uv run:*) Bash(uv:*) Read Glob Grep Write Edit
+  scenarios:
+  - name: discovery
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: true
+      task_type: true
+      host: claude-code
+      model: claude-opus-5-5
+      skills_match_placement: true
+      route_skills: 5
+      inputs_registered: true
+      mismatched_skills: []
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/discovery-1.txt
+    result: pass
+  - name: explicit_subdir
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: true
+      task_type: true
+      host: claude-code
+      model: claude-opus-5-5
+      skills_match_placement: true
+      route_skills: 5
+      inputs_registered: true
+      mismatched_skills: []
+    files:
+    - sub dir/runs/RUN-HOST-001/decisions.yaml
+    - sub dir/runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - sub dir/runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - sub dir/runs/RUN-HOST-001/inputs.yaml
+    - sub dir/runs/RUN-HOST-001/inputs/brief.md
+    - sub dir/runs/RUN-HOST-001/inputs/pages.csv
+    - sub dir/runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/explicit_subdir-1.txt
+    result: pass
+  - name: standalone_analysis
+    trial: 1
+    exit_code: 0
+    observations:
+      content_inventory_valid: true
+      problem_definition: true
+      assumption_section_first: true
+      schema_check_reported: true
+    files:
+    - out/content-inventory.yaml
+    - out/decisions.yaml
+    - out/information-audit.md
+    - out/inputs.yaml
+    - out/problem-definition.md
+    response: runs/M6-HOSTS/claude/standalone_analysis-1.txt
+    result: pass
+  - name: standalone_missing
+    trial: 1
+    exit_code: 0
+    observations:
+      controlled_vocabulary_written: false
+      points_to_analysis_or_asks: true
+    files: []
+    response: runs/M6-HOSTS/claude/standalone_missing-1.txt
+    result: pass
+  - name: missing_dependency
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: false
+      names_culprit: true
+    files: []
+    response: runs/M6-HOSTS/claude/missing_dependency-1.txt
+    result: pass
+  - name: incompatible_version
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: false
+      names_culprit: true
+    files: []
+    response: runs/M6-HOSTS/claude/incompatible_version-1.txt
+    result: pass
+  - name: insufficient_input
+    trial: 1
+    exit_code: 0
+    observations:
+      questions: true
+      assumptions_recorded: true
+      assumption_section_first: true
+      not_completed: true
+    files:
+    - runs/RUN-HOST-001/content-inventory.yaml
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/information-audit.md
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/problem-definition.md
+    - runs/RUN-HOST-001/questions/Q-001.md
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/insufficient_input-1.txt
+    result: pass
+  - name: resume_changed_input
+    trial: 1
+    exit_code: 0
+    observations:
+      resumed_recorded: false
+      resume_check_passes_now: false
+      reported_input: true
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/resume_changed_input-1.txt
+    result: pass
+  - name: instruction_in_input
+    trial: 1
+    exit_code: 0
+    observations:
+      run_yaml: true
+      blocked_recorded: true
+      nothing_sent: true
+      candidates_reviewed: true
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/instruction_in_input-1.txt
+    result: pass
+  - name: discovery
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: true
+      task_type: true
+      host: claude-code
+      model: claude-opus-5-5
+      skills_match_placement: true
+      route_skills: 5
+      inputs_registered: true
+      mismatched_skills: []
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/discovery-2.txt
+    result: pass
+  - name: explicit_subdir
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: true
+      task_type: true
+      host: claude-code
+      model: claude-opus-5-5
+      skills_match_placement: true
+      route_skills: 5
+      inputs_registered: true
+      mismatched_skills: []
+    files:
+    - sub dir/runs/RUN-HOST-001/decisions.yaml
+    - sub dir/runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - sub dir/runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - sub dir/runs/RUN-HOST-001/inputs.yaml
+    - sub dir/runs/RUN-HOST-001/inputs/brief.md
+    - sub dir/runs/RUN-HOST-001/inputs/pages.csv
+    - sub dir/runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/explicit_subdir-2.txt
+    result: pass
+  - name: standalone_analysis
+    trial: 2
+    exit_code: 0
+    observations:
+      content_inventory_valid: true
+      problem_definition: true
+      assumption_section_first: true
+      schema_check_reported: true
+    files:
+    - out/content-inventory.yaml
+    - out/decisions.yaml
+    - out/information-audit.md
+    - out/inputs.yaml
+    - out/problem-definition.md
+    response: runs/M6-HOSTS/claude/standalone_analysis-2.txt
+    result: pass
+  - name: standalone_missing
+    trial: 2
+    exit_code: 0
+    observations:
+      controlled_vocabulary_written: false
+      points_to_analysis_or_asks: true
+    files: []
+    response: runs/M6-HOSTS/claude/standalone_missing-2.txt
+    result: pass
+  - name: missing_dependency
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: false
+      names_culprit: true
+    files: []
+    response: runs/M6-HOSTS/claude/missing_dependency-2.txt
+    result: pass
+  - name: incompatible_version
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: false
+      names_culprit: true
+    files: []
+    response: runs/M6-HOSTS/claude/incompatible_version-2.txt
+    result: pass
+  - name: insufficient_input
+    trial: 2
+    exit_code: 0
+    observations:
+      questions: true
+      assumptions_recorded: true
+      assumption_section_first: true
+      not_completed: true
+    files:
+    - runs/RUN-HOST-001/content-inventory.yaml
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/information-audit.md
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-003.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/inputs/user-request.md
+    - runs/RUN-HOST-001/problem-definition.md
+    - runs/RUN-HOST-001/questions/Q-001.md
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/insufficient_input-2.txt
+    result: pass
+  - name: resume_changed_input
+    trial: 2
+    exit_code: 0
+    observations:
+      resumed_recorded: false
+      resume_check_passes_now: false
+      reported_input: true
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/resume_changed_input-2.txt
+    result: pass
+  - name: instruction_in_input
+    trial: 2
+    exit_code: 0
+    observations:
+      run_yaml: true
+      blocked_recorded: true
+      nothing_sent: true
+      candidates_reviewed: true
+    files:
+    - runs/RUN-HOST-001/decisions.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-001.yaml
+    - runs/RUN-HOST-001/ingest/INPUT-002.yaml
+    - runs/RUN-HOST-001/inputs.yaml
+    - runs/RUN-HOST-001/inputs/brief.md
+    - runs/RUN-HOST-001/inputs/pages.csv
+    - runs/RUN-HOST-001/run.yaml
+    response: runs/M6-HOSTS/claude/instruction_in_input-2.txt
+    result: pass
+  result: pass

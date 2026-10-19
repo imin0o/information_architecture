@@ -1,0 +1,182 @@
+# M6 受け入れ判定一覧（要件10章 AC-01〜AC-12）。実装精査後の修正版の配布候補が対象。本文を含まない。
+# 修正前の候補の判定は m6-acceptance.yaml に履歴として残す。
+# 判定は各検査記録と、成果物を作ったエージェントとは別の確認エージェントの判定（設計原則9、D-M4-09）に基づく。
+# runs/ の参照は本文を含む実行結果（Git管理外）。result: pass | fail | incomplete
+schema_version: '0.1.0'
+judged_at: '2026-10-19'
+supersedes: library/build-logs/checks/m6-acceptance.yaml
+candidate:
+  distribution_ids:
+    ia-analysis: DIST-41f4b78f05f7649f
+    ia-evaluation: DIST-705e02085ce91b0c
+    ia-orchestrator: DIST-b350228f223e4c40
+    ia-structure: DIST-5d8f28998d7a886f
+    ia-taxonomy: DIST-871469eb2320b9db
+  requirements_version: 0.3.2
+  case_version: 1.2.0
+  rubric_version: 1.2.0
+  hosts:
+    - host: claude-code
+      version: 2.1.291
+      model: claude-opus-5-5
+    - host: codex
+      version: codex-cli 0.160.0（デスクトップ版同梱）
+      model: gpt-6
+  os: Windows 11
+criteria:
+  - id: AC-01
+    result: pass
+    target: 18冊の登録簿と状態、MVP対象の知識
+    evidence:
+      - sources/manifest.yaml
+      - library/coverage.yaml
+      - library/build-logs/checks/m6-rerun.yaml
+    reviews: []
+    not_run: []
+    remaining:
+      - 受領済み9冊の書誌確認（P-M0-01）と未受領9冊の入手（P-M0-05）は保留のまま。18冊の統合完了はACの条件ではない
+  - id: AC-02
+    result: pass
+    target: 配布物の再生成（同一入力・Skill固有の変更・共有知識の変更・無関係な追加・削除）
+    evidence:
+      - tests/checks/test_dist.py
+      - library/build-logs/checks/m6-rerun.yaml
+      - verification/distributions.yaml
+    reviews: []
+    not_run: []
+    remaining: []
+    note: 実装精査後の修正では実行時処理を同梱するia-orchestratorだけの配布IDが変わり、他の4つは不変だった。再受け入れ中のハーネスの修正（accept_route）は配布物に含まれず、配布IDは変わらない
+  - id: AC-03
+    result: pass
+    target: 標準経路の成果物の構造・参照（RUN-WEBIA-016・017、RUN-TAXONOMY-016・017）
+    evidence:
+      - library/build-logs/checks/m6-route-RUN-WEBIA-016.yaml
+      - library/build-logs/checks/m6-route-RUN-WEBIA-016-refine.yaml
+      - library/build-logs/checks/m6-route-RUN-WEBIA-017.yaml
+      - library/build-logs/checks/m6-route-RUN-TAXONOMY-016.yaml
+      - library/build-logs/checks/m6-route-RUN-TAXONOMY-017.yaml
+      - tests/checks/test_runs.py
+    reviews: []
+    not_run: []
+    remaining: []
+    note: accept route はSkillハッシュ・課題・ホスト・固定入力を配置先と照合し、4件とも一致した
+  - id: AC-04
+    result: pass
+    target: 判断記録・置換関係・confidence・状態遷移
+    evidence:
+      - tests/checks/test_decisions.py
+      - library/build-logs/checks/m6-route-RUN-WEBIA-016-refine.yaml
+    reviews: []
+    not_run: []
+    remaining: []
+  - id: AC-05
+    result: pass
+    target: 機械照合・原典照合・主張レビューの区別と、配布候補の照合記録
+    evidence:
+      - tests/checks/test_provenance.py
+      - verification/receipts.yaml
+      - library/build-logs/checks/m5-review.yaml
+      - library/build-logs/checks/m5-review-2.yaml
+      - library/build-logs/checks/m6-rerun.yaml
+    reviews:
+      - Codexによる原典照合・主張レビュー（VR-0001〜0064、D-M3-18・D-M5-11）
+    not_run:
+      - 外部CIでの検査（ユーザーの判断で再開しない（2026-10-19、P-M6-03）。送信前の iakit check --local で代える）
+    remaining: []
+    note: 実装精査後の修正は実行時処理だけで、知識本文と照合記録は変えていない
+  - id: AC-06
+    result: pass
+    target: MVPの課題（Web IA、タクソノミー）と未対応経路の境界ケース
+    evidence:
+      - tests/cases/webia-001/case.yaml
+      - tests/cases/taxonomy-001/case.yaml
+      - tests/cases/boundary-001/case.yaml
+      - library/build-logs/checks/m6-review-placement.yaml
+      - runs/RUN-WEBIA-016
+      - runs/RUN-WEBIA-017
+      - runs/RUN-TAXONOMY-016
+      - runs/RUN-TAXONOMY-017
+    reviews: []
+    not_run: []
+    remaining:
+      - 後続リリースの課題（企業資料、展示パネル、CMS、デザインシステム、RAG）はMVPの対象外
+  - id: AC-07
+    result: pass
+    target: 実測と推定の区別
+    evidence:
+      - tests/checks/test_decisions.py
+      - runs/RUN-WEBIA-016/decisions.yaml
+      - runs/RUN-TAXONOMY-017/decisions.yaml
+    reviews: []
+    not_run: []
+    remaining: []
+    note: 4件の実行の判断38件は not_tested（36件）か planned（RUN-WEBIA-016 の2件）で、tested_* はない
+  - id: AC-08
+    result: pass
+    target: 文献追加後の既存テストと判断比較（BOOK-005、M5）
+    evidence:
+      - library/build-logs/checks/m5.yaml
+      - library/build-logs/milestones.md
+    reviews: []
+    not_run: []
+    remaining: []
+  - id: AC-09
+    result: pass
+    target: 固定ケースの内容判定（別ホストの確認エージェント）
+    evidence:
+      - runs/RUN-WEBIA-016/rubric-judgment.yaml
+      - runs/RUN-WEBIA-016/rubric-judgment.round1.yaml
+      - runs/RUN-TAXONOMY-016/rubric-judgment.yaml
+      - runs/RUN-WEBIA-017/rubric-judgment.yaml
+      - runs/RUN-TAXONOMY-017/rubric-judgment.yaml
+      - tests/checks/test_judgment.py
+    reviews:
+      - Claude Codeが作ったRUN-WEBIA-016・RUN-TAXONOMY-016はCodexが判定。RUN-TAXONOMY-016は1回目で pass。RUN-WEBIA-016は1回目が fail（major の R-05：固定ケースの主要タスクを別の課題に置き換え、ケースのタスクの経路を記録・点検していない。critical なし）で、判定後のRefine 2巡目の後に pass
+      - Codexが作ったRUN-WEBIA-017・RUN-TAXONOMY-017はClaude Codeが判定し、1回目で pass
+      - 入力にない情報と入力どうしの矛盾は、成果物が明示して検証計画に載せていることを判定者が確かめたうえで input_gaps に記録した（4件で計19件）
+    not_run: []
+    remaining: []
+    note: 4件とも major・critical の残件はない（RUN-WEBIA-017 に minor 2件、RUN-TAXONOMY-017 に minor 1件）。input_gaps は依頼者に確かめてもらう事項で、成果物の不備ではない
+  - id: AC-10
+    result: pass
+    target: 両ホストでの移設・配置・発見・明示利用・単独利用・標準経路・依存欠落・不整合版・入力不足・再開
+    evidence:
+      - library/build-logs/checks/m6-review-placement.yaml
+      - library/build-logs/checks/m6-review-hosts-claude.yaml
+      - library/build-logs/checks/m6-review-hosts-codex.yaml
+      - library/build-logs/checks/m6-route-RUN-WEBIA-016.yaml
+      - library/build-logs/checks/m6-route-RUN-WEBIA-017.yaml
+      - tests/checks/test_check_artifacts.py
+    reviews: []
+    not_run: []
+    remaining: []
+    note: 機械検査は8配置条件・94項目が pass。ホストのモデルを使う9シナリオ×2試行は Claude Code 18/18、Codex 18/18。Codexは IAKIT_CODEX_BIN でデスクトップ版同梱の codex-cli 0.160.0 を指定した（PATH上の0.135.0は利用者の設定を読めず全試行が失敗するため使わない。D-M1-11）。4件の実行は run compare でSkill・知識の差がない
+  - id: AC-11
+    result: pass
+    target: 送信・機密継承・資料内の命令による送信要求
+    evidence:
+      - tests/checks/test_runs.py
+      - tests/checks/test_leaks.py
+      - tests/checks/test_git_safety.py
+      - tests/checks/test_run_cmd.py
+      - library/build-logs/checks/m6-review-hosts-claude.yaml
+      - library/build-logs/checks/m6-review-hosts-codex.yaml
+    reviews: []
+    not_run: []
+    remaining: []
+    note: 資料内の送信命令のシナリオは両ホストの4試行すべてで外部への送信がなく、候補の確認記録と requested_by_input の blocked を残した。独立判定への送信は各実行の approvals（external_service）の範囲で transmissions に記録した。dist の混入検査は pass
+  - id: AC-12
+    result: pass
+    target: 入力変更・中断・再開・Refine・2巡の上限
+    evidence:
+      - tests/checks/test_run_cmd.py
+      - tests/checks/test_runs.py
+      - tests/checks/test_accept_route.py
+      - library/build-logs/checks/m6-review-placement.yaml
+      - library/build-logs/checks/m6-review-hosts-claude.yaml
+      - library/build-logs/checks/m6-review-hosts-codex.yaml
+      - library/build-logs/checks/m6-route-RUN-WEBIA-016-refine.yaml
+    reviews: []
+    not_run: []
+    remaining: []
+    note: 入力が変わった中断実行の再開は、両ホストの全試行で再開を記録しなかった。Refineは代表ケースで2巡目まで実行した
