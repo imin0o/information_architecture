@@ -1,0 +1,81 @@
+schema_version: 0.1.0
+result: pass
+checks:
+- check: accept_auto
+  host: codex
+  case: webia-001
+  run_id: RUN-P3-WEBIA-001
+  human_operations: 0
+  steps:
+  - check: accept_route
+    mode: full
+    host: codex
+    case: webia-001
+    run_id: RUN-P3-WEBIA-001
+    exit_code: 0
+    minutes: 14.9
+    placement: <base with spaces>/workspace/.agents/skills
+    distribution_ids:
+      ia-analysis: DIST-42ccc6d4b0e64f2d
+      ia-evaluation: DIST-89b88c85eb542008
+      ia-orchestrator: DIST-879c6956fbe51ccd
+      ia-structure: DIST-7cfc8e13aeed79ab
+      ia-taxonomy: DIST-9a1aa457fdebbf8d
+    started_with_bundled_runtime:
+      run_yaml: true
+      task_type: true
+      host: codex
+      model: GPT-6
+      skills_match_placement: true
+      route_skills: 5
+      inputs_registered: true
+      mismatched_skills: []
+    left_behind: null
+    status: completed
+    refine_rounds: 1
+    model: GPT-6
+    contracts: pass
+    result: pass
+  - check: judge
+    result: pass
+    judge_host: claude-code
+    exit_code: 0
+    verdict: pass
+    findings_added: []
+    judge_model: claude-opus-5-5
+    errors: []
+  status: completed
+  refine_rounds: 1
+  contracts: pass
+  standing_approvals:
+  - host-llm
+  - judge
+  human_items:
+  - 質問 Q-001 に未回答（questions/Q-001.md）。仮定で進めた
+  - 質問 Q-002 に未回答（questions/Q-002.md）。仮定で進めた
+  - 質問 Q-003 に未回答（questions/Q-003.md）。仮定で進めた
+  - 質問 Q-004 に未回答（questions/Q-004.md）。仮定で進めた
+  - '入力の不足（R-07）: 利用環境（端末、利用場面、支援技術、通信条件）が入力にない（ART-002 v3 ほか各成果物の冒頭「仮定に基づく箇所」で明示し、ART-011
+    v4 の IA-001 r1 行で利用者の聞き取りと端末実績の確認を計画している。）'
+  - '入力の不足（R-07）: 掲載6組の現行性と、掲載のない3組（中央×家事代行、南×見守り、北×一時預かり）が非提供か未掲載かが入力から決まらない（ART-008
+    v2 で「提供不可と断定せず問い合わせへ案内」と明示し、ART-011 v4 の IA-004 r1 行で運営担当による全9組の照合を計画している。）'
+  - '入力の不足（R-07）: 料金一覧・申込み方法の本文、地区別の料金・条件、受付方法が入力にない（ART-008 v2 「未検証の事項」と ART-010
+    v3 「未解決の指摘」で未確認として明示し、ART-011 v4 の IA-005 r2 行でページ本文・料金表・受付方法の照合を計画している。）'
+  - '入力の不足（R-04）: 終了キャンペーン（P-12）の保存・転送方針と所有者が入力にない（対象外の理由に「原ページは削除せず所有者が判断」と明示し、ART-011
+    v4 の IA-002 r1 行でコンテンツ所有者による方針確認を計画している。）'
+  - '検証計画（ART-011 v4）: IA-001 r1 / 利用端末・利用場面・支援技術 / 利用者の聞き取りと端末実績の確認 / 全タスク / 3利用者層で主要端末と困難な条件を記録し構造を再点検
+    / 人 / 計画'
+  - '検証計画（ART-011 v4）: IA-002 r1 / 終了キャンペーンの対象外方針 / コンテンツ所有者による保存・転送方針確認 / 全体の網羅性
+    / 対象外の理由と公開上の扱いを記録。原ページを無断削除しない / 人 / 計画'
+  - '検証計画（ART-011 v4）: IA-003 r1 / サービス案内とお問い合わせの理解、表記統合 / ラベル理解テスト、既存検索語の確認 / 問い合わせ・種類からの探索
+    / 両意味を参加者の8割以上が選び分け、危険な誤解0件 / 人 / 計画'
+  - '検証計画（ART-011 v4）: IA-004 r1 / 6組の現行性と未掲載3組の意味 / 運営担当による提供一覧照合 / 地区一覧・全6サービス /
+    全9組の提供状況と確認日を確定し、分類を必要に応じ更新 / 人 / 計画'
+  - '検証計画（ART-011 v4）: IA-005 r2 / 共通料金・申込み案内の地区別適用 / ページ本文・料金表・受付方法の照合 / 中央の見守りから料金・申込み、全サービス
+    / 各サービスの料金・条件・受付先が最新で参照可能。FIND-003の解消条件を満たす / 人 / 計画'
+  - '検証計画（ART-011 v4）: IA-004 r1、IA-005 r2 / 2起点の探索と地区一覧が理解できる / 人によるツリーテストと発話を伴うタスクテスト
+    / 地区・種類・問い合わせ / 各起点の到達8割以上、窓口と総称の重大誤認0件、地域外案内の誤認0件 / 人 / 計画'
+  - '検証計画（ART-011 v4）: IA-006 r1 / タスク記録の修正で分類の割当を変える必要がないこと / 運営担当による提供地区・種別と割当のレビュー
+    / 全6サービス / 13件の割当と6組の地区・種別が現行情報に一致。実ユーザー調査の対象ではない / 人 / 計画'
+  left_behind: null
+  result: pass

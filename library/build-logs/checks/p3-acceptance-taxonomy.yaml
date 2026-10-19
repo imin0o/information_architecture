@@ -1,0 +1,123 @@
+schema_version: 0.1.0
+result: pass
+checks:
+- check: accept_auto
+  host: claude
+  case: taxonomy-001
+  run_id: RUN-P3-TAXONOMY-001
+  human_operations: 0
+  steps:
+  - check: accept_route
+    mode: full
+    host: claude
+    case: taxonomy-001
+    run_id: RUN-P3-TAXONOMY-001
+    exit_code: 0
+    minutes: 12.8
+    placement: <base with spaces>/workspace/.claude/skills
+    distribution_ids:
+      ia-analysis: DIST-42ccc6d4b0e64f2d
+      ia-evaluation: DIST-89b88c85eb542008
+      ia-orchestrator: DIST-879c6956fbe51ccd
+      ia-structure: DIST-7cfc8e13aeed79ab
+      ia-taxonomy: DIST-9a1aa457fdebbf8d
+    started_with_bundled_runtime:
+      run_yaml: true
+      task_type: true
+      host: claude-code
+      model: claude-opus-5-5
+      skills_match_placement: true
+      route_skills: 4
+      inputs_registered: true
+      mismatched_skills: []
+    left_behind: null
+    status: completed
+    refine_rounds: 1
+    model: claude-opus-5-5
+    contracts: pass
+    result: pass
+  - check: judge
+    result: pass
+    judge_host: codex
+    exit_code: 0
+    verdict: fail
+    findings_added:
+    - FIND-004
+    judge_model: gpt-6
+    errors: []
+  - check: accept_route
+    mode: refine
+    host: claude
+    case: taxonomy-001
+    run_id: RUN-P3-TAXONOMY-001
+    exit_code: 0
+    minutes: 4.9
+    placement: <base with spaces>/workspace/.claude/skills
+    distribution_ids:
+      ia-analysis: DIST-42ccc6d4b0e64f2d
+      ia-evaluation: DIST-89b88c85eb542008
+      ia-orchestrator: DIST-879c6956fbe51ccd
+      ia-structure: DIST-7cfc8e13aeed79ab
+      ia-taxonomy: DIST-9a1aa457fdebbf8d
+    started_with_bundled_runtime:
+      run_yaml: true
+      task_type: true
+      host: claude-code
+      model: claude-opus-5-5
+      skills_match_placement: true
+      route_skills: 4
+      inputs_registered: true
+      mismatched_skills: []
+    left_behind: null
+    status: completed
+    refine_rounds: 2
+    model: claude-opus-5-5
+    contracts: pass
+    result: pass
+  - check: judge
+    result: pass
+    judge_host: codex
+    exit_code: 0
+    verdict: pass
+    findings_added: []
+    judge_model: gpt-6
+    errors: []
+  status: completed
+  refine_rounds: 2
+  contracts: pass
+  standing_approvals:
+  - host-llm
+  - judge
+  human_items:
+  - 質問 Q-001 に未回答（questions/Q-001.md）。仮定で進めた
+  - '入力の不足（R-06）: パンフレットと利用規約のどちらが見守りの現行の正式な位置付けかは、入力だけでは確定しない。（規約側の採用を仮定とし、反対の記述を未解決として保持する。法務・サービス担当への聞き取りで正式な位置付けとパンフレット改訂方針を確認する計画がある。）'
+  - '入力の不足（R-01）: 編集画面で1ページにサービス種別と案内種別の両方を付与できるかは入力にない。（複数付与をcriticalの仮定として明示し、サイト運営担当への聞き取りと編集画面の確認を計画する。単一選択しかできなければ案Aを見直す条件がある。仮定のcriticalは未解消のcritical指摘と同一ではない。）'
+  - '入力の不足（R-07）: 優先ラベルの実際の使用頻度、サポートの検索意図、介護・子育て支援から見守り・一時預かりを探す行動や担当者の分類の一致は、入力では確認できない。（検索行動・語の頻度・分類の一致は仮定または未検証事項とし、サイト運営担当へのログの提供依頼、検索回数・検索後の遷移の集計、
+    利用者の検索タスク、担当者3〜5名の閉じたカードソートを計画している。実施済みの調査結果としては扱っていない。）'
+  - '入力の不足（R-02）: 編集画面・検索が括弧付きラベルを扱え、検索結果に関連語を表示できるかは入力にない。（機能を仮定と明示し、サイト運営担当への確認とサポートの検索結果画面の確認を計画する。関連語が表示できなければ窓口ページに総称への案内を置く代替策も示す。）'
+  - '入力の不足（R-03）: 候補語17行以外のサービスの有無、特に子育て支援に含まれるサービスの範囲は入力にない。（対象を17行に限り、子育て世帯向けサービスは現時点で一時預かりだけという仮定を明示する。
+    サービス担当に追加すべきサービスを確認する計画があり、追加時は生活支援サービスの直下に加え子育て支援と関連付けるため、現行の兄弟の粒度を保てる。）'
+  - '検証計画（ART-009 v3）: IA-002 r1 / 利用規約の記述（見守りは介護保険の介護サービスではない）が現行の正式な位置付けである / 法務・サービス担当への聞き取り（Q-001
+    問1） / TASK-03 / 担当者が利用規約の記述を正式と確認し、パンフレットの改訂方針が決まる / 人 / 計画'
+  - '検証計画（ART-009 v3）: IA-005 r2 / 編集画面で1つのページにサービス種別と案内種別の両方を付けられる / サイト運営担当への聞き取りと編集画面の確認（Q-001
+    問2） / TASK-01 / 2つの分類語を同時に付けられる。できなければ案Aを見直す / 人 / 計画'
+  - '検証計画（ART-009 v3）: IA-005 r2 / 担当者が案Aで同じページに同じ分類語を付ける / 担当者3〜5名に同じページ群（10件程度）を分類してもらう閉じたカードソート
+    / TASK-01 / 各ページで担当者の8割以上が同じ概念を選ぶ / 人 / 計画'
+  - '検証計画（ART-009 v3）: IA-003 r1 / 家事代行・一時預かり・料金が、利用者が最も使う語である / サイト内検索のログで、同じ概念の語ごとの検索回数を数える（Q-001
+    問3） / TASK-02 / 優先ラベルの検索回数が同じ概念の同義語より多い。少なければ優先ラベルを見直す / 人 / 計画'
+  - '検証計画（ART-009 v3）: IA-004 r2 / 限定語のない「サポート」で検索する利用者の多くは窓口を探している / 検索ログで「サポート」の検索後に開いたページを集計する。利用者数名に検索から問い合わせ先を探してもらうユーザーテスト
+    / TASK-04 / 「サポート」検索の後、窓口のページを開いた割合がサービスのページより多い / 人 / 計画'
+  - '検証計画（ART-009 v3）: IA-004 r2 / 編集画面とサイト内検索が括弧を含むラベルを扱える / サイト運営担当への確認（Q-001 問4）
+    / TASK-04 / 括弧を含むラベルが崩れずに表示・検索される / 人 / 計画'
+  - '検証計画（ART-009 v3）: IA-004 r2 / サイト内検索が、検索結果に関連語（関連関係の概念）を表示できる / サイト運営担当への確認と、「サポート」で検索したときの結果画面の確認
+    / TASK-04 / 「サポート」の検索結果に問い合わせ窓口と生活支援サービスの両方が示される。表示できなければ窓口のページに総称への案内を置く / 人
+    / 計画'
+  - '検証計画（ART-009 v3）: IA-002 r1 / 利用者が「介護」で検索し、見守りを探すことがある / 検索ログで「介護」の検索回数と、検索後に開いたページを見る
+    / TASK-03 / 介護の検索がある場合、関連の見守りへ移る割合を確かめる。検索がなければ参照語の要否を見直す / 人 / 計画'
+  - '検証計画（ART-009 v3）: IA-005 r2 / 子育て世帯向けのサービスは現時点で一時預かりだけで、「子育て支援」で検索した利用者は関連関係で一時預かりへ進める
+    / サービス担当への聞き取り（Q-001 問5）と、検索ログで「子育て支援」の検索後に開いたページの集計 / TASK-02 / 追加のサービスがあれば生活支援サービスの直下に加え子育て支援と関連関係で結ぶ。「子育て支援」検索の後に一時預かりのページへ移る割合を確かめる
+    / 人 / 計画'
+  - '検証計画（ART-009 v3）: IA-001 r1 / 対象範囲は候補語17行で足りる / サービス担当への聞き取り（Q-001 問5） / TASK-01
+    / 追加すべきサービスや案内情報がない、または追加分を語彙に加える / 人 / 計画'
+  left_behind: null
+  result: pass
