@@ -134,6 +134,84 @@ def test_judge_fail_returns_critical_issue_to_refine(run_dir, tmp_path):
     assert (run_dir / "rubric-judgment.round1.yaml").is_file()
 
 
+def fail_change(data):
+    data["items"][0].update(result="fail", note="主要タスクの経路がない")
+    data["issues"] = [{"severity": "major", "item": data["items"][0]["item"], "problem": "主要タスクに着けない",
+                       "basis": ["ART-006 v1 節=主要タスク"], "residual": "残せない"}]
+    data["verdict"] = "fail"
+
+
+def test_judge_after_refine_limit_ends_unresolved_without_duplicates(run_dir, tmp_path):
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+    out = judge_cmd.judge(run_dir, "webia-001", call=fake_judge(run_dir, fail_change))
+    assert out["status"] == "in_progress" and len(out["findings_added"]) == 1
+    # Refineの上限に達した後の判定は、同じ指摘を加えず、未解決で終える
+    run = yamlio.load(run_dir / "run.yaml")
+    run["refine"]["rounds"] = 2
+    (run_dir / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+    run_inputs.event(run_dir, "completed", "")
+    again = judge_cmd.judge(run_dir, "webia-001", call=fake_judge(run_dir, fail_change))
+    assert again["findings_added"] == [] and again["findings_existing"] == out["findings_added"]
+    assert again["status"] == "unresolved"
+    found = {f["finding_id"]: f for f in yamlio.load(run_dir / "findings.yaml")["findings"]}
+    assert found[out["findings_added"][0]]["status"] == "unresolved"
+    assert yamlio.load(run_dir / "run.yaml")["refine"]["reported_to_user"] is True
+
+
+def test_judge_rejects_changes_outside_judgment(run_dir, tmp_path):
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+    inner = fake_judge(run_dir)
+
+    def call(*args):
+        (run_dir / "sitemap.yaml").write_text("# 判定者が書き換えた\n", encoding="utf-8")
+        return inner(*args)
+    out = judge_cmd.judge(run_dir, "webia-001", call=call)
+    assert out["result"] == "fail" and out["changed"] == ["sitemap.yaml"] and "verdict" not in out
+    assert not (run_dir / "rubric-judgment.yaml").is_file() and (run_dir / "rubric-judgment.rejected1.yaml").is_file()
+    report.write(run_dir)
+    assert "有効な記録がない" in (run_dir / report.NAME).read_text(encoding="utf-8")
+
+
+def test_judge_launch_failure_records_no_transmission(run_dir, tmp_path):
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+    out = judge_cmd.judge(run_dir, "webia-001", call=lambda *a: (127, ""))
+    assert out["exit_code"] == 127 and out["result"] == "fail"
+    assert not [t for t in yamlio.load(run_dir / "run.yaml")["transmissions"] if t["destination"] == "codex"]
+
+
+def test_judge_checks_status_before_syncing_profile(run_dir, tmp_path):
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+    run_inputs.event(run_dir, "rerun", "検査")
+    before = (run_dir / "run.yaml").read_bytes()
+    with pytest.raises(ValueError, match="標準経路を終えてから"):
+        judge_cmd.judge(run_dir, "webia-001", call=fake_judge(run_dir))
+    assert (run_dir / "run.yaml").read_bytes() == before
+
+
+def test_gate_total_limit_and_resume_reset(run_dir, monkeypatch):
+    run_inputs.event(run_dir, "rerun", "検査")
+    seq = iter(range(100))
+    monkeypatch.setattr(gate.contracts, "check_bundle", lambda d: {"result": "fail", "errors": [f"誤り {next(seq)}"]})
+    outs = [gate.gate(run_dir, "structure") for _ in range(gate.TOTAL_LIMIT)]
+    assert {o["failures"] for o in outs} == {1} and outs[-1]["result"] == "interrupted"
+    monkeypatch.setattr(gate.contracts, "check_bundle", lambda d: {"result": "fail", "errors": ["同じ誤り"]})
+    monkeypatch.setattr(run_inputs, "resume_errors", lambda d: [])
+    run_inputs.event(run_dir, "resumed", "人が直した")
+    assert "gate" not in yamlio.load(run_dir / "run.yaml")
+    assert [gate.gate(run_dir, "structure")["failures"] for _ in range(2)] == [1, 2]
+
+
+def test_standing_record_is_checked_against_profile_and_inputs(run_dir, tmp_path):
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+    standing.sync(run_dir)
+    run = yamlio.load(run_dir / "run.yaml")
+    run["approvals"][-1]["data_kinds"] = ["input"]
+    inputs = {i["input_id"]: {**i, "classification": "confidential"} for i in yamlio.load(run_dir / "inputs.yaml")["inputs"]}
+    errors = standing.record_errors(run, inputs)
+    assert any("プロファイルの項目と一致しない" in e for e in errors)
+    assert any("上限 internal を超える区分の入力" in e for e in errors)
+
+
 def test_report_separates_simulation_from_measurement(run_dir):
     out = report.write(run_dir)
     text = (run_dir / report.NAME).read_text(encoding="utf-8")

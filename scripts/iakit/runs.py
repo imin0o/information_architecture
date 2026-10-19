@@ -199,7 +199,7 @@ def run_errors(run: dict, inputs_doc: dict, inputs_sha256: str | None, actual: d
     for ref in run["decision_refs"]:
         if (ref["decision_id"], ref["decision_revision"]) not in known:
             errors.append(f"decision_refs: {ref['decision_id']} r{ref['decision_revision']} が判断記録にない")
-    errors += _route_errors(run) + _refine_errors(run) + _transmission_errors(run, inputs) + standing.record_errors(run)
+    errors += _route_errors(run) + _refine_errors(run) + _transmission_errors(run, inputs) + standing.record_errors(run, inputs)
     errors += _artifact_errors(run, inputs, actual, latest_active(decisions), decisions, studies)
     if run["status"] == "completed" and any(a["status"] == "stale" for a in run["artifacts"]):
         errors.append("stale の成果物が残るのに completed になっている")

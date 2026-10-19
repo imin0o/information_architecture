@@ -149,6 +149,8 @@ def event(directory: Path, name: str, note: str, status: str | None = None) -> d
     if name == "refine" and run["refine"]["rounds"] >= runs.MAX_REFINE_ROUNDS:
         raise ValueError(f"refine: 修正・再評価は{runs.MAX_REFINE_ROUNDS}巡まで")
     run["history"].append({"event": name, "at": now(), "note": note})
+    if name == "resumed":
+        run.pop("gate", None)  # 人が直した後は、段階の契約検査の失敗を数え直す（P3-1）
     if status or name in EVENTS_STATUS:
         run["status"] = status or EVENTS_STATUS[name]
     if run["status"] == "unresolved":

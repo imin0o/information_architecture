@@ -42,7 +42,8 @@ def _human_items(directory) -> list[str]:
 
 def _judge(dest, case: str) -> dict:
     j = judge_cmd.judge(dest, case)
-    return {"check": "judge", **{k: j.get(k) for k in ("result", "judge_host", "exit_code", "verdict", "findings_added")},
+    return {"check": "judge", **{k: j.get(k) for k in ("result", "judge_host", "exit_code", "verdict", "findings_added",
+                                                         "findings_existing", "status", "changed")},
             "judge_model": (j.get("judge") or {}).get("model"), "errors": j.get("errors", [])[:5]}
 
 
@@ -69,6 +70,8 @@ def auto(host: str, case: str, run_id: str, timeout: int = 7200) -> dict:
                 if judged["result"] != "pass":
                     errors.append(f"独立判定が {judged['result']}: {judged['errors'] or judged.get('verdict')}")
                 break
+            if judged["status"] == "unresolved":
+                break  # Refineの上限に達していたため、判定のコマンドが未解決で終えた
             rounds = yamlio.load(dest / "run.yaml")["refine"]["rounds"]
             step = accept_route.route(host, case, run_id, refine=True, timeout=timeout,
                                       prompt=REFINE.format(run=run_id), env=env)

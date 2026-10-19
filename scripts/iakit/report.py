@@ -4,6 +4,7 @@
 実測（tested_*）と別の欄に分ける。機密区分は現行の成果物と入力のうち最も厳しいものを継承する。
 """
 
+import re
 from pathlib import Path
 
 from . import judgment, validation_plan, yamlio
@@ -11,6 +12,7 @@ from .decisions import max_classification
 from .run_store import load
 
 NAME = "report.md"
+QUESTION = re.compile(r"(?<![0-9A-Za-z_-])(Q-[0-9]{3,})(?![0-9])")  # 回答の説明に挙がった質問ID
 MEASURED = ("tested_supported", "tested_refuted", "tested_inconclusive")
 
 
@@ -42,8 +44,13 @@ def _judgment(directory: Path, run: dict) -> tuple[list[str], list[str]]:
     """独立判定の要約と、人に示す事項。"""
     notes = [h["note"] for h in run["history"] if h["event"] == "judged"]
     if not (directory / judgment.FILE).is_file():
-        reason = notes[-1] if notes else "判定を依頼していない"
-        return [f"未実施（{reason}）"], [f"独立判定が未実施: {reason}"]
+        if not notes or notes[-1].startswith("not_run"):
+            reason = notes[-1] if notes else "判定を依頼していない"
+            return [f"未実施（{reason}）"], [f"独立判定が未実施: {reason}"]
+        # 判定を依頼したが、記録がないか検査で採らなかった。前回までの記録は退避してある
+        old = sorted(p.name for p in directory.glob("rubric-judgment.*.yaml"))
+        text = f"判定を依頼したが有効な記録がない（{notes[-1]}）" + (f"。退避した記録: {', '.join(old)}" if old else "")
+        return [text], [text]
     j = yamlio.load(directory / judgment.FILE)
     lines = [f"- 判定者: {j['judge']['agent']}（{j['judge']['host']} / {j['judge']['model']}）、{j['judged_at']}",
              f"- ルーブリック {j['rubric_version']}、判定: **{j['verdict']}**（{j['reason']}）"]
@@ -84,7 +91,7 @@ def build(directory: Path) -> str:
         for f in left])
     judged, asks = _judgment(directory, run)
     out += ["## 独立判定", ""] + judged + [""]
-    answered = {i["description"].split(" ")[0] for i in inputs if i["kind"] == "hearing_answer"}
+    answered = {q for i in inputs if i["kind"] == "hearing_answer" for q in QUESTION.findall(i["description"])}
     asks = [f"質問 {p.stem} に未回答（{p.relative_to(directory).as_posix()}）。仮定で進めた"
             for p in sorted((directory / "questions").glob("Q-*.md")) if p.stem not in answered] + asks
     asks += [f"送信を止めた: {t['destination']}（{t['data_kind']}）" for t in run["transmissions"] if t["outcome"] == "blocked"]

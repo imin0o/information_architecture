@@ -44,11 +44,40 @@ def _scope_errors(entry: dict, host: str) -> list[str]:
     return errors
 
 
-def record_errors(run: dict) -> list[str]:
-    """プロファイルから写した許可（standing）が常設の範囲内か。契約検査から呼ぶ。"""
-    host = run["environment"]["host"]
-    return [f"許可 {a['approval_id']}（常設 {a['standing']['entry']}）: {e}"
-            for a in run["approvals"] if a.get("standing") for e in _scope_errors(a, host)]
+FIELDS = ("destination", "destination_kind", "max_classification", "data_kinds")
+
+
+def _profile_entries(sha: str) -> dict[str, dict] | None:
+    """記録と同じ内容（ハッシュ）の現在のプロファイルの項目。照合できなければ None。"""
+    path = profile_path()
+    if not path.is_file() or manifest.sha256_file(path) != sha:
+        return None
+    try:
+        return {e["entry"]: e for e in load_profile(path)}
+    except ValueError:
+        return None
+
+
+def record_errors(run: dict, inputs: dict[str, dict]) -> list[str]:
+    """プロファイルから写した許可（standing）が常設の範囲内か。契約検査から呼ぶ。
+
+    対象の入力が許可の上限の区分を超えないことも確かめる。記録と同じ内容のプロファイルが手元にあれば、
+    項目がそこにあり内容が一致することも照合する（プロファイルが変わった後の記録は範囲だけを確かめる）。
+    """
+    host, errors = run["environment"]["host"], []
+    for a in (a for a in run["approvals"] if a.get("standing")):
+        tag = f"許可 {a['approval_id']}（常設 {a['standing']['entry']}）"
+        errors += [f"{tag}: {e}" for e in _scope_errors(a, host)]
+        over = sorted(i for i in a["input_ids"] if i in inputs
+                      and RANK[inputs[i]["classification"]] > RANK.get(a["max_classification"], -1))
+        if over:
+            errors.append(f"{tag}: 上限 {a['max_classification']} を超える区分の入力 {over} を対象にしている")
+        entries = _profile_entries(a["standing"]["profile_sha256"])
+        if entries is not None:
+            e = entries.get(a["standing"]["entry"])
+            if e is None or any((list(e[k]) if k == "data_kinds" else e[k]) != a[k] for k in FIELDS):
+                errors.append(f"{tag}: プロファイルの項目と一致しない")
+    return errors
 
 
 def load_profile(path: Path) -> list[dict]:

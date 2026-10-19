@@ -80,7 +80,7 @@ uv run --locked iakit input review runs/<run_id> <入力ID> --outcome <not_instr
 1. 担当Skill（[routing.md](routing.md)）のSKILL.mdを読み、その手順に従う。前段階の成果物はIDと版を確かめて入力に使う。
 2. 段階で読んだ知識を `iakit run knowledge runs/<run_id> <KN-ID> ...` で記録する（コマンドを使えない環境では、名前をKN-ID、版をライブラリの版、ハッシュを本文ファイルのsha256として `run.yaml` の `knowledge` に書く）。知識本文の「## 仮説・補完」節は文献の主張ではないため、採用理由の根拠に使わない。
 3. 判断は `iakit decision add`、指摘は `iakit finding add` で書き、成果物を `iakit run artifact` で登録する。`decisions.yaml`・`findings.yaml`・成果物の版の表記をテキスト編集しない。依存の変化で後続の成果物は自動で `stale` になる。
-4. `iakit run gate runs/<run_id> --stage <段階>` で契約検査を行い、失敗をすべて直してから次の段階に進む。失敗した場合は、エラーの内容から記録や成果物を直して同じコマンドを再実行する。同じ段階で同じ誤りが3回続くと、コマンドが中断（`interrupted`）を記録する。その場合は直す試みをやめ、手順8の報告に進む。コマンドを使えない環境では [references/checklist.md](references/checklist.md) で点検し、機械検査は `not_run` として報告する。
+4. `iakit run gate runs/<run_id> --stage <段階>` で契約検査を行い、失敗をすべて直してから次の段階に進む。失敗した場合は、エラーの内容から記録や成果物を直して同じコマンドを再実行する。同じ段階で同じ誤りが3回続くか、誤りが変わっても失敗が合計10回に達すると、コマンドが中断（`interrupted`）を記録する。失敗の回数は再開（`resumed`）で数え直す。中断した場合は直す試みをやめ、手順8の報告に進む。コマンドを使えない環境では [references/checklist.md](references/checklist.md) で点検し、機械検査は `not_run` として報告する。
 
 ### 5a. 一括実行
 
@@ -118,7 +118,7 @@ Validate（ia-evaluation）の指摘は `findings.yaml` に記録される。重
 
 固定した課題ケース（`tests/cases/<case>/case.yaml`）で実行した場合は、成果物を作ったエージェントとは別の判定エージェントに、ルーブリックで内容を判定させる（AC-09）。自分で自分の成果物を合格と判定しない。依頼の文と判定の記録形式は [references/independent-review.md](references/independent-review.md) にある。
 
-リポジトリで実行する場合は `uv run --locked iakit run judge runs/<run_id> --case <case>` を使う。コマンドは常設の許可を写し、判定の相手への送信の許可を確かめてから相手のホストを起動し、判定の記録を `iakit run judgment` と同じ検査にかけ、判定者のホストとモデルを履歴に残す。許可がなければ起動せず `not_run` を返す。`fail` の場合は、判定の問題と `fail` の項目をコマンドが `findings.yaml` の指摘に加えて登録し、実行を `in_progress` に戻す。Refineの上限（2巡）の範囲で修正し、再び終えてから判定を受け直す。上限に達していれば手順7のとおり `unresolved` で終える。
+リポジトリで実行する場合は `uv run --locked iakit run judge runs/<run_id> --case <case>` を使う。コマンドは常設の許可を写し、判定の相手への送信の許可を確かめてから相手のホストを起動し、判定の記録を `iakit run judgment` と同じ検査にかけ、判定者のホストとモデルを履歴に残す。許可がなければ起動せず `not_run` を返す。`fail` の場合は、判定の問題と `fail` の項目をコマンドが `findings.yaml` の指摘に加えて登録し（解決していない同じ指摘は加えない）、実行を `in_progress` に戻す。Refineの上限（2巡）の範囲で修正し、再び終えてから判定を受け直す。上限に達していれば、コマンドが指摘を `unresolved` にして実行を `unresolved` で終えるので、判定を受け直さずに報告する。判定者が判定の記録以外のファイルを変えた場合、コマンドは判定を採らずに `fail` を返す。変わったファイルを人の判断が必要な事項として報告する。
 
 判定者を手で起動した場合は、判定の記録 `rubric-judgment.yaml` を `iakit run judgment runs/<run_id> --case <case>` で検査し、`fail` で重大（`critical`）な問題を `findings.yaml` の指摘として加える。
 

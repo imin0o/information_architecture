@@ -3,6 +3,8 @@
 成果物を作ったホストと別のホスト（Claude Code と Codex の相互）を起動し、固定ケースのルーブリックで判定させる。
 送信は run.yaml の approvals（常設の許可を含む）の範囲に限り、許可がなければ起動せず not_run とする。
 判定の記録を iakit run judgment と同じ検査にかけ、fail の問題と fail の項目を findings.yaml の指摘としてRefineへ戻す。
+Refineが上限に達していれば、戻さずに指摘を unresolved にして未解決で終える。判定者が実行ディレクトリの
+判定の記録以外を変えた場合は、判定を採らない。
 依頼文の正本は skills/ia-orchestrator/references/independent-review.md の「依頼文」節にある。
 """
 
@@ -11,7 +13,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from . import finding_cmd, judgment, run_cmd, run_inputs, standing, yamlio
+from . import finding_cmd, judgment, manifest, run_cmd, run_inputs, runs, standing, yamlio
 from .decisions import RANK, max_classification
 from .paths import SKILLS
 from .run_outputs import STAGE_KINDS
@@ -86,16 +88,34 @@ def _target(run: dict, basis: list[str]) -> dict:
     return next(a for a in run["artifacts"] if a["kind"] == "ia_review")
 
 
-def to_findings(directory: Path, j: dict) -> list[str]:
-    """判定の問題と、問題に挙がっていない fail の項目を指摘として加え、findings.yaml を登録し直す。"""
+def _snapshot(directory: Path) -> dict[str, str]:
+    return {p.relative_to(directory).as_posix(): manifest.sha256_file(p) for p in directory.rglob("*") if p.is_file()}
+
+
+def _open_findings(directory: Path) -> dict[tuple[str, str], str]:
+    """解決していない指摘を（対象, 問題）で引く。判定を受け直しても同じ指摘を二重に加えない。"""
+    path = directory / finding_cmd.NAME
+    found = yamlio.load(path)["findings"] if path.is_file() else []
+    return {(f["target"]["artifact_id"], f["problem"]): f["finding_id"] for f in found if f["status"] != "resolved"}
+
+
+def to_findings(directory: Path, j: dict) -> dict:
+    """判定の問題と、問題に挙がっていない fail の項目を指摘として加え、findings.yaml を登録し直す。
+
+    解決していない同じ指摘は加えずに挙げる。Refineが上限に達していれば、指摘を unresolved にして未解決で終える。
+    """
     run = load(directory, "run.yaml")
+    known = _open_findings(directory)
     covered = {i["item"] for i in j["issues"]}
     entries = [(i["severity"], i["item"], i["problem"], i["basis"], i["residual"]) for i in j["issues"]]
     entries += [("major", i["item"], f"独立判定で {i['item']} が fail: {i['note'] or '基準を満たさない'}", i["basis"], None)
                 for i in j["items"] if i["result"] == "fail" and i["item"] not in covered]
-    added = []
+    added, existing = [], []
     for severity, item, problem, basis, residual in entries:
         art = _target(run, basis)
+        if (art["artifact_id"], problem) in known:
+            existing.append(known[(art["artifact_id"], problem)])
+            continue
         locator = next((b for b in basis if art["artifact_id"] in b), item)
         added.append(finding_cmd.add(directory, {
             "severity": severity, "target": {"artifact_id": art["artifact_id"]}, "locator": locator,
@@ -103,50 +123,96 @@ def to_findings(directory: Path, j: dict) -> list[str]:
             "recommendation": f"独立判定の {item} の基準を満たすよう修正する" + (f"（判定の residual: {residual}）" if residual else ""),
             "resolution_condition": f"再判定で {item} が fail にならず、この問題が issues に挙がらない",
             "return_to": STAGE_OF[art["kind"]]}, j["rubric_version"])["finding_id"])
-    if added:
-        if run["status"] in ("completed", "unresolved"):
-            run_inputs.event(directory, "rerun", f"独立判定 fail の指摘 {added} をRefineで扱う")
+    ids = added + sorted(set(existing) - set(added))
+    exhausted = run["refine"]["rounds"] >= runs.MAX_REFINE_ROUNDS
+    if run["status"] in ("completed", "unresolved"):
+        run_inputs.event(directory, "rerun", f"独立判定 fail の指摘 {ids} をRefineで扱う")
+    if exhausted:
+        for fid in ids:
+            finding_cmd.resolve(directory, fid, "unresolved", note=f"Refineは{runs.MAX_REFINE_ROUNDS}巡を終えている（独立判定）")
+    if added or exhausted:
         run_cmd.artifact(directory, "findings.yaml", "review_findings", [], [])
-    return added
+    if exhausted:
+        run_inputs.event(directory, "completed", f"Refineは{runs.MAX_REFINE_ROUNDS}巡を終えている。独立判定 fail の"
+                         f"指摘 {ids} を未解決として報告する", status="unresolved")
+    return {"added": added, "existing": sorted(set(existing)), "status": load(directory, "run.yaml")["status"]}
+
+
+def _record_sent(directory: Path, judge_host: str, inputs: list[dict], approval: dict) -> int:
+    """起動の前に送信を記録する（判定中に止まっても送信が記録に残る）。記録前の件数を返す。"""
+    run = load(directory, "run.yaml")
+    before = len(run["transmissions"])
+    run["transmissions"] += [{"destination": judge_host, "destination_kind": "external_service", "data_kind": kind,
+                              "input_ids": [i["input_id"] for i in inputs], "approval_id": approval["approval_id"],
+                              "outcome": "sent"} for kind in ("input", "derived")]
+    save(directory, "run.yaml", run)
+    return before
+
+
+def _set_aside(directory: Path, label: str) -> str | None:
+    """採らない判定の記録を退避する。報告は有効な判定の記録だけを読む。"""
+    path = directory / judgment.FILE
+    if not path.is_file():
+        return None
+    n = sum(1 for _ in directory.glob(f"rubric-judgment.{label}*.yaml")) + 1
+    target = directory / f"rubric-judgment.{label}{n}.yaml"
+    path.rename(target)
+    return target.name
 
 
 def judge(directory: Path, case: str, timeout: int = 3600, call=_call) -> dict:
-    synced = standing.sync(directory)
-    run, inputs = load(directory, "run.yaml"), load(directory, "inputs.yaml")["inputs"]
+    run = load(directory, "run.yaml")
     host = run["environment"]["host"]
     judge_host = standing.partner(host)
     if judge_host is None:
         raise ValueError(f"ホスト {host} の独立判定の相手が決まらない（claude-code・codex の実行だけ自動判定できる）")
     if run["status"] not in ("completed", "unresolved"):
         raise ValueError(f"実行は {run['status']}。標準経路を終えてから判定を受ける")
+    try:
+        synced = standing.sync(directory)
+    except ValueError as e:  # 不正なプロファイルは写さず、記録済みの許可で判断する
+        synced = {"error": str(e)}
+    run, inputs = load(directory, "run.yaml"), load(directory, "inputs.yaml")["inputs"]
     approval, level = _approval(run, inputs, judge_host)
     if approval is None:
         _history(directory, f"not_run: {level}")
         return {"result": "not_run", "judge_host": judge_host, "reason": level, "standing": synced}
     path = directory / judgment.FILE
-    if path.is_file():
-        n = sum(1 for _ in directory.glob("rubric-judgment.round*.yaml")) + 1
-        path.rename(directory / f"rubric-judgment.round{n}.yaml")
+    _set_aside(directory, "round")
     cwd = Path.cwd()
     try:
         rel = directory.resolve().relative_to(cwd.resolve()).as_posix()
     except ValueError:
         rel = directory.resolve().as_posix()
+    before = _record_sent(directory, judge_host, inputs, approval)
+    snapshot = _snapshot(directory)
     code, out = call(judge_host, cwd, request_text(rel, run["run_id"], case), timeout)
-    if code != 127:
-        # 起動できた時点で成果物と入力は判定者の提供元へ渡る
+    after = _snapshot(directory)
+    changed = sorted(k for k in snapshot.keys() | after.keys() if snapshot.get(k) != after.get(k) and k != judgment.FILE)
+    if code == 127 and not changed:
+        # 起動できなかったので、何も送っていない
         run = load(directory, "run.yaml")
-        run["transmissions"] += [{"destination": judge_host, "destination_kind": "external_service", "data_kind": kind,
-                                  "input_ids": [i["input_id"] for i in inputs], "approval_id": approval["approval_id"],
-                                  "outcome": "sent"} for kind in ("input", "derived")]
+        run["transmissions"] = run["transmissions"][:before]
         save(directory, "run.yaml", run)
     (directory / "judge-message.txt").write_text(out, encoding="utf-8", newline="\n")
-    checked = judgment.check(directory, case) if path.is_file() else {
-        "check": "rubric_judgment", "result": "fail", "errors": [f"判定者が {judgment.FILE} を書かなかった（終了コード {code}）"]}
+    if changed:
+        checked = {"check": "rubric_judgment", "result": "fail",
+                   "errors": [f"判定者が判定の記録以外を変えた: {', '.join(changed[:10])}。判定を採らず、変更を人が確かめる"]}
+    elif path.is_file():
+        checked = judgment.check(directory, case)
+    else:
+        checked = {"check": "rubric_judgment", "result": "fail",
+                   "errors": [f"判定者が {judgment.FILE} を書かなかった（終了コード {code}）"]}
     j = yamlio.load(path) if checked["result"] == "pass" else None
+    aside = None if j else _set_aside(directory, "rejected")
     who = f"{judge_host}/{j['judge']['model']}" if j else judge_host
-    _history(directory, f"{who} verdict={j['verdict'] if j else '-'} check={checked['result']} exit={code}")
+    _history(directory, f"{who} verdict={j['verdict'] if j else '-'} check={checked['result']} exit={code}"
+             + (f" changed={len(changed)}" if changed else "") + (f" set_aside={aside}" if aside else ""))
     result = {"result": checked["result"], "judge_host": judge_host, "exit_code": code, "errors": checked["errors"]}
+    if changed:
+        result["changed"] = changed
     if j:
-        result.update(verdict=j["verdict"], judge=j["judge"], findings_added=[] if j["verdict"] == "pass" else to_findings(directory, j))
+        moved = {"added": [], "existing": []} if j["verdict"] == "pass" else to_findings(directory, j)
+        result.update(verdict=j["verdict"], judge=j["judge"], findings_added=moved["added"],
+                      findings_existing=moved["existing"], status=load(directory, "run.yaml")["status"])
     return result
