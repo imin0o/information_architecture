@@ -8,11 +8,27 @@ from .run_outputs import DECISION_REF
 
 
 def _affected(run: dict, decisions: list[dict], refs: set[tuple[str, int]]) -> tuple[list[str], list[str]]:
-    """質問が挙げた判断のうち現行の版と、それを参照する成果物・その後続。"""
-    active = {(d["decision_id"], d["decision_revision"]) for d in decisions if d["status"] == "active"}
-    hit = sorted(refs & active)
+    """質問の判断を置換関係で現行版までたどり、旧版の成果物とその後続も挙げる。"""
+    known = {(d["decision_id"], d["decision_revision"]): d for d in decisions}
+    hit, related = [], set()
+    for key, decision in known.items():
+        if decision["status"] != "active":
+            continue
+        lineage, current = {key}, decision
+        while current["supersedes"]:
+            ref = current["supersedes"]
+            previous = (ref["decision_id"], ref["decision_revision"])
+            old = known.get(previous)
+            if previous in lineage or old is None or old["status"] != "superseded":
+                break
+            lineage.add(previous)
+            current = old
+        if refs & lineage:
+            hit.append(key)
+            related |= lineage
+    hit.sort()
     arts = {a["artifact_id"] for a in run["artifacts"]
-            if any((r["decision_id"], r["decision_revision"]) in hit for r in a["decision_refs"])}
+            if any((r["decision_id"], r["decision_revision"]) in related for r in a["decision_refs"])}
     changed = True
     while changed:
         more = {a["artifact_id"] for a in run["artifacts"] if any(d["ref"] in arts for d in a["depends_on"])}

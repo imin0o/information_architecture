@@ -58,7 +58,8 @@ def required_errors(run: dict) -> list[str]:
             for kind in STAGE_KINDS.get(stage, []) if kind not in present]
 
 
-def markdown_errors(directory: Path, run: dict, decisions: list[dict]) -> list[str]:
+def markdown_errors(directory: Path, run: dict, decisions: list[dict], *,
+                    pending_artifacts: frozenset[str] = frozenset()) -> list[str]:
     errors, known = [], {(d["decision_id"], d["decision_revision"]) for d in decisions}
     active = latest_active(decisions)
     for a in (a for a in run["artifacts"] if a["kind"] in MARKDOWN_KINDS):
@@ -87,7 +88,7 @@ def markdown_errors(directory: Path, run: dict, decisions: list[dict]) -> list[s
             elif a["status"] == "current" and key not in active:
                 errors.append(f"{tag}: 現行でない判断 {m.group(0)} を参照している")
     plan = next((a for a in run["artifacts"] if a["kind"] == "validation_plan"), None)
-    if plan and (directory / plan["path"]).is_file():
+    if plan and plan["artifact_id"] not in pending_artifacts and (directory / plan["path"]).is_file():
         text = (directory / plan["path"]).read_text(encoding="utf-8")
         refs = {(m.group(1), int(m.group(2))) for m in DECISION_REF.finditer(text)}
         errors += [f"validation_plan: planned の判断 {d['decision_id']} r{d['decision_revision']} に検証方法が対応付いていない"
@@ -155,13 +156,13 @@ def findings_errors(doc: dict, run: dict) -> list[str]:
     return errors
 
 
-def check(directory: Path, docs: dict) -> list[str]:
+def check(directory: Path, docs: dict, *, pending_artifacts: frozenset[str] = frozenset()) -> list[str]:
     run = docs.get("run.yaml")
     found = []
     if not run:
         return found
     decisions = docs.get("decisions.yaml", {"decisions": []})["decisions"]
-    found += required_errors(run) + markdown_errors(directory, run, decisions)
+    found += required_errors(run) + markdown_errors(directory, run, decisions, pending_artifacts=pending_artifacts)
     found += assumption_errors(directory, run, decisions)
     reg = next((a for a in run["artifacts"] if a["kind"] == "review_findings"), None)
     doc = docs.get("findings.yaml")

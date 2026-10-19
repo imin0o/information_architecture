@@ -24,7 +24,7 @@ uv run --locked iakit decision revise runs/<run_id> IA-nnn <変更する項目�
 uv run --locked iakit decision withdraw runs/<run_id> IA-nnn
 ```
 
-`revise` は最新版を写して変更を当て、版を上げて旧版を `superseded` にする。版が変わった判断を参照する成果物は `stale` になる。
+`revise` は最新版を写して変更を当て、版を上げて旧版を `superseded` にする。版が変わった判断を参照する成果物は `stale` になる。改訂時に `classification` を省くと旧版の区分を下限に継承し、使う入力がより厳しければ引き上げる。`stale` の検証計画と同じ版の調査対象の適用確認は、判断の書き込み時だけ更新待ちとして扱う。通常の契約検査と完了時には、その確認を省略しない。
 
 ## 判断の項目
 
@@ -77,7 +77,7 @@ uv run --locked iakit run artifact runs/<run_id> <パス> --kind <kind> [--depen
 - YAML成果物の最上位の `artifact_id`・`version`・`classification` と、Markdown成果物の冒頭の `機密区分:` を、登録する値に書き換える。
 - 依存先の参照版（YAMLの `{artifact_id: ART-nnn, version: N}`、Markdownの最初の節より前の `ART-nnn vN`）を現行版に書き換える。評価の記録（findings.yaml、ia-review.md）が示す対象の版は、評価した時点の証跡なので書き換えない。
 - 置き換えられた（`superseded`）判断の参照（`IA-nnn rN`、YAMLの `decision_ref`）を、同じIDの現行版に書き換える。findings.yaml の `basis` は書き換えない。撤回した判断は書き換えないので、参照を外す。
-- 登録時に、分類体系・サイトマップの `inventory`・`vocabulary` が正しい型の成果物を指すか、Markdownの必須見出し・機密区分・判断の版付き参照・仮定の明示を検査する。合わなければ登録せず、書き換えも戻す。
+- 登録時に、YAML成果物のスキーマ、分類体系・サイトマップの `inventory`・`vocabulary` の参照先の型、Markdownの必須見出し・機密区分・判断の版付き参照・仮定の明示を検査する。合わなければ登録しない。保存・依存更新まで含めて失敗した場合は、本文・判断・実行記録を更新前に戻す。
 - `stale` の成果物を内容を変えずに再登録するときは、依存の変更が内容に影響しないことを確かめ、`--no-impact <理由>` を付ける。理由は判断として記録される。内容を変えた場合は付けない。
 
 Markdown成果物の依存（読んだ入力・成果物）は `--depends` で渡す。本文中の `IA-nnn rN` は判断の参照として自動で記録される。登録後に `uv run --locked iakit contracts check runs/<run_id>` を実行し、失敗をすべて直す。

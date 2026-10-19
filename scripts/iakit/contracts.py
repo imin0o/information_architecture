@@ -138,7 +138,8 @@ def _artifact_document_errors(run: dict, docs: dict) -> list[str]:
 
 
 def consistency_errors(directory: Path, docs: dict, sources: dict,
-                       extracted_root: Path = EXTRACTED) -> tuple[list[str], dict]:
+                       extracted_root: Path = EXTRACTED, *,
+                       pending_artifacts: frozenset[str] = frozenset()) -> tuple[list[str], dict]:
     """スキーマに通ったファイル間の整合性。原典のない環境でも実行できる層だけを扱う。"""
     prov = docs.get("provenance.yaml", EMPTY["provenance.yaml"])
     receipts = docs.get("receipts.yaml", EMPTY["receipts.yaml"])
@@ -168,7 +169,10 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
                                       ("sitemap.yaml", "nodes", "node_id"),
                                       ("findings.yaml", "findings", "finding_id")):
             target_ids.update(item[key] for item in docs.get(name, {}).get(collection, []))
-        versions = {a: v["version"] for a, v in arts.items() if v["status"] == "current"}
+        # 判断の書き込み中だけ、stale の対象の同じ版の調査を更新待ちにできる。
+        # 版そのものが変わった調査や、通常の契約検査には適用しない。
+        versions = {a: v["version"] for a, v in arts.items()
+                    if v["status"] == "current" or a in pending_artifacts}
         errors += decisions.decision_errors(docs["decisions.yaml"], claims,
                                             derived["states"], inputs, studies, versions, target_ids)
     if run:
@@ -198,7 +202,7 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
     for name, doc in docs.items():
         if run and "run_id" in doc and doc["run_id"] != run["run_id"]:
             errors.append(f"{name}: run_id が実行記録と一致しない")
-    errors += run_outputs.check(directory, docs)
+    errors += run_outputs.check(directory, docs, pending_artifacts=pending_artifacts)
     return errors, derived
 
 

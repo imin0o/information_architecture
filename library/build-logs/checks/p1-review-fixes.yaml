@@ -1,0 +1,356 @@
+schema_version: 0.1.0
+result: pass
+uv: uv 0.12.7 (61291a8ca 2026-08-27 x86_64-pc-windows-msvc)
+tests:
+- python: Python 3.12.13
+  result: pass
+  tests: 691
+- python: Python 3.14.3
+  result: pass
+  tests: 691
+candidate_snapshot: temporary index; actual index unchanged
+checks:
+- check: manifest
+  result: pass
+  local_originals: run
+  status_counts:
+    bibliography_unconfirmed: 9
+    not_received: 9
+  unassigned_originals: 1
+  errors: []
+- check: fixtures
+  result: pass
+  files:
+  - epub/reflowable.epub
+  - pdf/page-labels.pdf
+  - pdf/unicode-layout.pdf
+  expected_catalogue_sha256: 
+    766e3bbb033302989fe3972e5c98cb594a6b17935950cd03da71a61505b74b1c
+  errors: []
+- check: leaks
+  result: pass
+  targets:
+  - git:index
+  files_scanned: 264
+  known_original_hashes: 10
+  violations: []
+  errors: []
+- check: cases
+  result: pass
+  cases:
+    CASE-BOUNDARY-001: 1.2.0
+    CASE-TAXONOMY-001: 1.2.0
+    CASE-WEBIA-001: 1.2.0
+  rubric_version: 1.2.0
+  content_review: human_only
+  errors: []
+- check: contracts
+  target: tests/fixtures/contracts/webia-run
+  result: pass
+  files:
+  - content-inventory.yaml
+  - controlled-vocabulary.yaml
+  - decisions.yaml
+  - findings.yaml
+  - inputs.yaml
+  - observations.yaml
+  - provenance.yaml
+  - receipts.yaml
+  - run.yaml
+  - sitemap.yaml
+  - taxonomy.yaml
+  input_files:
+    run: 3
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 1
+    stale: []
+  errors: []
+- check: contracts
+  target: library
+  result: pass
+  files:
+  - provenance.yaml
+  - receipts.yaml
+  input_files:
+    run: 0
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 61
+    stale:
+    - VR-0001
+    - VR-0002
+    - VR-0003
+  errors: []
+- check: library
+  result: pass
+  errors: []
+  knowledge:
+    adopted:
+    - KN-001
+    - KN-002
+    - KN-003
+    - KN-004
+    - KN-005
+    - KN-006
+    - KN-007
+    - KN-008
+    - KN-009
+    - KN-010
+    - KN-011
+    - KN-012
+    - KN-013
+    - KN-014
+    - KN-015
+    - KN-016
+    hypothesis: []
+    not_supported: []
+  needs:
+    NEED-01: adopted
+    NEED-02: adopted
+    NEED-03: adopted
+    NEED-04: adopted
+    NEED-05: adopted
+    NEED-06: adopted
+    NEED-07: adopted
+    NEED-08: adopted
+    NEED-09: adopted
+    NEED-10: adopted
+  coverage:
+    status_counts:
+      not_received: 9
+      not_started: 6
+      partial: 3
+    extractions:
+      EXTRACT-001-001:
+        read:
+        - - 296
+          - 385
+        - - 1365
+          - 1444
+        - - 1700
+          - 1721
+        - - 1995
+          - 2010
+        - - 3137
+          - 3196
+        - - 3445
+          - 3534
+        - - 4417
+          - 4526
+        - - 5492
+          - 5541
+        - - 9130
+          - 9269
+        - - 9606
+          - 9735
+        - - 9763
+          - 9802
+        - - 11140
+          - 11209
+        displayed_lines: 0
+        integrated:
+        - - 1382
+          - 1403
+        - - 1428
+          - 1438
+        - - 3141
+          - 3145
+        - - 3174
+          - 3184
+        - - 3454
+          - 3460
+        - - 3488
+          - 3506
+        - - 3511
+          - 3528
+        - - 4486
+          - 4490
+        - - 4501
+          - 4526
+        - - 5493
+          - 5499
+        - - 5517
+          - 5521
+        - - 9138
+          - 9151
+        - - 9229
+          - 9244
+        - - 9254
+          - 9258
+        - - 9649
+          - 9655
+        - - 9671
+          - 9678
+        - - 9682
+          - 9686
+        - - 9769
+          - 9773
+        - - 9779
+          - 9783
+        - - 11183
+          - 11186
+        - - 11190
+          - 11200
+      EXTRACT-003-001:
+        read:
+        - - 55
+          - 134
+        - - 3843
+          - 3952
+        - - 4060
+          - 4139
+        - - 4250
+          - 4319
+        - - 4440
+          - 4629
+        - - 4847
+          - 5076
+        - - 9968
+          - 10117
+        displayed_lines: 60
+        integrated:
+        - - 3844
+          - 3848
+        - - 3890
+          - 3897
+        - - 3907
+          - 3911
+        - - 3938
+          - 3942
+        - - 4096
+          - 4109
+        - - 4263
+          - 4271
+        - - 4296
+          - 4302
+        - - 4456
+          - 4462
+        - - 4503
+          - 4507
+        - - 4523
+          - 4530
+        - - 4547
+          - 4560
+        - - 4604
+          - 4623
+        - - 4866
+          - 4870
+        - - 4979
+          - 4982
+        - - 4996
+          - 5008
+        - - 5038
+          - 5044
+        - - 5056
+          - 5060
+        - - 5062
+          - 5068
+        - - 5074
+          - 5076
+        - - 9979
+          - 9983
+        - - 10027
+          - 10033
+        - - 10077
+          - 10083
+        - - 10103
+          - 10108
+      EXTRACT-005-001:
+        read:
+        - - 4082
+          - 4095
+        - - 7672
+          - 7687
+        - - 13110
+          - 13171
+        - - 13330
+          - 13389
+        - - 20640
+          - 20699
+        - - 24930
+          - 24974
+        - - 25010
+          - 25029
+        displayed_lines: 14
+        integrated:
+        - - 4082
+          - 4089
+        - - 13119
+          - 13128
+        - - 13337
+          - 13345
+        - - 13368
+          - 13380
+        - - 20670
+          - 20689
+        - - 24946
+          - 24970
+  sample_reviews:
+    EXTRACT-001-001: issue
+    EXTRACT-003-001: issue
+    EXTRACT-005-001: issue
+  quote_ledger:
+    BOOK-001:
+      previews: 28
+      quotes: 0
+      words_total: 248
+      words_unique_spans: 248
+      overlap_undetermined: 0
+    BOOK-003:
+      previews: 23
+      quotes: 0
+      words_total: 232
+      words_unique_spans: 232
+      overlap_undetermined: 0
+    BOOK-005:
+      previews: 8
+      quotes: 0
+      words_total: 38
+      words_unique_spans: 38
+      overlap_undetermined: 0
+  edited_after_generation:
+  - library/books/BOOK-005/notes.md
+  - library/methods/applicability-check.md
+  - library/methods/conflicting-requirements.md
+  - library/methods/hierarchy-acyclicity.md
+  - library/methods/homograph-disambiguation.md
+  - library/provenance.yaml
+  - library/terms.yaml
+  human_review: not_run
+- check: dist
+  human_source_check: not_run
+  target: regenerated
+  result: pass
+  errors: []
+  existing_receipts_checked: 156
+  distributions:
+  - skill: ia-analysis
+    distribution_id: DIST-edb95ec53881650e
+    bundle_receipt_sha256: 
+      ccfa204d5541d5af379111ea3f91f60aa9cce5a25e95ce3ffa8577212c1d9c62
+    files: 23
+  - skill: ia-evaluation
+    distribution_id: DIST-d9440b1eae28ab3d
+    bundle_receipt_sha256: 
+      e89b4f790e97354df8ee96a2090a0241067bddd967735f9e500f8eb49452cfac
+    files: 21
+  - skill: ia-orchestrator
+    distribution_id: DIST-bbdb76c80e822239
+    bundle_receipt_sha256: 
+      a4a793867973ec5b114bbb0de31f03ea97a29d71d9ab3a782949eba3faea7a21
+    files: 90
+  - skill: ia-structure
+    distribution_id: DIST-e6bdd401e169170a
+    bundle_receipt_sha256: 
+      36dcb4a2b2c6020dbc2f688fbb8c292760299e73d455e0bcec581afb261dfcc1
+    files: 24
+  - skill: ia-taxonomy
+    distribution_id: DIST-56bc1ff3caaec672
+    bundle_receipt_sha256: 
+      12a6422daccaf0fe0eb0ffc44a357fc2e9d25b23a190d03f2474909700d40372
+    files: 29

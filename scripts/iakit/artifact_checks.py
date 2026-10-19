@@ -2,9 +2,25 @@
 
 from pathlib import Path
 
-from . import run_outputs
+from . import run_outputs, yamlio
 from .run_outputs import DECISION_REF
 REF_KINDS = {"inventory": "content_inventory", "vocabulary": "controlled_vocabulary"}
+YAML_SCHEMAS = {
+    "content_inventory": "content-inventory.schema.json", "controlled_vocabulary": "controlled-vocabulary.schema.json",
+    "taxonomy": "taxonomy.schema.json", "sitemap": "sitemap.schema.json", "review_findings": "findings.schema.json",
+}
+
+
+def schema_check(kind: str, body, own: dict | None = None) -> None:
+    """参照の読み取り前と書き換え後に、YAML成果物のスキーマを検査する。"""
+    if kind not in YAML_SCHEMAS:
+        return
+    # 自動更新する既存のヘッダー値だけは補正後の値で検査する。必須キーの欠落は補わない。
+    if own and isinstance(body, dict):
+        body = dict(body, **{k: v for k, v in own.items() if k in body})
+    found = yamlio.schema_errors(body, YAML_SCHEMAS[kind])
+    if found:
+        raise ValueError("登録しない（スキーマに合わない）: " + " / ".join(found[:5]))
 
 
 def contract_check(directory: Path, run: dict, entry: dict, decisions: list[dict]) -> None:

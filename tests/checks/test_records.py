@@ -5,7 +5,7 @@ import shutil
 
 import pytest
 
-from iakit import cli, contracts, decision_cmd, finding_cmd, question_cmd, run_cmd, run_inputs, run_outputs, yamlio
+from iakit import cli, contracts, decision_cmd, finding_cmd, question_cmd, run_cmd, run_inputs, run_outputs, stamps, yamlio
 from iakit.paths import ROOT
 
 CASE = ROOT / "tests/cases/webia-001/inputs"
@@ -199,3 +199,178 @@ def test_question_answer_registers_input_and_lists_affected(bundle, tmp_path):
     assert (registered["input_id"], registered["kind"]) == (out["input_id"], "hearing_answer")
     with pytest.raises(ValueError, match="Q-002.md がない"):
         question_cmd.answer(bundle, "Q-002", answer)
+
+
+def test_revision_preserves_classification_until_explicitly_changed(bundle):
+    decision_cmd.add(bundle, dict(DECISION, classification="confidential"))
+    assert errors(bundle) == []
+    out = decision_cmd.revise(bundle, "IA-004", {"rationale": "理由だけを言い換えた"})
+    assert out["classification"] == "confidential"
+    assert errors(bundle) == []
+    out = decision_cmd.revise(bundle, "IA-004", {"classification": "internal"})
+    assert out["classification"] == "internal"
+
+
+def reregister_stale(directory):
+    for a in yamlio.load(directory / "run.yaml")["artifacts"]:
+        if a["status"] == "stale":
+            run_cmd.artifact(directory, a["path"], a["kind"], [d["ref"] for d in a["depends_on"]], [],
+                             no_impact="変更による内容への影響がないことを確認した")
+
+
+def test_planned_decision_can_be_revised_before_its_stale_plan_is_updated(bundle):
+    doc = yamlio.load(bundle / "decisions.yaml")
+    for d in doc["decisions"]:
+        if d["decision_id"] == "IA-001" and d["status"] == "active":
+            d["validation_status"] = "planned"
+        if d["decision_id"] == "IA-002":
+            d.update(validation_status="not_tested", validation_record_ids=[], confidence="medium")
+    run_cmd.save(bundle, "decisions.yaml", doc)
+    assert errors(bundle) == []
+    out = decision_cmd.revise(bundle, "IA-001", {"rationale": "計画に載せた判断の理由を更新した"})
+    assert out["decision"] == "IA-001 r3" and "ART-011" in out["staled"]
+    assert decision_cmd.revise(bundle, "IA-001", {"rationale": "計画の再登録前にさらに明確にした"})["decision"] == "IA-001 r4"
+    # コマンドの更新待ちの扱いは、通常の検査や完了条件を緩めない。
+    assert any("validation_plan: planned の判断 IA-001 r4" in e for e in errors(bundle))
+    assert cli.main(["run", "event", str(bundle), "completed"]) == 1
+    reregister_stale(bundle)
+    assert errors(bundle) == []
+    assert "IA-001 r4" in (bundle / "validation-plan.md").read_text(encoding="utf-8")
+    assert cli.main(["run", "event", str(bundle), "completed"]) == 0
+
+
+def test_upstream_revision_defers_stale_study_target_but_requires_reassessment(bundle):
+    assert errors(bundle) == []
+    out = decision_cmd.revise(bundle, "IA-001", {"rationale": "上流の理由を更新した"})
+    assert "ART-004" in out["staled"]
+    assert any("STUDY-001" in e and "未確認" in e for e in errors(bundle))
+    assert cli.main(["run", "event", str(bundle), "completed"]) == 1
+    # 調査を適用できるか未確認の判断を改訂してから後続を再登録する。
+    decision_cmd.revise(bundle, "IA-002", {"validation_status": "not_tested", "validation_record_ids": []})
+    reregister_stale(bundle)
+    assert errors(bundle) == []
+    # 登録済みの版が変わった後は、古い調査を使う改訂を許可しない。
+    before = (bundle / "decisions.yaml").read_bytes()
+    with pytest.raises(ValueError, match="STUDY-001.*未確認"):
+        decision_cmd.revise(bundle, "IA-002", {"validation_status": "tested_supported", "validation_record_ids": ["STUDY-001"]})
+    assert (bundle / "decisions.yaml").read_bytes() == before
+    assert cli.main(["run", "event", str(bundle), "completed"]) == 0
+
+
+def test_invalid_kind_does_not_modify_existing_artifact_or_records(bundle):
+    names = ("information-audit.md", "run.yaml", "decisions.yaml")
+    before = {n: (bundle / n).read_bytes() for n in names}
+    with pytest.raises(ValueError, match="未知の成果物の型"):
+        run_cmd.artifact(bundle, "information-audit.md", "information_aduit", [], [])
+    assert {n: (bundle / n).read_bytes() for n in names} == before
+    assert errors(bundle) == []
+
+
+@pytest.mark.parametrize("failure", ["run_save", "refresh"])
+def test_registration_rolls_back_body_decisions_and_run_after_late_failure(bundle, monkeypatch, failure):
+    inv = bundle / "content-inventory.yaml"
+    inv.write_text(inv.read_text(encoding="utf-8") + "\n# 改訂\n", encoding="utf-8")
+    run_cmd.artifact(bundle, "content-inventory.yaml", "content_inventory", [], [])
+    names = ("taxonomy.yaml", "run.yaml", "decisions.yaml")
+    before = {n: (bundle / n).read_bytes() for n in names}
+    save = run_cmd.save
+    refresh = run_cmd.refresh
+
+    def fail_save(directory, name, doc):
+        save(directory, name, doc)
+        if name == "run.yaml":
+            raise OSError("保存後の失敗")
+
+    def fail_refresh(directory):
+        refresh(directory)
+        raise OSError("依存更新後の失敗")
+
+    monkeypatch.setattr(run_cmd, "save" if failure == "run_save" else "refresh",
+                        fail_save if failure == "run_save" else fail_refresh)
+    with pytest.raises(OSError):
+        run_cmd.artifact(bundle, "taxonomy.yaml", "taxonomy", [], [], no_impact="分類は変わらない")
+    assert {n: (bundle / n).read_bytes() for n in names} == before
+
+
+@pytest.mark.parametrize("kind,name", [
+    ("content_inventory", "content-inventory.yaml"), ("controlled_vocabulary", "controlled-vocabulary.yaml"),
+    ("taxonomy", "taxonomy.yaml"), ("sitemap", "sitemap.yaml"), ("review_findings", "findings.yaml"),
+])
+@pytest.mark.parametrize("invalid", ["unknown_field", "missing_required"])
+def test_yaml_schema_errors_are_rejected_before_registration(bundle, kind, name, invalid):
+    path = bundle / name
+    doc = yamlio.load(path)
+    if invalid == "unknown_field":
+        doc["misspelled_field"] = True
+    else:
+        collection = {"content_inventory": "items", "controlled_vocabulary": "concepts", "taxonomy": "schemes",
+                      "sitemap": "nodes", "review_findings": "findings"}[kind]
+        del doc[collection]
+    path.write_text(yamlio.dumps(doc), encoding="utf-8")
+    before = {n: (bundle / n).read_bytes() for n in (name, "run.yaml", "decisions.yaml")}
+    with pytest.raises(ValueError, match="スキーマに合わない"):
+        run_cmd.artifact(bundle, name, kind, [], [])
+    assert {n: (bundle / n).read_bytes() for n in before} == before
+
+
+@pytest.mark.parametrize("reference", [
+    '{version: 1, artifact_id: ART-001}',
+    '\n  version: 1 # 版の説明\n  artifact_id: ART-001',
+    '{"version": 1, "artifact_id": "ART-001"}',
+    '{\n  version: 1,\n  artifact_id: ART-001\n}',
+])
+def test_yaml_reference_versions_are_updated_regardless_of_key_order(bundle, reference):
+    inv = bundle / "content-inventory.yaml"
+    inv.write_text(inv.read_text(encoding="utf-8") + "\n# 改訂\n", encoding="utf-8")
+    run_cmd.artifact(bundle, "content-inventory.yaml", "content_inventory", [], [])
+    tax = bundle / "taxonomy.yaml"
+    original = tax.read_text(encoding="utf-8")
+    tax.write_text(original.replace('{artifact_id: ART-001, version: 1}', reference), encoding="utf-8")
+    run_cmd.artifact(bundle, "taxonomy.yaml", "taxonomy", [], [])
+    assert yamlio.load(tax)["inventory"] == {"artifact_id": "ART-001", "version": 2}
+    assert tax.read_text(encoding="utf-8").splitlines()[0] == original.splitlines()[0]
+    if "# 版の説明" in reference:
+        assert "# 版の説明" in tax.read_text(encoding="utf-8")
+
+
+def test_yaml_rewrite_preserves_examples_and_updates_quoted_headers():
+    text = ('"artifact_id": "ART-001"\n"version": "1"\nclassification: internal\n'
+            'description: |\n  artifact_id: ART-002\n  version: 1\n'
+            '# {artifact_id: ART-002, version: 1}\n'
+            'reference: {version: 1, artifact_id: "ART-002"}\n')
+    rewritten = stamps.rewrite(text, False, {"artifact_id": "ART-001", "version": 1, "classification": "internal"},
+                               {"ART-002": 2})
+    doc = yamlio.loads(rewritten)
+    assert doc["version"] == 1
+    assert doc["reference"] == {"version": 2, "artifact_id": "ART-002"}
+    assert doc["description"] == "artifact_id: ART-002\nversion: 1\n"
+    assert '# {artifact_id: ART-002, version: 1}' in rewritten
+    assert '"artifact_id": "ART-001"' in rewritten
+
+
+def test_yaml_decision_revision_is_updated_regardless_of_key_order(bundle):
+    decision_cmd.revise(bundle, "IA-001", {"rationale": "理由を更新した"})
+    tax = bundle / "taxonomy.yaml"
+    tax.write_text(tax.read_text(encoding="utf-8").replace(
+        '{decision_id: IA-001, decision_revision: 2}', '{"decision_revision": 2, "decision_id": "IA-001"}'),
+        encoding="utf-8")
+    run_cmd.artifact(bundle, "taxonomy.yaml", "taxonomy", [], [])
+    assert {s["decision_ref"]["decision_revision"] for s in yamlio.load(tax)["schemes"]} == {3}
+
+
+def test_answer_follows_superseded_decisions_and_includes_stale_artifacts(bundle, tmp_path):
+    (bundle / "questions").mkdir()
+    question = bundle / "questions/Q-001.md"
+    question.write_text("# Q-001\n\n利用環境の仮定を確かめる（IA-001 r2）。\n", encoding="utf-8")
+    decision_cmd.revise(bundle, "IA-001", {"rationale": "理由を明確にした"})
+    decision_cmd.revise(bundle, "IA-001", {"rationale": "同じ仮定のまま再度明確にした"})
+    answer = tmp_path / "answer.md"
+    answer.write_text("スマートフォンで閲覧する。\n", encoding="utf-8")
+    out = question_cmd.answer(bundle, "Q-001", answer)
+    assert out["decisions"] == ["IA-001 r4"]
+    assert {"ART-003", "ART-004", "ART-011"} <= set(out["artifacts"])
+    # 未知の版や、撤回されて現行の版がない判断を同じIDだけで復活させない。
+    decision_cmd.withdraw(bundle, "IA-003")
+    question.write_text("# Q-001\n\nIA-001 r99 / IA-003 r1\n", encoding="utf-8")
+    out = question_cmd.answer(bundle, "Q-001", answer)
+    assert out["decisions"] == [] and out["artifacts"] == []

@@ -15,12 +15,13 @@ from .run_cmd import load, now, refresh, save
 AUTO = ("decision_id", "decision_revision", "run_id", "status", "supersedes", "recorded_at")
 
 
-def _state(directory: Path) -> tuple[list[str], dict, dict, dict]:
+def _state(directory: Path, pending_artifacts: frozenset[str] = frozenset()) -> tuple[list[str], dict, dict, dict]:
     """契約検査の誤り一覧と、補完に使う照合状態・入力・調査記録。"""
     docs, errors = contracts.load_bundle(directory)
     states = {}
     if not errors:
-        found, derived = contracts.consistency_errors(directory, docs, provenance.registered_sources())
+        found, derived = contracts.consistency_errors(directory, docs, provenance.registered_sources(),
+                                                      pending_artifacts=pending_artifacts)
         errors, states = errors + found, derived.get("states", {})
     inputs = {i["input_id"]: i for i in docs.get("inputs.yaml", {"inputs": []})["inputs"]}
     studies = {s["study_id"]: s for s in docs.get("observations.yaml", {"studies": []})["studies"]}
@@ -37,7 +38,9 @@ def _derive(d: dict, given: dict, states: dict, inputs: dict, studies: dict) -> 
     used = [inputs[o["input_id"]]["classification"] for o in d["input_observations"] if o.get("input_id") in inputs]
     used += [studies[sid]["classification"] for sid in d["validation_record_ids"] if sid in studies]
     if "classification" not in given:
-        d["classification"] = max_classification(used or ["internal"])
+        # 改訂時は旧版の区分を下限にする。区分の引き下げには明示的な指定が必要。
+        prior = [d["classification"]] if "classification" in d else []
+        d["classification"] = max_classification(used + prior or ["internal"])
     errors = yamlio.schema_errors({"schema_version": "1.0", "run_id": d["run_id"], "decisions": [d]},
                                   "decision.schema.json")
     if "confidence" not in given:
@@ -53,10 +56,13 @@ def _commit(directory: Path, doc: dict, before: list[str]) -> list[str]:
     try:
         save(directory, "decisions.yaml", doc)
         staled = refresh(directory)["staled"]
-        added = Counter(_state(directory)[0]) - Counter(before)
+        # stale の後続の計画・調査対象は、再登録まで更新待ちにできる。
+        # 通常の契約検査では猶予せず、完了前に必ず再確認する。
+        pending = frozenset(a["artifact_id"] for a in load(directory, "run.yaml")["artifacts"] if a["status"] == "stale")
+        added = Counter(_state(directory, pending_artifacts=pending)[0]) - Counter(before)
         if added:
             raise ValueError("契約検査に通らないため書き込まない: " + " / ".join(list(added)[:5]))
-    except (ValueError, yamlio.DataError):
+    except (ValueError, OSError):
         for name, data in saved.items():
             (directory / name).write_bytes(data)
         raise
@@ -98,8 +104,8 @@ def revise(directory: Path, decision_id: str, changes: dict) -> dict:
         raise ValueError(f"{fixed} はコマンドが決める")
     before, states, inputs, studies = _state(directory)
     old = _latest(doc, decision_id)
-    # 導出値は変更後の記録から導き直す。指定した場合だけその値を使う
-    d = {k: v for k, v in deepcopy(old).items() if k not in ("confidence", "classification")}
+    # confidence は導き直し、機密区分は旧版を下限にして継承する。
+    d = {k: v for k, v in deepcopy(old).items() if k != "confidence"}
     for s in d["sources"]:
         s.pop("source_verification", None)
         s.pop("support_status", None)

@@ -6,13 +6,13 @@ iakit finding で書き、承認・送信の記録はエージェントが YAML 
 
 from pathlib import Path
 
-from . import artifact_checks, decision_build, manifest, runs, stamps, yamlio
+from . import artifact_checks, decision_build, manifest, run_outputs, runs, stamps, yamlio
 from .decisions import artifact_inputs, latest_active, max_classification
 # init・skill_item などは呼出側（cli_run、テスト）の互換のため run_cmd からも参照できるようにする
 from .run_init import CONTRACT_VERSION, LATER_ROUTES, STAGE_SKILLS, init, skill_item  # noqa: F401
 from .run_store import load, now, save
 
-YAML_KINDS = {"content_inventory", "controlled_vocabulary", "taxonomy", "sitemap", "review_findings"}
+YAML_KINDS = set(artifact_checks.YAML_SCHEMAS)
 EVIDENCE_KINDS = {"ia_review", "review_findings"}
 
 
@@ -77,6 +77,8 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
 
     no_impact は stale の成果物を内容を変えずに再登録するときの確認の理由で、判断として記録する。
     """
+    if kind not in YAML_KINDS | run_outputs.MARKDOWN_KINDS:
+        raise ValueError(f"未知の成果物の型 {kind}")
     run, inputs = load(directory, "run.yaml"), load(directory, "inputs.yaml")
     if not (directory / rel).is_file() and not Path(rel).is_file():
         raise ValueError(f"{rel} がない")
@@ -101,10 +103,11 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
         version = 1
         aid = f"ART-{len(run['artifacts']) + 1:03d}"
     original = text
+    artifact_checks.schema_check(kind, body, {"artifact_id": aid, "version": version, "classification": "public"})
     decisions = load(directory, "decisions.yaml")["decisions"]
     if kind != "review_findings":
         # 置き換えられた判断の参照は現行版へ書き換える。指摘の basis は評価時点の証跡なので対象外
-        text = stamps.rewrite_decisions(text, decisions)
+        text = stamps.rewrite_decisions(text, decisions, markdown=kind not in YAML_KINDS)
         body = yamlio.loads(text) if kind in YAML_KINDS else None
     artifact_checks.ref_kind_check(kind, body, run["artifacts"])
     refs, found = artifact_checks.body_refs(kind, body, text)
@@ -139,13 +142,14 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
     stamped = stamps.rewrite(text, kind not in YAML_KINDS,
                              own if body is None or (isinstance(body, dict) and "artifact_id" in body) else None,
                              versions)
-    saved = path.read_bytes()
-    if stamped != original:
-        path.write_text(stamped, encoding="utf-8", newline="")
-        sha = manifest.sha256_file(path)
+    saved = {p: p.read_bytes() for p in (path, directory / "run.yaml", directory / "decisions.yaml")}
     try:
+        if stamped != original:
+            path.write_text(stamped, encoding="utf-8", newline="")
+            sha = manifest.sha256_file(path)
+        body = yamlio.load(path) if kind in YAML_KINDS else None
+        artifact_checks.schema_check(kind, body)
         if body is not None and isinstance(body, dict) and "artifact_id" in body:
-            body = yamlio.load(path)
             wrong = {k: v for k, v in own.items() if body.get(k) != v}
             if wrong:
                 raise ValueError(f"{rel}: 本体の {', '.join(f'{k} を {v}' for k, v in wrong.items())} に書き換えられない。"
@@ -159,22 +163,25 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
         if existing and "classification_override" in existing:
             entry["classification_override"] = existing["classification_override"]
         artifact_checks.contract_check(directory, run, entry, decisions)
-    except ValueError:
-        path.write_bytes(saved)  # 登録しない場合は書き換えを戻し、次の試行で内容の変更と誤認させない
+        out = {"artifact_id": aid, "version": version, "classification": level}
+        if no_impact:
+            doc = load(directory, "decisions.yaml")
+            record = decision_build.no_impact(run, doc["decisions"], existing, no_impact, now())
+            doc["decisions"].append(record)
+            save(directory, "decisions.yaml", doc)
+            out["no_impact_decision"] = f"{record['decision_id']} r1"
+        if existing:
+            run["artifacts"][run["artifacts"].index(existing)] = entry
+        else:
+            run["artifacts"].append(entry)
+        save(directory, "run.yaml", run)
+        out["staled"] = refresh(directory)["staled"]
+    except Exception:
+        # 本文・影響なしの判断・登録簿の更新を一体として戻す。保存やrefreshの失敗も含む。
+        for target, data in saved.items():
+            if target.read_bytes() != data:
+                target.write_bytes(data)
         raise
-    out = {"artifact_id": aid, "version": version, "classification": level}
-    if no_impact:
-        doc = load(directory, "decisions.yaml")
-        record = decision_build.no_impact(run, doc["decisions"], existing, no_impact, now())
-        doc["decisions"].append(record)
-        save(directory, "decisions.yaml", doc)
-        out["no_impact_decision"] = f"{record['decision_id']} r1"
-    if existing:
-        run["artifacts"][run["artifacts"].index(existing)] = entry
-    else:
-        run["artifacts"].append(entry)
-    save(directory, "run.yaml", run)
-    out["staled"] = refresh(directory)["staled"]
     if stamped != original:
         out["rewritten"] = True
     return out

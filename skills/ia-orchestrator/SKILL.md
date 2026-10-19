@@ -67,7 +67,7 @@ uv run --locked iakit input review runs/<run_id> <入力ID> --outcome <not_instr
 
 - 同じ応答の中で回答が得られた場合は、ファイルに保存して入力として登録し、観察（`input_observations`）として使う。
 - 回答がその場で得られない場合は、ただちに仮定を置いて進める。仮定は判断の `assumptions` に書き、採用理由に欠かせない仮定は `critical: true` にする。仮定に基づく箇所は、各Markdown成果物の最初の節「## 仮定に基づく箇所」に示す。
-- 後から回答が届いた場合は、ファイルに保存して `iakit question answer runs/<run_id> Q-nnn <回答ファイル>` で登録する。コマンドは回答を `hearing_answer` として登録し、質問ファイルが `IA-nnn rN` で挙げた判断のうち現行のものと、それを参照する成果物の一覧を出す。挙がった判断を `iakit decision revise` で新しい版に置き換える（回答を `input_observations` に加え、外れた仮定を除く）。依存する成果物は自動で `stale` になるので、該当段階から再実行する。質問ファイルでは、仮定を使った判断を `IA-nnn rN` で示しておく。
+- 後から回答が届いた場合は、ファイルに保存して `iakit question answer runs/<run_id> Q-nnn <回答ファイル>` で登録する。コマンドは回答を `hearing_answer` として登録し、質問ファイルが `IA-nnn rN` で挙げた判断を置換関係で現行版までたどる。現行の判断と、旧版を参照する `stale` の成果物を含む影響先の一覧を出す。挙がった判断を `iakit decision revise` で新しい版に置き換える（回答を `input_observations` に加え、外れた仮定を除く）。依存する成果物は自動で `stale` になるので、該当段階から再実行する。質問ファイルでは、仮定を使った判断を `IA-nnn rN` で示しておく。
 
 仮定の置き方は、入力に最も近い解釈を選び、外れた場合の影響が小さい案を優先する。影響が大きい仮定ほど、検証計画で先に確かめる対象にする。
 
