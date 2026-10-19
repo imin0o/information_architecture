@@ -30,6 +30,8 @@ def contract_check(directory: Path, run: dict, entry: dict, decisions: list[dict
     found = [e for e in run_outputs.markdown_errors(directory, trial, decisions)
              + run_outputs.assumption_errors(directory, trial, decisions)
              if e.startswith(tag) or (entry["kind"] == "validation_plan" and e.startswith("validation_plan:"))]
+    if entry["kind"] == "review_findings":
+        found += run_outputs.finding_item_errors(yamlio.load(directory / entry["path"]), trial)
     if found:
         raise ValueError("登録しない（契約に合わない）: " + " / ".join(found[:5]))
 

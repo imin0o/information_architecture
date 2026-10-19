@@ -5,6 +5,10 @@
 """
 
 from collections import Counter
+import hashlib
+
+from . import yamlio
+from .decisions import RANK, max_classification
 
 NONE = "(none)"
 
@@ -16,19 +20,52 @@ def expected(method: str, item_id: str, site: dict, categories: list[str]) -> tu
         task = next((t for t in site["tasks"] if t["task_id"] == item_id), None)
         if task is None:
             raise ValueError(f"{item_id}: サイトマップの主要タスクにない")
+        content = task.get("target_content_ids")
+        if content:
+            found = sorted(n["node_id"] for n in site["nodes"] if set(content) <= set(n["content_ids"]))
+            if not found:
+                raise ValueError(f"{item_id}: 目的のコンテンツをすべて載せるノードがない")
+            firsts = first_choices(found, site)
+            return found, firsts[0] if len(firsts) == 1 else None
         return [task["path"][-1]], (task["path"][1] if len(task["path"]) > 1 else None)
     found = []
     for n in site["nodes"]:
         if item_id not in n["content_ids"]:
             continue
         cur = n["node_id"]
-        while cur in nodes:
+        seen = set()
+        while cur in nodes and cur not in seen:
+            seen.add(cur)
             if cur in categories and cur not in found:
                 found.append(cur)
             cur = nodes[cur]["parent"]
     if not found:
         raise ValueError(f"{item_id}: 分類先 {categories} のどこにも配置されていない")
     return found, None
+
+
+def first_choices(targets: list[str], site: dict) -> list[str]:
+    """正解ノードを含む主階層の入口。複数の正解経路を同等に扱う。"""
+    nodes = {n["node_id"]: n for n in site["nodes"]}
+    out = set()
+    for target in targets:
+        cur, seen = target, set()
+        while cur in nodes and cur not in seen:
+            seen.add(cur)
+            parent = nodes[cur]["parent"]
+            if parent == site["root"]:
+                out.add(cur)
+                break
+            cur = parent
+    return sorted(out)
+
+
+def expected_item(method: str, item_id: str, site: dict, categories: list[str]) -> dict:
+    exp, first = expected(method, item_id, site, categories)
+    task = next((t for t in site["tasks"] if t["task_id"] == item_id), {})
+    firsts = (first_choices(exp, site) if method == "tree_test" and task.get("target_content_ids")
+              else [first] if first else [])
+    return {"expected": exp, "expected_first": first, "expected_first_choices": firsts}
 
 
 def derive_results(sim: dict) -> list[dict]:
@@ -39,8 +76,8 @@ def derive_results(sim: dict) -> list[dict]:
         if not trials:
             continue
         ok = sum(t["answer"] in item["expected"] for t in trials) / len(trials)
-        direct = (sum(t["first_choice"] == item["expected_first"] for t in trials) / len(trials)
-                  if item["expected_first"] else None)
+        first_choices = item.get("expected_first_choices", [item["expected_first"]] if item["expected_first"] else [])
+        direct = (sum(t["first_choice"] in first_choices for t in trials) / len(trials) if first_choices else None)
         firsts = Counter(t["first_choice"] or NONE for t in trials)
         out.append({"item_id": item_id, "attempts": len(trials), "success_rate": round(ok, 3),
                     "direct_first_rate": None if direct is None else round(direct, 3),
@@ -49,7 +86,7 @@ def derive_results(sim: dict) -> list[dict]:
     return out
 
 
-def record_errors(doc: dict, artifacts: dict[str, dict]) -> list[str]:
+def record_errors(doc: dict, artifacts: dict[str, dict], site: dict | None = None) -> list[str]:
     """artifacts は実行記録の成果物（ID→登録内容）。"""
     errors, seen = [], set()
     for sim in doc["simulations"]:
@@ -57,11 +94,55 @@ def record_errors(doc: dict, artifacts: dict[str, dict]) -> list[str]:
         if sid in seen:
             found.append(f"{sid}: simulation_id が重複している")
         seen.add(sid)
+        levels = []
         for key, kind in (("target", "sitemap"), ("persona", "problem_definition")):
             ref = sim[key] if key == "target" else sim[key]["source"]
             a = artifacts.get(ref["artifact_id"])
             if a is None or a["kind"] != kind or ref["version"] > a["version"]:
                 found.append(f"{sid}: {key} {ref['artifact_id']} v{ref['version']} は登録済みの {kind} ではない")
+            elif ref["version"] == a["version"]:
+                levels.append(a["classification"])
+        if RANK[sim["classification"]] < RANK[max_classification(levels)]:
+            found.append(f"{sid}: 機密区分が参照した成果物の区分より低い")
+        truth = None
+        ref = sim["target"]
+        if site and (site["artifact_id"], site["version"]) == (ref["artifact_id"], ref["version"]):
+            truth = site
+        if "sitemap_snapshot" in sim:
+            raw = sim["sitemap_snapshot"]
+            if hashlib.sha256(raw.encode("utf-8")).hexdigest() != sim.get("sitemap_sha256"):
+                found.append(f"{sid}: サイトマップのスナップショットのハッシュが一致しない")
+            a = artifacts.get(ref["artifact_id"])
+            if a and a["version"] == ref["version"] and a["sha256"] != sim.get("sitemap_sha256"):
+                found.append(f"{sid}: スナップショットが登録済みのサイトマップと一致しない")
+            try:
+                snapshot = yamlio.loads(raw)
+                invalid = yamlio.schema_errors(snapshot, "sitemap.schema.json")
+                if invalid or (snapshot["artifact_id"], snapshot["version"], snapshot["run_id"]) != (
+                        ref["artifact_id"], ref["version"], doc["run_id"]):
+                    found.append(f"{sid}: スナップショットの対象・版・実行が一致しないか形式が不正")
+                elif truth is None:
+                    truth = snapshot
+            except ValueError:
+                found.append(f"{sid}: スナップショットを読み込めない")
+        # 旧形式の過去版は履歴として保持する。現行の判断・計画の証跡には使えない。
+        if truth:
+            if RANK[sim["classification"]] < RANK[truth["classification"]]:
+                found.append(f"{sid}: 機密区分が評価対象の区分より低い")
+            nodes = {n["node_id"] for n in truth["nodes"]}
+            if any(c not in nodes for c in sim["categories"]):
+                found.append(f"{sid}: categories にサイトマップにないノードがある")
+            if any(v is not None and v not in nodes for t in sim["trials"] for v in (t["answer"], t["first_choice"])):
+                found.append(f"{sid}: 試行の選択がサイトマップにない")
+            for item in sim["items"]:
+                try:
+                    derived = expected_item(sim["method"], item["item_id"], truth, sim["categories"])
+                    multi = any(t["task_id"] == item["item_id"] and t.get("target_content_ids") for t in truth["tasks"])
+                    if any(item.get(k) != v for k, v in derived.items()
+                           if multi or k in item or k != "expected_first_choices"):
+                        found.append(f"{sid}: {item['item_id']} の正解が対象版のサイトマップからの導出と一致しない")
+                except ValueError as exc:
+                    found.append(f"{sid}: {exc}")
         if (sim["method"] == "closed_card_sort") != bool(sim["categories"]):
             found.append(f"{sid}: categories は閉じたカードソートだけに書く")
         prefix = "TASK-" if sim["method"] == "tree_test" else "CONTENT-"

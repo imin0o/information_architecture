@@ -166,6 +166,10 @@ def sitemap_errors(site: dict, inv: dict | None, vocab: dict | None, check_refs:
                if i["status"] == "placed" and c not in placed]
     for t in site["tasks"]:
         path = t["path"]
+        content = t.get("target_content_ids", [])
+        errors += [f"{t['task_id']}: 目的のコンテンツ {c} がコンテンツ一覧にない" for c in content if c not in items]
+        if content and path[-1] in nodes and not set(content) <= set(nodes[path[-1]]["content_ids"]):
+            errors.append(f"{t['task_id']}: 経路の末端が目的のコンテンツをすべて載せていない")
         if path[0] != site["root"]:
             errors.append(f"{t['task_id']}: 経路がルートから始まらない")
         for a, b in zip(path, path[1:]):

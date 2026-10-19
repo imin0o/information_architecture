@@ -1,6 +1,7 @@
 """評価の指摘とRefineの整合、Markdown成果物の判断参照（FR-06、FR-08、IN-04）。"""
 
 from iakit import yamlio
+import pytest
 
 
 def has(errors, text):
@@ -93,3 +94,33 @@ def test_planned_decision_must_appear_in_validation_plan(check_bundle):
         ia3 = next(x for x in d["decisions.yaml"]["decisions"] if x["decision_id"] == "IA-003")
         ia3["validation_status"] = "planned"
     assert has(check_bundle(planned), "planned の判断 IA-003 r1 に検証方法が対応付いていない")
+
+
+@pytest.mark.parametrize("basis", [["SIM-001"], ["SIM-001 TASK-03"], ["SIM-001", "到達率が低い"]])
+def test_simulation_only_critical_is_rejected_on_write_and_registration(tmp_path, basis):
+    import shutil
+    from conftest import BUNDLE
+    from iakit import contracts, finding_cmd, run_cmd
+    directory = tmp_path / "run"
+    shutil.copytree(BUNDLE, directory)
+    path = directory / "findings.yaml"
+    doc = yamlio.load(path)
+    data = {k: v for k, v in doc["findings"][0].items() if k not in finding_cmd.AUTO}
+    data.update(severity="critical", basis=basis)
+    before = path.read_bytes()
+    with pytest.raises(ValueError, match="模擬評価だけを根拠に critical"):
+        finding_cmd.add(directory, data)
+    assert path.read_bytes() == before
+    doc["findings"][0].update(severity="critical", basis=basis)
+    path.write_text(yamlio.dumps(doc), encoding="utf-8")
+    with pytest.raises(ValueError, match="模擬評価だけを根拠に critical"):
+        run_cmd.artifact(directory, "findings.yaml", "review_findings", [], [])
+    assert has(contracts.check_bundle(directory)["errors"], "模擬評価だけを根拠に critical")
+
+
+def test_simulation_can_accompany_independent_evidence_for_critical(bundle_docs):
+    from iakit.run_outputs import finding_item_errors
+    import copy
+    doc = copy.deepcopy(bundle_docs["findings.yaml"])
+    doc["findings"][0].update(severity="critical", basis=["SIM-001", "measurements/structure.yaml: 到達不能"])
+    assert finding_item_errors(doc, bundle_docs["run.yaml"]) == []

@@ -1,0 +1,30 @@
+schema_version: 0.1.0
+result: pass
+checks:
+- check: contracts
+  target: runs/RUN-P2-WEBIA-001
+  result: pass
+  files:
+  - content-inventory.yaml
+  - controlled-vocabulary.yaml
+  - decisions.yaml
+  - findings.yaml
+  - inputs.yaml
+  - provenance.yaml
+  - receipts.yaml
+  - run.yaml
+  - simulations.yaml
+  - sitemap.yaml
+  - taxonomy.yaml
+  input_files:
+    run: 3
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 61
+    stale:
+    - VR-0001
+    - VR-0002
+    - VR-0003
+  errors: []

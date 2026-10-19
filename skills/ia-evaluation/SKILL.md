@@ -86,6 +86,8 @@ uv run --locked iakit simulation add runs/<run_id> <ファイル|-> | --json '<J
 
 入力は `method`、`persona.statement`、`evaluator`（`host`・`model`）、`repetitions`、`items`（`item_id` と `prompt`）、`trials`（`repetition`・`item_id`・`first_choice`・`answer`）、カードソートでは `categories`。基準（既定は到達率0.8）を下回った項目は指摘にする（重大度は `major` まで）。判断を `simulated` にする場合は `iakit decision revise` で `validation_record_ids` に `SIM-nnn` を入れる。
 
+ツリーテストでは、タスクに `target_content_ids` があれば全件を載せる全ノードと、それぞれの主階層の入口を正解として集計する。省略時は従来どおり経路の末端を正解にする。正解と入口の一覧は評価者へ渡さない。新しい記録には、対象版のサイトマップ本文とハッシュも保存され、契約検査が正解・集計を再導出する。旧形式の記録は現行版のサイトマップで照合できる場合だけ証跡として使える。照合できない過去版は履歴として保持する。模擬評価と、それを参照する判断は、参照元より機密区分を下げられない。
+
 ### 4. 指摘を記録する
 
 `findings.yaml` に指摘を書く（スキーマ `findings.schema.json`）。ファイルをテキスト編集せず、1件ずつ次のコマンドで追加する。コマンドは `finding_id`（`FIND-001` から順）、`round`（現在の巡数）、`status: open` を決め、`target` の `version` を省けば対象の現行版を補う。スキーマや指摘ごとの整合性に合わなければ書き込まない。再評価で同じ問題を見つけた場合は新しく追加せず、既存の指摘の状態を更新する。
@@ -97,6 +99,7 @@ uv run --locked iakit finding add runs/<run_id> <ファイル|-> | --json '<JSON
 - `severity`: `critical` は主要タスクを妨げる問題、根拠の不正な断定（未照合・未レビュー・`not_supported` の主張や未実測の内容を確定事項として扱う）、機密情報の不適切な扱い。`major` は局所的な誤解や不整合。`minor` は意味を変えない表記上の問題。
 - `target`: 指摘した成果物のART-IDと版。`locator` に成果物内の位置（ID、見出し）。
 - `basis`: ルーブリック項目、検査結果、判断・入力・主張のID。
+  模擬評価の `SIM-nnn` だけを根拠にした `critical` は保存・登録・契約検査で拒否する。独立した根拠がある場合は、測定記録、実ユーザー調査、ルーブリック項目などへの参照を別の要素に記録する。
 - `recommendation`・`resolution_condition`: 推奨する修正と、解消したと判定できる条件。
 - `return_to`: 修正を担当する段階。
 問題が見つからない観点も、ia-review.mdに確かめた範囲を書く。指摘がない場合も `findings.yaml` を `findings: []` で作る（`iakit finding add` を使わずに作る場合は、本体の版と機密区分は登録時にコマンドが書き換える）。
@@ -119,6 +122,7 @@ uv run --locked iakit run refresh runs/<run_id>
 ```
 
 `refresh` は、未解決の重大な指摘を `run.yaml` の `refine.unresolved_critical` に同期する。
+検証計画の「実行済み」は、直後の括弧内に書いた証跡の実在・実行ID・現行の対象版まで照合する。過去の結果の説明は括弧の外に書く。構造の測定は測定元のハッシュも確認する。サイトマップを再登録したら、構造を測定し直してから検証計画を登録する。存在しない `SIM-nnn` や古い測定記録を証跡として記載しただけでは登録できない。
 評価一式の登録時には、指摘の有無によらず、登録済みの全設計成果物への依存を自動で付ける。評価後に設計成果物を変更・追加した場合は、評価一式も `stale` になるので再評価する。
 
 ## 再評価（Refine）

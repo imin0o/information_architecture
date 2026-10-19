@@ -17,10 +17,13 @@
       "required": ["simulation_id", "method", "target", "persona", "evaluator", "repetitions", "categories", "items",
                    "trials", "threshold", "results", "classification", "recorded_at"],
       "additionalProperties": false,
+      "dependentRequired": {"sitemap_snapshot": ["sitemap_sha256"], "sitemap_sha256": ["sitemap_snapshot"]},
       "properties": {
         "simulation_id": {"$ref": "common.schema.json#/$defs/simulation_id"},
         "method": {"enum": ["tree_test", "closed_card_sort"]},
         "target": {"description": "模擬したサイトマップとその版", "$ref": "common.schema.json#/$defs/artifact_ref"},
+        "sitemap_snapshot": {"description": "評価時点のサイトマップのUTF-8本文。新規記録ではコマンドが保存する", "type": "string", "minLength": 1},
+        "sitemap_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "persona": {
           "description": "問題定義から作った利用者像。設計意図や判断記録は含めない",
           "type": "object", "required": ["statement", "source"], "additionalProperties": false,
@@ -50,7 +53,8 @@
               "prompt": {"description": "評価者に渡した課題文・カードの文言", "$ref": "common.schema.json#/$defs/nonempty"},
               "expected": {"type": "array", "minItems": 1, "uniqueItems": true,
                            "items": {"$ref": "common.schema.json#/$defs/node_id"}},
-              "expected_first": {"oneOf": [{"$ref": "common.schema.json#/$defs/node_id"}, {"type": "null"}]}
+              "expected_first": {"oneOf": [{"$ref": "common.schema.json#/$defs/node_id"}, {"type": "null"}]},
+              "expected_first_choices": {"type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/node_id"}}
             }
           }
         },

@@ -11,7 +11,7 @@ from .decisions import max_classification
 from .run_cmd import load, now
 
 NAME = "simulations.yaml"
-AUTO = ("simulation_id", "results", "recorded_at")
+AUTO = ("simulation_id", "results", "recorded_at", "sitemap_snapshot", "sitemap_sha256")
 DEFAULT_THRESHOLD = 0.8
 
 
@@ -73,8 +73,7 @@ def add(directory: Path, data: dict) -> dict:
     categories = data.get("categories", [])
     items = []
     for item in data.get("items", []):
-        exp, first = simulations.expected(method, item.get("item_id"), site, categories)
-        items.append({**item, "expected": exp, "expected_first": first})
+        items.append({**item, **simulations.expected_item(method, item.get("item_id"), site, categories)})
     nodes = {n["node_id"] for n in site["nodes"]}
     unknown = sorted({v for t in data.get("trials", []) for v in (t.get("first_choice"), t.get("answer"))
                       if v is not None and v not in nodes})
@@ -88,12 +87,14 @@ def add(directory: Path, data: dict) -> dict:
            "repetitions": data.get("repetitions"), "categories": categories, "items": items,
            "trials": data.get("trials", []), "threshold": data.get("threshold", {"success_rate": DEFAULT_THRESHOLD}),
            "results": [], "classification": data.get("classification") or max_classification(
-               [reg["classification"], problem["classification"]]), "recorded_at": now()}
+               [reg["classification"], problem["classification"]]), "recorded_at": now(),
+           "sitemap_snapshot": (directory / reg["path"]).read_bytes().decode("utf-8"),
+           "sitemap_sha256": reg["sha256"]}
     doc["simulations"].append(sim)
     errors = yamlio.schema_errors(doc, "simulation.schema.json")
     if not errors:
         sim["results"] = simulations.derive_results(sim)
-        errors = simulations.record_errors(doc, {a["artifact_id"]: a for a in run["artifacts"]})
+        errors = simulations.record_errors(doc, {a["artifact_id"]: a for a in run["artifacts"]}, site)
     if errors:
         raise ValueError(f"{NAME} に書き込まない: " + " / ".join(errors[:5]))
     path.write_text(yamlio.dumps(doc), encoding="utf-8", newline="\n")

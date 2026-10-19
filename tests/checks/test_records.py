@@ -214,6 +214,9 @@ def test_revision_preserves_classification_until_explicitly_changed(bundle):
 def reregister_stale(directory):
     for a in yamlio.load(directory / "run.yaml")["artifacts"]:
         if a["status"] == "stale":
+            if a["kind"] == "validation_plan":
+                from iakit import measure
+                measure.structure(directory)
             run_cmd.artifact(directory, a["path"], a["kind"], [d["ref"] for d in a["depends_on"]], [],
                              no_impact="変更による内容への影響がないことを確認した")
 

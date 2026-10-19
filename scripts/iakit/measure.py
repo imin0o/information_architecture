@@ -7,8 +7,8 @@
 
 from pathlib import Path
 
-from . import measure_site, yamlio
-from .run_cmd import load, now
+from . import manifest, measure_site, yamlio
+from .run_store import load, now
 
 OUT = Path("measurements") / "structure.yaml"
 BASIS = "iakit measure structure"
@@ -117,12 +117,15 @@ def structure(directory: Path, site_dir: Path | None = None, baseline: Path | No
     reg = next((a for a in run["artifacts"] if a["kind"] == "sitemap" and a["status"] == "current"), None)
     if reg is None:
         raise ValueError("現行のサイトマップが登録されていない")
+    if manifest.sha256_file(directory / reg["path"]) != reg["sha256"]:
+        raise ValueError("サイトマップの内容が登録時から変わっている。先に登録し直す")
     vreg = next((a for a in run["artifacts"] if a["kind"] == "controlled_vocabulary"), None)
     site = yamlio.load(directory / reg["path"])
     vocab = yamlio.load(directory / vreg["path"]) if vreg else None
     target = {"artifact_id": reg["artifact_id"], "version": reg["version"]}
     sm = sitemap_metrics(site, vocab)
     doc = {"measurement": "structure", "run_id": run["run_id"], "measured_at": now(), "target": target,
+           "source_sha256": reg["sha256"],
            "thresholds": {"max_clicks": max_clicks}, "sitemap": sm, "site": None, "baseline": None, "comparison": None}
     after = None
     if site_dir:

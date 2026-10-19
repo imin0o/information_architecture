@@ -4,7 +4,7 @@ import shutil
 
 import pytest
 
-from iakit import measure, validation_plan, yamlio
+from iakit import contracts, measure, run_cmd, validation_plan, yamlio
 
 from conftest import BUNDLE
 
@@ -101,3 +101,70 @@ def test_validation_plan_accepts_executed_agent_rows_and_planned_human_rows():
     assert validation_plan.errors(plan(rows), "ART-011") == []
     old = ["## 未検証の判断と検証方法", "", "| 判断 | 方法 |", "|---|---|", "| IA-001 r2 | ツリーテスト |"]
     assert any("「実行者」「実行状況」の列がない" in e for e in validation_plan.errors(old, "ART-011"))
+
+
+@pytest.mark.parametrize("status", ["実行済み（SIM-999）", "実行済み（measurements/missing.yaml）",
+                                     "実行済み（measurements/../../outside.yaml）"])
+def test_missing_evidence_blocks_registration_and_completion(run_dir, status):
+    path = run_dir / "validation-plan.md"
+    path.write_text(path.read_text(encoding="utf-8").replace("実行済み（measurements/structure.yaml）", status), encoding="utf-8")
+    before = (run_dir / "run.yaml").read_bytes()
+    with pytest.raises(ValueError, match="証跡が無効"):
+        run_cmd.artifact(run_dir, "validation-plan.md", "validation_plan", [], [])
+    assert (run_dir / "run.yaml").read_bytes() == before
+    assert any("証跡が無効" in e for e in contracts.check_bundle(run_dir)["errors"])
+
+
+@pytest.mark.parametrize("change", ["version", "hash", "run_id", "results"])
+def test_measurement_must_match_run_and_current_target(run_dir, change):
+    path = run_dir / "measurements/structure.yaml"
+    doc = yamlio.load(path)
+    if change == "version":
+        doc["target"]["version"] += 1
+    elif change == "hash":
+        doc["source_sha256"] = "0" * 64
+    elif change == "run_id":
+        doc["run_id"] = "RUN-OTHER"
+    else:
+        doc["sitemap"]["tasks"][0]["clicks"] = 0
+    path.write_text(yamlio.dumps(doc), encoding="utf-8")
+    assert any("証跡が無効" in e for e in contracts.check_bundle(run_dir)["errors"])
+    measure.structure(run_dir)
+    assert contracts.check_bundle(run_dir)["errors"] == []
+
+
+def test_real_simulation_evidence_passes_but_stale_and_invalid_records_fail(run_dir):
+    from iakit import simulation_cmd
+    from test_simulations import tree_test
+    simulation_cmd.add(run_dir, tree_test())
+    run = yamlio.load(run_dir / "run.yaml")
+    lines = plan([("模擬ツリーテスト", "エージェント", "実行済み（SIM-001）")])
+    assert validation_plan.evidence_errors(lines, "plan", run_dir, run) == []
+    history = plan([("模擬ツリーテスト", "エージェント", "実行済み（SIM-001）。旧記録 SIM-999 は今回の証跡ではない")])
+    assert validation_plan.evidence_errors(history, "plan", run_dir, run) == []
+    path = run_dir / "simulations.yaml"
+    doc = yamlio.load(path)
+    doc["simulations"][0]["results"][0]["success_rate"] = 1.0
+    path.write_text(yamlio.dumps(doc), encoding="utf-8")
+    assert validation_plan.evidence_errors(lines, "plan", run_dir, run)
+    measure.structure(run_dir)
+    lines = plan([("構造の測定", "エージェント", "実行済み（measurements/structure.yaml）")])
+    next(a for a in run["artifacts"] if a["kind"] == "sitemap")["version"] += 1
+    assert validation_plan.evidence_errors(lines, "plan", run_dir, run)
+
+
+def test_unregistered_source_changes_cannot_be_measured_or_used_as_evidence(run_dir):
+    path = run_dir / "sitemap.yaml"
+    path.write_text(path.read_text(encoding="utf-8") + "\n# unregistered edit\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="先に登録し直す"):
+        measure.structure(run_dir)
+    with pytest.raises(ValueError, match="対象の内容が登録時から変わっている"):
+        run_cmd.artifact(run_dir, "validation-plan.md", "validation_plan", [], [])
+
+
+def test_human_evidence_must_be_an_existing_current_study(run_dir):
+    run = yamlio.load(run_dir / "run.yaml")
+    lines = plan([("ツリーテスト", "人", "実行済み（STUDY-001）")])
+    assert validation_plan.evidence_errors(lines, "plan", run_dir, run) == []
+    for status in ("実行済み（STUDY-999）", "実行済み（結果なし）。旧記録 STUDY-001"):
+        assert validation_plan.evidence_errors(plan([("ツリーテスト", "人", status)]), "plan", run_dir, run)

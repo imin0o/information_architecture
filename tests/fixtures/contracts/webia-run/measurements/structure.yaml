@@ -1,0 +1,66 @@
+measurement: structure
+run_id: RUN-FIXTURE-001
+measured_at: '2026-10-19T21:57:01+09:00'
+target: &id001
+  artifact_id: ART-004
+  version: 1
+source_sha256: fef64d184f4aa9f1f9950de181bf8db713e08380b0fa64d2787f028fe833ff69
+thresholds:
+  max_clicks: 3
+sitemap:
+  tasks:
+  - task_id: TASK-01
+    target: NODE-009
+    label: 南地区
+    clicks: 2
+  - task_id: TASK-02
+    target: NODE-010
+    label: 料金・申込み
+    clicks: 3
+  - task_id: TASK-03
+    target: NODE-007
+    label: 北地区
+    clicks: 2
+  - task_id: TASK-04
+    target: NODE-011
+    label: お問い合わせ
+    clicks: 1
+  one_click:
+  - NODE-002
+  - NODE-006
+  - NODE-010
+  - NODE-011
+  label_match:
+    NODE-002: contains
+    NODE-003: pref_label
+    NODE-004: pref_label
+    NODE-005: pref_label
+    NODE-006: contains
+    NODE-007: pref_label
+    NODE-008: pref_label
+    NODE-009: pref_label
+    NODE-010: mismatch
+    NODE-011: mismatch
+  duplicate_labels: {}
+site: null
+baseline: null
+comparison: null
+finding_candidates:
+- severity: minor
+  target: *id001
+  locator: NODE-010
+  problem: ノードのラベルが統制語彙の優先ラベル・同義語のどれとも一致せず、含みもしない
+  basis:
+  - iakit measure structure（measurements/structure.yaml）
+  recommendation: 優先ラベルに合わせるか、語彙に同義語として加える
+  resolution_condition: ラベルが優先ラベルか同義語に一致する
+  return_to: structure
+- severity: minor
+  target: *id001
+  locator: NODE-011
+  problem: ノードのラベルが統制語彙の優先ラベル・同義語のどれとも一致せず、含みもしない
+  basis:
+  - iakit measure structure（measurements/structure.yaml）
+  recommendation: 優先ラベルに合わせるか、語彙に同義語として加える
+  resolution_condition: ラベルが優先ラベルか同義語に一致する
+  return_to: structure

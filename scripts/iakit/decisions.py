@@ -163,6 +163,7 @@ def decision_errors(doc: dict, claims: dict, states: dict, inputs: dict[str, dic
         results = []
         sims = [sid for sid in d["validation_record_ids"] if sid.startswith("SIM-")]
         errors += _simulation_errors(tag, d, sims, simulations, artifact_versions)
+        used += [simulations[sid]["classification"] for sid in sims if sid in simulations]
         for sid in (sid for sid in d["validation_record_ids"] if not sid.startswith("SIM-")):
             study = studies.get(sid)
             if study is None:

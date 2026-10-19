@@ -2,27 +2,27 @@
 schema_version: '1.0'
 distributions:
 - skill: ia-analysis
-  distribution_id: DIST-fd910686233ee513
+  distribution_id: DIST-42ccc6d4b0e64f2d
   bundle_receipt_sha256: 
-    ced78326c68dfd6f7146467f4b09166de0b1aba897c9c967dc1699d026e64c94
+    e76d1952bff31e91c0f0abc37c13edbfe8a3801f64c9cf5dcadb8dbfa1d882b2
   files: 24
 - skill: ia-evaluation
-  distribution_id: DIST-2f4402010a97bfef
+  distribution_id: DIST-73882777c7cda681
   bundle_receipt_sha256: 
-    c067ec0dc508271d8de3cd9fe670e45560d3ed4aca27993e8aeb5b1ed3e634a7
+    9bac3d90aced1e4438f2ca19a832386877130b4ad166c1239548fb1f29b3b1c6
   files: 22
 - skill: ia-orchestrator
-  distribution_id: DIST-59d57c6eeb828942
+  distribution_id: DIST-25313d369bb533cb
   bundle_receipt_sha256: 
-    119a5eecdc3aadd84a05469a4646834bdf071cbe1cfd6207c546fe9190912a51
+    116dbc8f845b91bc69b5426c10afa24339260d2a8117b26458bade1d1c6d5087
   files: 96
 - skill: ia-structure
-  distribution_id: DIST-4713b35e0cd8e2e8
+  distribution_id: DIST-5f06856547f150ea
   bundle_receipt_sha256: 
-    62ed244ef72d406058e2a58dcc6424276ebe4bdc793df1bf16e9ee2cbbc35adc
+    17687c96a7b20b2a519c39d44d85a0bc77d14148a7cefa1d3c9f0ecf4726debe
   files: 25
 - skill: ia-taxonomy
-  distribution_id: DIST-715ee94743770589
+  distribution_id: DIST-9dc542c37c2f47b2
   bundle_receipt_sha256: 
-    e3e8701a0e347bf320c928ad654038b7f9af04363842fe94f2af4886a0286e01
+    379666b285b821f6c6f9d3c678908935eb1e70ec067fd29de002658cdaf544e0
   files: 30

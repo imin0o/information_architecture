@@ -324,6 +324,8 @@ def test_matching_artifact_classification_with_user_override_passes(run_copy):
             if dep["ref"] == "ART-004":
                 dep["sha256"] = run["artifacts"][3]["sha256"]
     (run_copy / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+    from iakit import measure
+    measure.structure(run_copy)
     assert contracts.check_bundle(run_copy)["result"] == "pass"
 
 

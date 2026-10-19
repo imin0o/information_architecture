@@ -32,6 +32,7 @@
         "type": "object", "required": ["task_id", "path"], "additionalProperties": false,
         "properties": {
           "task_id": {"$ref": "common.schema.json#/$defs/task_id"},
+          "target_content_ids": {"description": "到達先で必要なコンテンツ。全件を載せるノードを模擬評価の正解にする。省略時はpath末端だけ", "type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/content_id"}},
           "path": {"type": "array", "minItems": 1, "items": {"$ref": "common.schema.json#/$defs/node_id"}}
         }
       }

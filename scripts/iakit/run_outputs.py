@@ -77,6 +77,8 @@ def markdown_errors(directory: Path, run: dict, decisions: list[dict], *,
                    for heading in MARKDOWN_HEADINGS[a["kind"]] if f"## {heading}" not in headings]
         if a["kind"] == "validation_plan":
             errors += validation_plan.errors(lines, tag)
+            if a["status"] == "current" and a["artifact_id"] not in pending_artifacts:
+                errors += validation_plan.evidence_errors(lines, tag, directory, run)
         header = "\n".join(lines[:next((i for i, ln in enumerate(lines) if ln.startswith("## ")), len(lines))])
         levels = re.findall(r"^\s*(?:[-*]\s+)?機密区分\s*[:：]\s*`?(public|internal|confidential)`?\s*$", header, re.M)
         if levels != [a["classification"]]:
@@ -147,6 +149,11 @@ def finding_item_errors(doc: dict, run: dict) -> list[str]:
             errors.append(f"{fid}: resolved_in は対象と同じ成果物の、指摘より新しい登録済みの版にする")
         if f["status"] == "unresolved" and run["refine"]["rounds"] < 2 and f["severity"] == "critical":
             errors.append(f"{fid}: 2巡に達する前の重大な指摘は open のまま修正する")
+        sim_ref = re.compile(r"(?<![0-9A-Za-z_-])SIM-[0-9]{3}(?![0-9A-Za-z_-])")
+        independent = re.compile(r"(?:STUDY|ART|IA|KN|CLAIM|EV|NODE|TASK)-[0-9]+|measurements/|R-[0-9]+|iakit contracts")
+        if (f["severity"] == "critical" and any(sim_ref.search(b) for b in f["basis"])
+                and not any(not sim_ref.search(b) and independent.search(b) for b in f["basis"])):
+            errors.append(f"{fid}: 模擬評価だけを根拠に critical にできない（major 以下にする）")
     return errors
 
 
