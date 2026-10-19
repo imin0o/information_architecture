@@ -12,9 +12,9 @@ distributions:
     c067ec0dc508271d8de3cd9fe670e45560d3ed4aca27993e8aeb5b1ed3e634a7
   files: 22
 - skill: ia-orchestrator
-  distribution_id: DIST-19b68b6d4e8212e9
+  distribution_id: DIST-59d57c6eeb828942
   bundle_receipt_sha256: 
-    527d9f74670f2242ce1014936711cf9d37d24c6bf3b635fa0b20395e018a0e35
+    119a5eecdc3aadd84a05469a4646834bdf071cbe1cfd6207c546fe9190912a51
   files: 96
 - skill: ia-structure
   distribution_id: DIST-4713b35e0cd8e2e8
