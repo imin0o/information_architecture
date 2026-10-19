@@ -20,7 +20,7 @@ import json
 import re
 from pathlib import Path
 
-from . import yamlio
+from . import manifest, yamlio
 
 FORMATS = {
     ".txt": "text", ".md": "markdown", ".markdown": "markdown", ".pdf": "pdf", ".docx": "docx", ".csv": "csv",
@@ -107,10 +107,19 @@ def _walk(value, name: str, parts: list) -> list[dict]:
 
 def _structured(text: str, name: str, fmt: str) -> tuple[list[dict], list[dict]]:
     try:
-        data = json.loads(text) if fmt == "json" else yamlio.loads(text)
+        data = json.loads(text, object_pairs_hook=_unique_object) if fmt == "json" else yamlio.loads(text)
     except (ValueError, yamlio.DataError) as exc:
         return [], [unreadable(f"{name}#/", "parse_error", f"{fmt}として解析できない: {str(exc).splitlines()[0]}")]
     return _walk(data, name, []), []
+
+
+def _unique_object(pairs: list[tuple[str, object]]) -> dict:
+    data = {}
+    for key, value in pairs:
+        if key in data:
+            raise ValueError("JSONのキーが重複している")
+        data[key] = value
+    return data
 
 
 def parse(path: Path, fmt: str) -> tuple[list[dict], list[dict]]:
@@ -139,3 +148,31 @@ def build(run_id: str, input_id: str, sha256: str, path: Path, fmt: str) -> dict
     if errors:
         raise ValueError(f"取込み結果がスキーマに合わない: {errors[:3]}")
     return doc
+
+
+def load_registered(directory: Path, inputs_doc: dict, require_all: bool = False) -> tuple[dict, list[str]]:
+    """内容ハッシュ・スキーマ・入力との対応を照合し、検査に通った取込み結果だけを返す。"""
+    docs, errors = {}, []
+    for record in inputs_doc["inputs"]:
+        iid = record["input_id"]
+        path = directory / "ingest" / f"{iid}.yaml"
+        if not path.is_file():
+            if require_all or "ingest_sha256" in record:
+                errors.append(f"{iid}: 取込み結果がない。iakit input add --replace で再登録する")
+            continue  # 手書きの旧契約素材には取込み結果がない場合がある
+        try:
+            doc = yamlio.load(path)
+            found = yamlio.schema_errors(doc, "ingest.schema.json")
+            if found:
+                errors.extend(f"ingest/{path.name} {e}" for e in found[:3])
+                continue
+            if (doc["run_id"], doc["input_id"], doc["sha256"], doc["format"], doc["unreadable"]) != (
+                    inputs_doc["run_id"], iid, record["sha256"], record["format"], record["unreadable"]):
+                errors.append(f"{iid}: 取込み結果が現在の入力登録と対応しない。再登録する")
+            elif record.get("ingest_sha256") != manifest.sha256_file(path):
+                errors.append(f"{iid}: 取込み結果の内容ハッシュが未登録か一致しない。iakit input add --replace で再登録する")
+            else:
+                docs[iid] = doc
+        except (OSError, ValueError):
+            errors.append(f"{iid}: 取込み結果を読み込めない。iakit input add --replace で再登録する")
+    return docs, errors

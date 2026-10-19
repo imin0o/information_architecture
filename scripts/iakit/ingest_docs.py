@@ -42,10 +42,17 @@ def _xml_units(root, name: str) -> list[dict]:
         if text or attrs:
             units.append(unit(f"{name}#xpath={path}", "element", text or None, fields=attrs or None))
         counts: dict[str, int] = {}
+        text_index = 1 if el.text is not None else 0
         for child in el:
             tag = _local(child.tag)
             counts[tag] = counts.get(tag, 0) + 1
             walk(child, f"{path}/{tag}[{counts[tag]}]")
+            # XPathのtext()は空白だけの本文も数える。子要素直後も文書順に残す。
+            if child.tail is not None:
+                text_index += 1
+            tail = (child.tail or "").strip()
+            if tail:
+                units.append(unit(f"{name}#xpath={path}/text()[{text_index}]", "element", tail))
 
     walk(root, f"/{_local(root.tag)}")
     return units

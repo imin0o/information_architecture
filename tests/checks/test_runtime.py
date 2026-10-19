@@ -117,8 +117,8 @@ def sourced_run(installed, tmp_path):
                                                 "source_verification", "support_status")} | {"primary": True}])
     (directory / "decisions.yaml").write_text(yamlio.dumps({"schema_version": "1.0", "run_id": "RUN-SOURCE",
                                                            "decisions": [decision]}), encoding="utf-8")
-    (directory / "information-audit.md").write_text("# Audit\n\n## 仮定に基づく箇所\n\nなし\n\n## 判断\n\nIA-001 r1\n",
-                                                    encoding="utf-8")
+    from test_run_cmd import audit
+    audit(directory, "## 仮定に基づく箇所\n\nなし\n\n## 判断\n\nIA-001 r1\n")
     code, out = run(installed, "run", "artifact", directory, "information-audit.md", "--kind", "information_audit")
     assert code == 0, out
     return directory

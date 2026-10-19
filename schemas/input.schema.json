@@ -29,6 +29,7 @@
         "description": {"$ref": "common.schema.json#/$defs/nonempty"},
         "received_at": {"$ref": "common.schema.json#/$defs/datetime"},
         "sha256": {"$ref": "common.schema.json#/$defs/sha256"},
+        "ingest_sha256": {"description": "固定したingest/<input_id>.yaml全体のSHA-256。生成後の本文・flagsの変更を検出する", "$ref": "common.schema.json#/$defs/sha256"},
         "classification": {"$ref": "common.schema.json#/$defs/classification"},
         "classification_source": {
           "description": "default は未指定時の internal。区分の引き下げはユーザーの明示指定（user）だけで行う",

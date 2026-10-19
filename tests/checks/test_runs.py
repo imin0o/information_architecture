@@ -5,7 +5,7 @@ import shutil
 
 import pytest
 
-from iakit import cli, contracts, manifest, yamlio
+from iakit import cli, contracts, manifest, run_outputs, yamlio
 from iakit.paths import FIXTURES
 
 BUNDLE = FIXTURES / "contracts" / "webia-run"
@@ -332,3 +332,47 @@ def test_standard_route_requires_every_route_skill_record(check_bundle):
     def drop(d):
         d["run.yaml"]["skills"] = [s for s in d["run.yaml"]["skills"] if s["name"] != "ia-structure"]
     assert has(check_bundle(drop), "経路に必要なSkill ['ia-structure'] の記録がない")
+
+
+@pytest.mark.parametrize("invalid", ["schema", "yaml", "duplicate", "extra_property"])
+def test_contract_error_reports_never_include_private_values(run_copy, tmp_path, capsys, invalid):
+    private = "PRIVATE_BODY_SENTINEL"
+    path = run_copy / "observations.yaml"
+    if invalid in ("schema", "extra_property"):
+        doc = yamlio.load(path)
+        doc["studies"][0]["classification"] = "confidential"
+        if invalid == "schema":
+            doc["studies"][0]["summary"] = {"private_text": private}
+        else:
+            doc["studies"][0][private] = "unexpected property"
+        text = yamlio.dumps(doc)
+    elif invalid == "duplicate":
+        text = f"summary: {private}\nsummary: another\n"
+    else:
+        text = f"summary: [{private}\n"
+    path.write_text(text, encoding="utf-8")
+    report = tmp_path / "report.yaml"
+    assert cli.main(["contracts", "check", str(run_copy), "--report", str(report)]) == 1
+    assert private not in report.read_text(encoding="utf-8")
+    captured = capsys.readouterr()
+    assert private not in captured.out + captured.err
+    assert yamlio.load(report)["checks"][0]["errors"]
+
+
+@pytest.mark.parametrize("kind", sorted(run_outputs.MARKDOWN_KINDS))
+def test_each_markdown_artifact_requires_its_template_headings(run_copy, kind):
+    run = yamlio.load(run_copy / "run.yaml")
+    artifact = next(a for a in run["artifacts"] if a["kind"] == kind)
+    path = run_copy / artifact["path"]
+    # 必須見出しをコード例の中へ隠しても成果物の節としては認めない。
+    heading = "## " + run_outputs.MARKDOWN_HEADINGS[kind][0]
+    path.write_text(path.read_text(encoding="utf-8").replace(heading, f"```markdown\n{heading}\n```"), encoding="utf-8")
+    assert has(contracts.check_bundle(run_copy)["errors"], f"必須見出し「{heading}」がない")
+
+
+@pytest.mark.parametrize("replacement", ["", "- 機密区分: public", "```\n- 機密区分: internal\n```",
+                                         "- 機密区分: internal\n- 機密区分: public"])
+def test_markdown_classification_must_match_once_in_header(run_copy, replacement):
+    path = run_copy / "problem-definition.md"
+    path.write_text(path.read_text(encoding="utf-8").replace("- 機密区分: internal", replacement), encoding="utf-8")
+    assert has(contracts.check_bundle(run_copy)["errors"], "冒頭に機密区分: internal を1件示す")

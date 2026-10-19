@@ -59,11 +59,14 @@ def check(target: Path) -> dict:
         try:
             data = _load(path)
         except Exception as exc:  # ruamel の各種例外をまとめて扱う
-            errors.append(f"{path.name}: YAMLとして読めない: {str(exc).splitlines()[0]}")
+            mark = getattr(exc, "problem_mark", None)
+            position = f" line={mark.line + 1} column={mark.column + 1}" if mark else ""
+            errors.append(f"{path.name}: YAMLとして読めない ({type(exc).__name__}){position}")
             continue
         validator = Draft202012Validator(registry.contents(schema), registry=registry)
-        errors += [f"{path.name}: {'/'.join(str(p) for p in e.absolute_path) or '$'}: {e.message}"
-                   for e in sorted(validator.iter_errors(data), key=lambda e: [str(p) for p in e.absolute_path])]
+        for error in sorted(validator.iter_errors(data), key=lambda e: [str(p) for p in e.absolute_path]):
+            missing = ": " + ", ".join(k for k in error.validator_value if k not in error.instance) if error.validator == "required" else ""
+            errors.append(f"{path.name}: {'/'.join(str(p) for p in error.absolute_path) or '$'}: {error.validator}{missing}")
     if not checked:
         errors.append("検査できるファイルがない（このSkillにスキーマを同梱した成果物を置いたディレクトリを指定する）")
     return {"check": "schema_only", "result": "fail" if errors else "pass", "checked": checked,

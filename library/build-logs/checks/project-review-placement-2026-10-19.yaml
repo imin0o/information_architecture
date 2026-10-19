@@ -1,0 +1,452 @@
+schema_version: 0.1.0
+result: pass
+checks:
+- check: accept_placement
+  os: Windows 11
+  uv: uv 0.12.7 (61291a8ca 2026-08-27 x86_64-pc-windows-msvc)
+  runner: uv run --no-project <ia-orchestrator>/scripts/run_iakit.py
+  distribution_ids:
+    ia-analysis: DIST-3923445a80029e5c
+    ia-evaluation: DIST-225b614bfbdb6c4e
+    ia-orchestrator: DIST-74126d9861e0f744
+    ia-structure: DIST-6e4dbc0d82e068e4
+    ia-taxonomy: DIST-5e3061e59a9645e3
+  matches_record: true
+  placements:
+  - host_layout: claude-code
+    placement: <workspace>/.claude/skills
+    variant: normal
+    checks:
+    - name: placement_integrity
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_web_ia
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_taxonomy
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: input_add
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: contracts_check
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_unchanged
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt_again
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_changed_input
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: '再開前の照合に失敗: INPUT-001: 実体が登録時と異なる。iakit input add --replace
+        で再登録する'"
+    - name: refine_1
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_2
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_3
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: 'refine: 修正・再評価は2巡まで'"
+    - name: unsupported_route
+      expect: pass
+      exit_code: 0
+      result: pass
+  - host_layout: claude-code
+    placement: <workspace>/.claude/skills
+    variant: other_cwd
+    checks:
+    - name: placement_integrity
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_web_ia
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_taxonomy
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: input_add
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: contracts_check
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_unchanged
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt_again
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_changed_input
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: '再開前の照合に失敗: INPUT-001: 実体が登録時と異なる。iakit input add --replace
+        で再登録する'"
+    - name: refine_1
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_2
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_3
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: 'refine: 修正・再評価は2巡まで'"
+    - name: unsupported_route
+      expect: pass
+      exit_code: 0
+      result: pass
+  - host_layout: claude-code
+    placement: <workspace>/.claude/skills
+    variant: space_in_path
+    checks:
+    - name: placement_integrity
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_web_ia
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_taxonomy
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: input_add
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: contracts_check
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_unchanged
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt_again
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_changed_input
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: '再開前の照合に失敗: INPUT-001: 実体が登録時と異なる。iakit input add --replace
+        で再登録する'"
+    - name: refine_1
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_2
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_3
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: 'refine: 修正・再評価は2巡まで'"
+    - name: unsupported_route
+      expect: pass
+      exit_code: 0
+      result: pass
+  - host_layout: claude-code
+    placement: <workspace>/.claude/skills
+    variant: negative
+    checks:
+    - name: missing_dependency:web_ia
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: \"標準経路に必要なSkillがない: ['ia-structure']。段階を省略せず、配置してから開始する\""
+    - name: missing_unneeded:taxonomy
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: incompatible_contract:taxonomy
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: \"ia-analysis: 入出力契約の版 '2.0' は非互換（必要: 1.0）。Skillを更新してから開始する\""
+    - name: modified_file:taxonomy
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: \"配布物の検査に失敗した: ['ia-taxonomy: SKILL.md が配布時から変わった']。配布物をディレクトリ単位で入れ替えてから開始する\""
+    - name: mixed_shared_id:taxonomy
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: \"配布物の検査に失敗した: ['CLAIM-0001: ia-orchestrator と ia-taxonomy で内容が異なる。両方を同じ配布から更新する']。配布物をディレクトリ単位で入れ替えてから開始する\""
+    - name: standalone_domain_skill
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: standalone_schema_check
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: standalone_schema_check_broken
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: 'errors:'
+  - host_layout: codex
+    placement: <workspace>/.agents/skills
+    variant: normal
+    checks:
+    - name: placement_integrity
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_web_ia
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_taxonomy
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: input_add
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: contracts_check
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_unchanged
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt_again
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_changed_input
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: '再開前の照合に失敗: INPUT-001: 実体が登録時と異なる。iakit input add --replace
+        で再登録する'"
+    - name: refine_1
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_2
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_3
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: 'refine: 修正・再評価は2巡まで'"
+    - name: unsupported_route
+      expect: pass
+      exit_code: 0
+      result: pass
+  - host_layout: codex
+    placement: <workspace>/.agents/skills
+    variant: other_cwd
+    checks:
+    - name: placement_integrity
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_web_ia
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_taxonomy
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: input_add
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: contracts_check
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_unchanged
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt_again
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_changed_input
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: '再開前の照合に失敗: INPUT-001: 実体が登録時と異なる。iakit input add --replace
+        で再登録する'"
+    - name: refine_1
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_2
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_3
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: 'refine: 修正・再評価は2巡まで'"
+    - name: unsupported_route
+      expect: pass
+      exit_code: 0
+      result: pass
+  - host_layout: codex
+    placement: <workspace>/.agents/skills
+    variant: space_in_path
+    checks:
+    - name: placement_integrity
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_web_ia
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: init_taxonomy
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: input_add
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: contracts_check
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_unchanged
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: interrupt_again
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: resume_changed_input
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: '再開前の照合に失敗: INPUT-001: 実体が登録時と異なる。iakit input add --replace
+        で再登録する'"
+    - name: refine_1
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_2
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: refine_3
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: 'refine: 修正・再評価は2巡まで'"
+    - name: unsupported_route
+      expect: pass
+      exit_code: 0
+      result: pass
+  - host_layout: codex
+    placement: <workspace>/.agents/skills
+    variant: negative
+    checks:
+    - name: missing_dependency:web_ia
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: \"標準経路に必要なSkillがない: ['ia-structure']。段階を省略せず、配置してから開始する\""
+    - name: missing_unneeded:taxonomy
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: incompatible_contract:taxonomy
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: \"ia-analysis: 入出力契約の版 '2.0' は非互換（必要: 1.0）。Skillを更新してから開始する\""
+    - name: modified_file:taxonomy
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: \"配布物の検査に失敗した: ['ia-taxonomy: SKILL.md が配布時から変わった']。配布物をディレクトリ単位で入れ替えてから開始する\""
+    - name: mixed_shared_id:taxonomy
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: "error: \"配布物の検査に失敗した: ['CLAIM-0001: ia-orchestrator と ia-taxonomy で内容が異なる。両方を同じ配布から更新する']。配布物をディレクトリ単位で入れ替えてから開始する\""
+    - name: standalone_domain_skill
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: standalone_schema_check
+      expect: pass
+      exit_code: 0
+      result: pass
+    - name: standalone_schema_check_broken
+      expect: stop
+      exit_code: 1
+      result: pass
+      detail: 'errors:'
+  result: pass

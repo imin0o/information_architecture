@@ -108,7 +108,7 @@ Validate（ia-evaluation）の指摘は `findings.yaml` に記録される。重
 
 ## 中断と再開
 
-中断するときは `iakit run event runs/<run_id> interrupted --note <理由>` を記録する。再開するときは `iakit run event runs/<run_id> resumed` を実行する。コマンドは入力登録簿、入力の実体、取込み結果、成果物のハッシュを照合し、不一致があれば再開を止める。
+中断するときは `iakit run event runs/<run_id> interrupted --note <理由>` を記録する。再開するときは `iakit run event runs/<run_id> resumed` を実行する。コマンドは入力登録簿、入力の実体、取込み結果、成果物のハッシュを照合し、不一致があれば再開を止める。取込み結果の内容ハッシュは `inputs.yaml` の `ingest_sha256` に記録する。旧実行で未登録の場合は入力を `input add --replace` で再登録し、命令候補の確認と、`stale` になった成果物の点検をやり直す。
 
 - 入力の実体が変わっていた場合は `iakit input add --replace <input_id>` で再登録する。依存する成果物が `stale` になる。
 - `stale` の成果物は、再生成するか、影響がないことを確かめて再登録するまで現行版として使わない。影響なしとする場合は、その確認を判断として記録する。

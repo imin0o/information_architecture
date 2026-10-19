@@ -1,0 +1,151 @@
+review_date: '2026-10-19'
+commit: e6fb4dc087834dd92f06e8d713351264bf45bb00
+scope:
+  - requirements.md・roadmap.md と実装の対応
+  - CLI・入力取込み・実行と再開・成果物と判断・出典と知識の検査
+  - 配布生成と同梱処理・Gitフック・CI・受け入れ検査の実装と既存証跡
+result: findings
+implementation_changed: false
+graph:
+  update: incremental
+  files_reparsed: 14
+  files_total: 81
+  nodes: 862
+  edges: 8009
+  languages: [bash, python]
+  errors: []
+validation:
+  python: 3.14.3
+  uv: 0.12.7
+  pytest:
+    command: uv run --locked pytest -q
+    result: pass
+    passed: 618
+    seconds: 300.81
+  project_checks:
+    command: uv run --locked iakit check --local
+    result: pass
+    checks: [manifest, fixtures, leaks, cases, contracts, library, dist]
+    index_files_scanned: 248
+    regenerated_distributions: 5
+  additional_probes: 自作データと契約fixtureの一時コピーで下記7件を再現した。
+findings:
+  - id: REVIEW-001
+    priority: P1
+    title: 機密値が検査エラーから本文を含まないはずのレポートへ流出する
+    locations: [scripts/iakit/yamlio.py:104, scripts/iakit/contracts.py:56, scripts/iakit/cli.py:48]
+    reproduce:
+      - tests/fixtures/contracts/webia-run を一時ディレクトリへコピーする。
+      - observations.yaml の最初のstudyを機密扱いにし、summaryを文字列でなく辞書にする。辞書のprivate_textに自作の検査用文字列を置く。
+      - contracts.check_bundle の結果を yamlio.dumps で保存する。CLIの contracts check DIR --report PATH でも同じエラーが保存される。
+      - leak_rules.inspect にそのレポートを渡す。
+    observed: スキーマエラーに辞書の値がそのまま入り、機密区分はレポートへ継承されず、漏えい検査の指摘も空になる。
+    impact: 検査失敗を記録する通常の操作で、機密本文をGit管理される検査記録へ混入させうる。
+    repair: 機械記録にはパス・制約・エラーコードを保存し、入力値やYAML解析エラーの本文断片を含めない。詳細診断は機密区分を継承した管理外の保存先に限定する。
+  - id: REVIEW-002
+    priority: P1
+    title: accepted にした未解消のcritical指摘を残してcompletedにできる
+    locations: [scripts/iakit/run_cmd.py:151, scripts/iakit/run_outputs.py:108, scripts/iakit/judgment.py:19]
+    reproduce:
+      - 契約fixtureのコピーをin_progressにする。
+      - findings.yaml の最初の指摘をcritical・acceptedに変更し、versionを2にする。
+      - run artifact でfindings.yamlを登録し直し、staleになったia-review.mdもART-009への依存を付けて再登録する。
+      - run event DIR completed を実行する。
+    observed: 終了コード0、statusはcompleted、unresolved_criticalは空、契約検査もpassになる。
+    impact: 解消済み以外のcriticalを合格不可とする独立判定側と、標準経路の完了条件が食い違う。固定ケース以外では独立判定も必須でなく、誤った完了状態が残る。
+    repair: 未解消criticalの定義を共通化し、acceptedも完了を妨げる対象にする。
+  - id: REVIEW-003
+    priority: P2
+    title: 取込み本文の変更を再開・契約検査が検出しない
+    locations: [scripts/iakit/run_inputs.py:124, scripts/iakit/run_outputs.py:126]
+    reproduce:
+      - run init と input add で自作のテキストを登録する。
+      - 原本とsha256フィールドは変えず、ingest/INPUT-001.yaml のunitsのtextだけを別の内容へ変更する。
+      - run resume と contracts check を実行する。
+    observed: resume_errorsは空で、契約検査もpassになる。
+    impact: 元の入力と異なる本文を、同じ入力ハッシュに由来する有効な取込み結果として使える。命令候補のflagsも同様に変更できる。
+    repair: 取込み結果の内容ハッシュを生成時に登録し、再開と契約検査で検証するか、固定入力からの再取込み結果と照合する。
+  - id: REVIEW-004
+    priority: P2
+    title: 不正な取込み結果をスキーマ検査前に参照してCLIが落ちる
+    locations: [scripts/iakit/runs.py:158, scripts/iakit/contracts.py:179, scripts/iakit/contracts.py:196]
+    reproduce:
+      - 入力を登録した実行のingest/INPUT-001.yamlを、unitsを持たない有効なYAMLへ変更する。
+      - contracts check を実行する。
+    observed: ingest_errorsのスキーマ検査より先にflagged_unitsがunitsを読み、KeyErrorで終了する。
+    impact: 構造不正を通常のfail結果として報告できず、レポートの保存や完了操作のエラー処理も中断する。
+    repair: 取込み結果を読み込んだ直後にスキーマ検査し、通った文書だけを命令候補の参照検査へ渡す。
+  - id: REVIEW-005
+    priority: P2
+    title: Markdown成果物の必須見出しと機密区分を検査していない
+    locations: [scripts/iakit/run_outputs.py:31, requirements.md:603]
+    reproduce:
+      - 契約fixtureのコピーでproblem-definition.mdをタイトル・仮定の節・IA-001 r2だけにする。
+      - 対応する成果物と依存元記録のハッシュを更新する。
+      - contracts check を実行する。
+    observed: 問題定義の必須項目も機密区分の表示もない文書でpassになる。
+    impact: 付録Aが明示する形式検査が抜けており、必要な節を欠いた成果物を完了扱いにできる。
+    repair: 型ごとの必須見出しと機密区分の表示・実行記録との一致を検査する。内容の適切さの判定とは分ける。
+  - id: REVIEW-006
+    priority: P2
+    title: XMLの子要素の後に続く本文を黙って捨てる
+    locations: [scripts/iakit/ingest_docs.py:40, scripts/iakit/ingest_docs.py:48]
+    reproduce:
+      - 自作XMLとして '<p>BEFORE<em>EMPHASIS</em>AFTER</p>' を作る。
+      - ingest.parse(path, 'xml') を実行する。
+    observed: BEFOREとEMPHASISだけを取り込み、AFTERは失われる。unreadableは空になる。
+    impact: 混在テキストを含む資料やCMSエクスポートから、条件や説明を欠落させたまま設計を進めうる。
+    repair: ElementTreeのtailも文書順と位置付きで取り込むか、未対応の混在部分をunreadableとして明示する。
+  - id: REVIEW-007
+    priority: P2
+    title: JSONの重複キーを黙って上書きする
+    locations: [scripts/iakit/ingest.py:110]
+    reproduce:
+      - 自作JSONとして '{"title":"FIRST","title":"SECOND"}' を作る。
+      - ingest.parse(path, 'json') を実行する。
+    observed: SECONDだけを取り込み、FIRSTは失われる。unreadableは空になる。
+    impact: YAMLとCSVでは重複を拒否しているが、JSONでは曖昧な入力を正常に読み取ったものとして扱う。
+    repair: object_pairs_hook等で全階層の重複キーを検出し、parse_errorとして入力へ記録する。
+limits:
+  - Python 3.12での再実行と、両ホストのモデルを使う受け入れ評価は今回実施していない。
+  - 原典の内容・引用の適切さ・人による原典照合は再判定していない。
+cleanup:
+  - 自作の検証用プログラムと一時コピーは、結果と再現手順を本記録へ残して削除した。
+  - グラフは再利用する索引として保持した。
+resolution:
+  result: pass
+  resolved: [REVIEW-001, REVIEW-002, REVIEW-003, REVIEW-004, REVIEW-005, REVIEW-006, REVIEW-007]
+  full_tests:
+    - {python: 3.12.13, passed: 657, seconds: 269.71}
+    - {python: 3.14.3, passed: 657, seconds: 266.29}
+  candidate_checks: pass（全候補を一時indexで検査。実indexは変更していない）
+  placement_checks: {result: pass, checks: 94, host_layouts: [claude-code, codex]}
+  regenerated_distributions: 5
+  graph: {files: 81, nodes: 879, edges: 8237, languages: [bash, python], errors: []}
+  not_run: [実モデルによる両ホストの受け入れ再実行, 原典の内容と引用の人による再判定]
+  focused_tests: {passed: 223, seconds: 56.83}
+  followup_focused_tests: {passed: 83, seconds: 9.32}
+  checks:
+    REVIEW-001: tests/checks/test_runs.py::test_contract_error_reports_never_include_private_values
+    REVIEW-002: tests/checks/test_run_cmd.py::test_accepted_critical_cannot_complete_normal_route
+    REVIEW-003: tests/checks/test_run_cmd.py::test_ingest_integrity_is_checked_before_resume_review_and_contracts
+    REVIEW-004: tests/checks/test_run_cmd.py::test_ingest_integrity_is_checked_before_resume_review_and_contracts
+    REVIEW-005: tests/checks/test_runs.py::test_each_markdown_artifact_requires_its_template_headings
+    REVIEW-006: tests/checks/test_ingest.py::test_xml_mixed_content_keeps_all_text_in_document_order
+    REVIEW-007: tests/checks/test_ingest.py::test_duplicate_json_keys_are_unreadable_at_any_depth
+  evidence:
+    - library/build-logs/checks/project-review-dist-2026-10-19.yaml
+    - library/build-logs/checks/project-review-placement-2026-10-19.yaml
+    - library/build-logs/checks/project-review-fixes-2026-10-19.yaml
+  compatibility: 既存の取込み結果にingest_sha256がない実行はinput add --replaceで再登録する。取込み結果が変われば確認記録を無効化し、依存成果物をstaleにする。
+  fixture_hash_regeneration: 更新した各成果物の実ファイルからSHA-256を計算し、契約fixtureのrun.yamlのartifacts[].sha256と、対応するdepends_on[].sha256を同じ値へ更新した。
+  cleanup:
+    removed: [.tmp/update_review_fixture.py]
+    blocked_by_automatic_review:
+      action: focused pytest runsの一時出力3件と、それを指すpytest-currentリンクの削除
+      reason: blocked by policy（詳細な理由は返されていない）
+      paths:
+        - C:/Users/makot/AppData/Local/Temp/pytest-of-makot/pytest-845
+        - C:/Users/makot/AppData/Local/Temp/pytest-of-makot/pytest-846
+        - C:/Users/makot/AppData/Local/Temp/pytest-of-makot/pytest-current
+        - Z:/_projects/information_architecture/.tmp/review-focused

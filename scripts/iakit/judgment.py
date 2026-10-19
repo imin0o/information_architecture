@@ -7,7 +7,7 @@
 
 from pathlib import Path
 
-from . import yamlio
+from . import runs, yamlio
 from .cases import CASES
 
 FILE = "rubric-judgment.yaml"
@@ -15,8 +15,7 @@ FILE = "rubric-judgment.yaml"
 
 def _expected_verdict(j: dict, run: dict, findings: dict | None) -> str:
     # 残置を了承した（accepted）重大な指摘も、解消していないため合格を妨げる
-    unresolved = [f for f in (findings or {}).get("findings", [])
-                  if f["severity"] == "critical" and f["status"] != "resolved"]
+    unresolved = runs.unresolved_critical((findings or {}).get("findings", []))
     ok = (run["status"] == "completed" and not unresolved
           and all(c["result"] == "met" for c in j["conditions"] + j["human_checks"])
           and all(i["result"] != "fail" for i in j["items"])

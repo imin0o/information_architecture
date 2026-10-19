@@ -31,6 +31,7 @@ def _ingest(directory: Path, run_id: str, record: dict) -> None:
     out = directory / "ingest" / f"{record['input_id']}.yaml"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(yamlio.dumps(doc), encoding="utf-8", newline="\n")
+    record["ingest_sha256"] = manifest.sha256_file(out)
     record["unreadable"] = doc["unreadable"]
 
 
@@ -60,13 +61,14 @@ def add(directory: Path, source: Path, kind: str, description: str, fmt: str | N
     else:
         inputs["inputs"].append(record)
     save(directory, "inputs.yaml", inputs)
-    if old and any(old[key] != record[key] for key in ("sha256", "path", "format")):
+    changed = old and any(old.get(key) != record.get(key) for key in ("sha256", "path", "format", "ingest_sha256"))
+    if changed:
         # 同じ入力ID・位置でも内容が変われば確認し直す。送信の履歴は証跡として残す。
         run = load(directory, "run.yaml")
         if "input_reviews" in run:
             run["input_reviews"] = [r for r in run["input_reviews"] if r["input_id"] != replace]
             save(directory, "run.yaml", run)
-    result = refresh(directory)
+    result = refresh(directory, changed_inputs=(record["input_id"],) if changed else ())
     flagged = _flagged(directory, record["input_id"])
     out = {"input_id": record["input_id"], "path": rel, "format": record["format"],
            "classification": record["classification"], "unreadable": len(record["unreadable"]),
@@ -78,7 +80,14 @@ def add(directory: Path, source: Path, kind: str, description: str, fmt: str | N
 
 
 def _flagged(directory: Path, input_id: str) -> list[str]:
-    doc = yamlio.load(directory / "ingest" / f"{input_id}.yaml")
+    inputs = load(directory, "inputs.yaml")
+    inputs["inputs"] = [i for i in inputs["inputs"] if i["input_id"] == input_id]
+    if not inputs["inputs"]:
+        raise ValueError(f"{input_id} は登録されていない")
+    docs, errors = ingest.load_registered(directory, inputs, require_all=True)
+    if errors:
+        raise ValueError(" / ".join(errors))
+    doc = docs[input_id]
     return [u["locator"] for u in doc["units"] if "instruction_like" in u.get("flags", [])]
 
 
@@ -115,15 +124,13 @@ def resume_errors(directory: Path) -> list[str]:
     errors = []
     if manifest.sha256_file(directory / "inputs.yaml") != run["inputs_sha256"]:
         errors.append("inputs.yaml が実行記録の後に変わった。iakit run refresh で依存をstaleにしてから進める")
+    errors += ingest.load_registered(directory, inputs, require_all=True)[1]
     for i in inputs["inputs"]:
         path = directory / i["path"]
         if not path.is_file():
             errors.append(f"{i['input_id']}: 実体 {i['path']} がない（照合済みに数えない）")
         elif manifest.sha256_file(path) != i["sha256"]:
             errors.append(f"{i['input_id']}: 実体が登録時と異なる。iakit input add --replace で再登録する")
-        ingested = directory / "ingest" / f"{i['input_id']}.yaml"
-        if not ingested.is_file() or yamlio.load(ingested).get("sha256") != i["sha256"]:
-            errors.append(f"{i['input_id']}: 取込み結果がないか古い")
     for a in run["artifacts"]:
         path = directory / a["path"]
         if not path.is_file() or manifest.sha256_file(path) != a["sha256"]:

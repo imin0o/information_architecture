@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-from . import yamlio
+from . import runs
 from .decisions import latest_active
 
 STAGE_KINDS = {
@@ -15,8 +15,35 @@ STAGE_KINDS = {
 MARKDOWN_KINDS = {"problem_definition", "information_audit", "classification_options", "information_architecture",
                   "ia_review", "validation_plan"}
 ASSUMPTION_HEADING = "## 仮定に基づく箇所"
+# templates/*.md の必須節。対応が変わったらtest_markdown_contract_matches_templatesで検出する。
+MARKDOWN_HEADINGS = {
+    "problem_definition": ["判定に要る4項目", "解くべき問題", "主要タスク", "範囲と制約", "関連する判断"],
+    "information_audit": ["インベントリの概要", "重複", "欠落", "矛盾", "粒度の不一致", "同名異義語・同義語の候補",
+                          "情報ニーズと探索行動の仮説", "不明点と追加調査事項", "後の段階への申し送り"],
+    "classification_options": ["比較した案", "比較", "採った案と理由", "同名異義語・同義語・矛盾の扱い", "対象外・未分類", "未検証の事項"],
+    "information_architecture": ["構造の種類と採用理由", "代替構造", "ナビゲーション", "主要タスクの経路", "コンテンツの配置", "意図的な例外", "未検証の事項"],
+    "ia_review": ["指摘の一覧", "観点ごとの結果", "主要タスクの経路の点検", "機械検査", "ルーブリックの観点との対応",
+                  "改善の優先度と修正理由", "未解決の指摘", "模擬評価の扱い"],
+    "validation_plan": ["未検証の判断と検証方法", "方法の適用可否", "実施の条件", "結果の記録"],
+}
 DECISION_ID = re.compile(r"\bIA-[0-9]{3}\b(?! r[0-9])")
 DECISION_REF = re.compile(r"\b(IA-[0-9]{3}) r([0-9]+)\b")
+
+
+def _markdown_lines(text: str) -> list[str]:
+    """コード例に書かれた見出し・区分を、成果物の必須情報として数えない。"""
+    lines, fence = [], None
+    for line in text.splitlines():
+        marker = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if marker:
+            token = marker[1]
+            if fence is None:
+                fence = token
+            elif token[0] == fence[0] and len(token) >= len(fence) and not line[marker.end():].strip():
+                fence = None
+        elif fence is None:
+            lines.append(line)
+    return lines
 
 
 def required_errors(run: dict) -> list[str]:
@@ -37,9 +64,17 @@ def markdown_errors(directory: Path, run: dict, decisions: list[dict]) -> list[s
             continue
         text = path.read_text(encoding="utf-8")
         tag = f"{a['artifact_id']}（{a['path']}）"
-        first = next((ln.strip() for ln in text.splitlines() if ln.startswith("## ")), None)
+        lines = _markdown_lines(text)
+        headings = [ln.strip() for ln in lines if ln.startswith("## ")]
+        first = next(iter(headings), None)
         if first != ASSUMPTION_HEADING:
             errors.append(f"{tag}: 最初の節を「{ASSUMPTION_HEADING}」にする（仮定がなければ「なし」と書く）")
+        errors += [f"{tag}: 必須見出し「## {heading}」がない"
+                   for heading in MARKDOWN_HEADINGS[a["kind"]] if f"## {heading}" not in headings]
+        header = "\n".join(lines[:next((i for i, ln in enumerate(lines) if ln.startswith("## ")), len(lines))])
+        levels = re.findall(r"^\s*(?:[-*]\s+)?機密区分\s*[:：]\s*`?(public|internal|confidential)`?\s*$", header, re.M)
+        if levels != [a["classification"]]:
+            errors.append(f"{tag}: 冒頭に機密区分: {a['classification']} を1件示す（実行記録と一致させる）")
         errors += [f"{tag}: 判断 {m.group(0)} を版なしで参照している（{m.group(0)} rN と書く）"
                    for m in DECISION_ID.finditer(text)]
         for m in DECISION_REF.finditer(text):
@@ -105,34 +140,15 @@ def findings_errors(doc: dict, run: dict) -> list[str]:
             errors.append(f"{fid}: resolved_in は対象と同じ成果物の、指摘より新しい登録済みの版にする")
         if f["status"] == "unresolved" and run["refine"]["rounds"] < 2 and f["severity"] == "critical":
             errors.append(f"{fid}: 2巡に達する前の重大な指摘は open のまま修正する")
-    open_critical = sorted(f["finding_id"] for f in doc["findings"]
-                           if f["severity"] == "critical" and f["status"] in ("open", "unresolved"))
+    open_critical = runs.unresolved_critical(doc["findings"])
     if open_critical != sorted(run["refine"]["unresolved_critical"]):
         errors.append(f"refine.unresolved_critical {run['refine']['unresolved_critical']} が指摘の状態 {open_critical} と一致しない")
     return errors
 
 
-def ingest_errors(directory: Path, inputs_doc: dict) -> list[str]:
-    """取込み結果があれば、入力のハッシュと一致し、スキーマに合うこと。"""
-    errors = []
-    for i in inputs_doc["inputs"]:
-        path = directory / "ingest" / f"{i['input_id']}.yaml"
-        if not path.is_file():
-            continue
-        doc = yamlio.load(path)
-        found = yamlio.schema_errors(doc, "ingest.schema.json")
-        if found:
-            errors += [f"ingest/{path.name} {e}" for e in found[:3]]
-        elif doc["sha256"] != i["sha256"] or doc["input_id"] != i["input_id"]:
-            errors.append(f"ingest/{path.name}: 入力 {i['input_id']} の現在の実体と対応しない（再取込みする）")
-        elif doc["unreadable"] != i["unreadable"]:
-            errors.append(f"{i['input_id']}: unreadable が取込み結果と一致しない")
-    return errors
-
-
 def check(directory: Path, docs: dict) -> list[str]:
     run = docs.get("run.yaml")
-    found = ingest_errors(directory, docs["inputs.yaml"]) if "inputs.yaml" in docs else []
+    found = []
     if not run:
         return found
     decisions = docs.get("decisions.yaml", {"decisions": []})["decisions"]

@@ -115,4 +115,5 @@ def test_input_gap_is_recorded_without_severity(judge):
 def test_input_gap_has_no_severity(judge):
     gap = {"item": "R-05", "gap": "地区別の料金が入力にない", "basis": ["ART-006 v1"], "handling": "検証計画",
            "severity": "major"}
-    assert has(judge(lambda j: j.update(input_gaps=[gap])), "severity")
+    # 追加プロパティの名前は入力由来なので診断へコピーしない。違反した制約で確認する。
+    assert has(judge(lambda j: j.update(input_gaps=[gap])), "additionalProperties")

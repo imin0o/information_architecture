@@ -103,7 +103,7 @@ def _current_hashes(run: dict, inputs: dict) -> dict[str, str]:
     return found
 
 
-def refresh(directory: Path) -> dict:
+def refresh(directory: Path, changed_inputs: tuple[str, ...] = ()) -> dict:
     """inputs.yaml のハッシュと判断参照を更新し、依存が変わった成果物を連鎖的に stale にする。"""
     run, inputs = load(directory, "run.yaml"), load(directory, "inputs.yaml")
     decisions = load(directory, "decisions.yaml")["decisions"]
@@ -136,7 +136,7 @@ def refresh(directory: Path) -> dict:
         for a in (a for a in run["artifacts"] if a["status"] == "current"):
             for dep in a["depends_on"]:
                 ref = dep["ref"]
-                if current.get(ref) != dep["sha256"] or arts.get(ref, {}).get("status") == "stale":
+                if ref in changed_inputs or current.get(ref) != dep["sha256"] or arts.get(ref, {}).get("status") == "stale":
                     a.update(status="stale", stale_reason=f"依存 {ref} が変わった。再生成か影響なしの確認まで使わない")
                     staled.append(a["artifact_id"])
                     changed = True
@@ -147,8 +147,7 @@ def refresh(directory: Path) -> dict:
                             for d in decisions]
     if (directory / "findings.yaml").is_file():
         found = yamlio.load(directory / "findings.yaml")["findings"]
-        run["refine"]["unresolved_critical"] = sorted(
-            f["finding_id"] for f in found if f["severity"] == "critical" and f["status"] in ("open", "unresolved"))
+        run["refine"]["unresolved_critical"] = runs.unresolved_critical(found)
     save(directory, "run.yaml", run)
     return {"inputs_sha256": sha, "staled": staled}
 

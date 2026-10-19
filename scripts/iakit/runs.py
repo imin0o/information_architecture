@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from . import manifest, yamlio
+from . import ingest, manifest, yamlio
 from .decisions import RANK, artifact_inputs, latest_active, max_classification
 
 ROUTES = {
@@ -18,6 +18,11 @@ EVALUATION_KINDS = {"review_findings", "ia_review", "validation_plan"}
 def evaluation_dependencies(kind: str, artifacts: list[dict]) -> set[str]:
     """指摘の有無によらず、評価一式は評価した設計成果物の全体に依存する。"""
     return {a["artifact_id"] for a in artifacts if a["kind"] not in EVALUATION_KINDS} if kind in EVALUATION_KINDS else set()
+
+
+def unresolved_critical(findings: list[dict]) -> list[str]:
+    """ユーザーが残置を決めたacceptedも、解消済みでないcriticalとして扱う。"""
+    return sorted(f["finding_id"] for f in findings if f["severity"] == "critical" and f["status"] != "resolved")
 
 
 def input_errors(doc: dict) -> list[str]:
@@ -150,12 +155,15 @@ def _artifact_errors(run: dict, inputs: dict[str, dict], actual: dict[str, str],
     return errors
 
 
-def flagged_units(directory: Path, input_ids) -> dict[str, list[str]]:
+def flagged_units(directory: Path, input_ids, ingested: dict | None = None) -> dict[str, list[str]]:
     """取込み結果で命令文の候補（instruction_like）とされた位置。取込み結果がない入力は対象にしない。"""
     found = {}
+    if ingested is None:
+        if not (directory / "inputs.yaml").is_file():
+            return found
+        ingested, _ = ingest.load_registered(directory, yamlio.load(directory / "inputs.yaml"))
     for input_id in input_ids:
-        path = directory / "ingest" / f"{input_id}.yaml"
-        locs = [u["locator"] for u in (yamlio.load(path)["units"] if path.is_file() else [])
+        locs = [u["locator"] for u in ingested.get(input_id, {}).get("units", [])
                 if "instruction_like" in u.get("flags", [])]
         if locs:
             found[input_id] = locs

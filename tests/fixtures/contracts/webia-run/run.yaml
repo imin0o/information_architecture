@@ -107,7 +107,7 @@ artifacts:
   kind: problem_definition
   path: problem-definition.md
   version: 1
-  sha256: 3fdf4dee8a02e2a01aaab6c6eefd236bc5ef94276ab2bddb2162c1ca047b298a
+  sha256: dd68ddca177fd8f90d4808537dcaa9345782dd30ab24c888552cab627aba946a
   status: current
   stale_reason: null
   classification: internal
@@ -123,7 +123,7 @@ artifacts:
   kind: information_audit
   path: information-audit.md
   version: 1
-  sha256: 23b0925d3888fbcb0a75b4f0d4c96d549f1359a9b5c286fe097fbf266a5a51d2
+  sha256: a5f3cb0c7846ba60589449d12c1f7f06f715f7530e1163f12a3163173907f782
   status: current
   stale_reason: null
   classification: internal
@@ -137,7 +137,7 @@ artifacts:
   kind: classification_options
   path: classification-options.md
   version: 1
-  sha256: 2ca71193c0a4d6afc9c1542c2faac508be64326b80b3c31d55c7884858be43b5
+  sha256: 761486aadb0079b59183ae0333234942969bf4e7aa8f9fc0c2381395265d5bb3
   status: current
   stale_reason: null
   classification: internal
@@ -155,7 +155,7 @@ artifacts:
   kind: information_architecture
   path: information-architecture.md
   version: 1
-  sha256: 180125e76547df40d40bbe317d666e4cd3b4ec8100786835c0a4f3ba5307505b
+  sha256: 0aebb7e21e167668441ba9eef7a3020cdc5e8784c20fbce24ea6e5cf48e3e617
   status: current
   stale_reason: null
   classification: internal
@@ -187,19 +187,19 @@ artifacts:
   - ref: ART-004
     sha256: fef64d184f4aa9f1f9950de181bf8db713e08380b0fa64d2787f028fe833ff69
   - ref: ART-005
-    sha256: 3fdf4dee8a02e2a01aaab6c6eefd236bc5ef94276ab2bddb2162c1ca047b298a
+    sha256: dd68ddca177fd8f90d4808537dcaa9345782dd30ab24c888552cab627aba946a
   - ref: ART-006
-    sha256: 23b0925d3888fbcb0a75b4f0d4c96d549f1359a9b5c286fe097fbf266a5a51d2
+    sha256: a5f3cb0c7846ba60589449d12c1f7f06f715f7530e1163f12a3163173907f782
   - ref: ART-007
-    sha256: 2ca71193c0a4d6afc9c1542c2faac508be64326b80b3c31d55c7884858be43b5
+    sha256: 761486aadb0079b59183ae0333234942969bf4e7aa8f9fc0c2381395265d5bb3
   - ref: ART-008
-    sha256: 180125e76547df40d40bbe317d666e4cd3b4ec8100786835c0a4f3ba5307505b
+    sha256: 0aebb7e21e167668441ba9eef7a3020cdc5e8784c20fbce24ea6e5cf48e3e617
   decision_refs: []
 - artifact_id: ART-010
   kind: ia_review
   path: ia-review.md
   version: 1
-  sha256: ca7f5d57d3cf7f938123781318f78108951341890c69b9de2c7ad77cf9c56dc9
+  sha256: fba85edce43ee4bd04961191d4d119b19f21abdebe872eb57e75ded49b06f0e0
   status: current
   stale_reason: null
   classification: internal
@@ -213,13 +213,13 @@ artifacts:
   - ref: ART-004
     sha256: fef64d184f4aa9f1f9950de181bf8db713e08380b0fa64d2787f028fe833ff69
   - ref: ART-005
-    sha256: 3fdf4dee8a02e2a01aaab6c6eefd236bc5ef94276ab2bddb2162c1ca047b298a
+    sha256: dd68ddca177fd8f90d4808537dcaa9345782dd30ab24c888552cab627aba946a
   - ref: ART-006
-    sha256: 23b0925d3888fbcb0a75b4f0d4c96d549f1359a9b5c286fe097fbf266a5a51d2
+    sha256: a5f3cb0c7846ba60589449d12c1f7f06f715f7530e1163f12a3163173907f782
   - ref: ART-007
-    sha256: 2ca71193c0a4d6afc9c1542c2faac508be64326b80b3c31d55c7884858be43b5
+    sha256: 761486aadb0079b59183ae0333234942969bf4e7aa8f9fc0c2381395265d5bb3
   - ref: ART-008
-    sha256: 180125e76547df40d40bbe317d666e4cd3b4ec8100786835c0a4f3ba5307505b
+    sha256: 0aebb7e21e167668441ba9eef7a3020cdc5e8784c20fbce24ea6e5cf48e3e617
   - ref: ART-009
     sha256: a76ef3d4e2ad73a29969f331b64b2fb5a57ab522543dd4ea1e4dd4f960381261
   decision_refs: []
@@ -227,7 +227,7 @@ artifacts:
   kind: validation_plan
   path: validation-plan.md
   version: 1
-  sha256: e09a27a674562c9e868199ae7b2e2a11479a64626f8210a30e13f80106086bfd
+  sha256: aa3e6f630dd2c2aa4de7df350e02782adb2f6654918f2bc40138fc87f72cc3bb
   status: current
   stale_reason: null
   classification: internal
@@ -241,13 +241,13 @@ artifacts:
   - ref: ART-004
     sha256: fef64d184f4aa9f1f9950de181bf8db713e08380b0fa64d2787f028fe833ff69
   - ref: ART-005
-    sha256: 3fdf4dee8a02e2a01aaab6c6eefd236bc5ef94276ab2bddb2162c1ca047b298a
+    sha256: dd68ddca177fd8f90d4808537dcaa9345782dd30ab24c888552cab627aba946a
   - ref: ART-006
-    sha256: 23b0925d3888fbcb0a75b4f0d4c96d549f1359a9b5c286fe097fbf266a5a51d2
+    sha256: a5f3cb0c7846ba60589449d12c1f7f06f715f7530e1163f12a3163173907f782
   - ref: ART-007
-    sha256: 2ca71193c0a4d6afc9c1542c2faac508be64326b80b3c31d55c7884858be43b5
+    sha256: 761486aadb0079b59183ae0333234942969bf4e7aa8f9fc0c2381395265d5bb3
   - ref: ART-008
-    sha256: 180125e76547df40d40bbe317d666e4cd3b4ec8100786835c0a4f3ba5307505b
+    sha256: 0aebb7e21e167668441ba9eef7a3020cdc5e8784c20fbce24ea6e5cf48e3e617
   - ref: INPUT-002
     sha256: b7141cc23f06aa4f79fe85b6d05aec4b8dbc49cabbe9df39c5855d94aba2bb7f
   decision_refs:

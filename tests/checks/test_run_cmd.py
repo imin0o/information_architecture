@@ -5,7 +5,7 @@ from copy import deepcopy
 
 import pytest
 
-from iakit import cli, contracts, run_cmd, run_inputs, yamlio
+from iakit import cli, contracts, manifest, run_cmd, run_inputs, run_outputs, yamlio
 from iakit.paths import ROOT
 
 CASE = ROOT / "tests/cases/webia-001/inputs"
@@ -28,8 +28,14 @@ def inventory(d, version=1, classification="internal", rows=(2, 3)):
     (d / "content-inventory.yaml").write_text(yamlio.dumps(doc), encoding="utf-8")
 
 
-def audit(d, text="## 仮定に基づく箇所\n\nなし\n"):
-    (d / "information-audit.md").write_text("# 情報監査\n\n" + text, encoding="utf-8")
+def markdown(d, name, kind, text="## 仮定に基づく箇所\n\nなし\n", classification="internal"):
+    body = f"# 自作の検査用成果物\n\n- 機密区分: {classification}\n\n" + text
+    body += "".join(f"\n## {heading}\n\n検査用。\n" for heading in run_outputs.MARKDOWN_HEADINGS[kind])
+    (d / name).write_text(body, encoding="utf-8")
+
+
+def audit(d, text="## 仮定に基づく箇所\n\nなし\n", classification="internal"):
+    markdown(d, "information-audit.md", "information_audit", text, classification)
 
 
 def test_init_records_route_and_skill_hashes(run_dir):
@@ -68,6 +74,72 @@ def test_input_add_freezes_file_and_ingests(run_dir):
     ingested = yamlio.load(run_dir / "ingest/INPUT-002.yaml")
     assert ingested["units"][1]["locator"] == "pages.csv#row=2"
     assert contracts.check_bundle(run_dir)["result"] == "pass"
+    assert inputs[1]["ingest_sha256"] == manifest.sha256_file(run_dir / "ingest/INPUT-002.yaml")
+
+
+@pytest.mark.parametrize("change", ["text", "flags", "missing", "missing_hash", "invalid_structure", "invalid_yaml", "format", "run_id"])
+def test_ingest_integrity_is_checked_before_resume_review_and_contracts(run_dir, change, capsys):
+    path = run_dir / "ingest/INPUT-001.yaml"
+    doc = yamlio.load(path)
+    if change == "missing":
+        path.unlink()
+    elif change == "missing_hash":
+        inputs = yamlio.load(run_dir / "inputs.yaml")
+        del inputs["inputs"][0]["ingest_sha256"]
+        run_cmd.save(run_dir, "inputs.yaml", inputs)
+        run_cmd.refresh(run_dir)
+    else:
+        if change == "text":
+            doc["units"][0]["text"] = "CHANGED TEXT"
+        elif change == "flags":
+            doc["units"][0]["flags"] = ["instruction_like"]
+        elif change == "invalid_structure":
+            del doc["units"]
+        elif change == "format":
+            doc["format"] = "json"
+        elif change == "run_id":
+            doc["run_id"] = "RUN-OTHER"
+        path.write_text("bad: [\n" if change == "invalid_yaml" else yamlio.dumps(doc), encoding="utf-8")
+    assert cli.main(["run", "resume", str(run_dir)]) == 1
+    assert cli.main(["run", "event", str(run_dir), "resumed"]) == 1
+    report = run_dir / "report.yaml"
+    assert cli.main(["contracts", "check", str(run_dir), "--report", str(report)]) == 1
+    assert yamlio.load(report)["result"] == "fail"
+    assert "Traceback" not in capsys.readouterr().out
+    with pytest.raises(ValueError):
+        run_inputs.review(run_dir, "INPUT-001", "ignored")
+
+
+def test_reregistering_input_repairs_ingest_and_invalidates_changed_interpretation(run_dir, monkeypatch):
+    from iakit import ingest
+    audit(run_dir)
+    run_cmd.artifact(run_dir, "information-audit.md", "information_audit", ["INPUT-001"], [])
+    original = ingest.build
+
+    def changed(*args):
+        result = original(*args)
+        result["units"][0]["text"] += " New interpretation."
+        return result
+
+    monkeypatch.setattr(ingest, "build", changed)
+    out = run_inputs.add(run_dir, run_dir / "inputs/brief.md", "brief", "updated", replace="INPUT-001")
+    assert out["staled"] == ["ART-001"]
+    assert contracts.check_bundle(run_dir)["result"] == "pass"
+    assert run_inputs.resume_errors(run_dir) == []
+
+
+def test_accepted_critical_cannot_complete_normal_route(tmp_path):
+    directory = tmp_path / "run"
+    shutil.copytree(ROOT / "tests/fixtures/contracts/webia-run", directory)
+    doc = yamlio.load(directory / "findings.yaml")
+    doc["version"] += 1
+    doc["findings"][0].update(severity="critical", status="accepted")
+    (directory / "findings.yaml").write_text(yamlio.dumps(doc), encoding="utf-8")
+    run_cmd.artifact(directory, "findings.yaml", "review_findings", [], [])
+    run_cmd.artifact(directory, "ia-review.md", "ia_review", ["ART-009"], [])
+    assert yamlio.load(directory / "run.yaml")["refine"]["unresolved_critical"] == ["FIND-001"]
+    assert cli.main(["run", "event", str(directory), "completed"]) == 1
+    assert yamlio.load(directory / "run.yaml")["status"] == "in_progress"
 
 
 def test_instruction_in_input_is_reported(run_dir, tmp_path):
@@ -253,7 +325,7 @@ def test_decision_inherits_secret_input_and_replacement_stales_dependents(run_di
                                   "locator": "secret.txt#L1", "observation": "private observation"}],
              confidence="medium", classification="confidential")
     run_cmd.save(run_dir, "decisions.yaml", {"schema_version": "1.0", "run_id": "RUN-T", "decisions": [d]})
-    audit(run_dir, "## 仮定に基づく箇所\n\nなし\n\n## 判断\n\nIA-001 r1\n")
+    audit(run_dir, "## 仮定に基づく箇所\n\nなし\n\n## 判断\n\nIA-001 r1\n", classification="confidential")
     result = run_cmd.artifact(run_dir, "information-audit.md", "information_audit", [], [])
     assert result["classification"] == "confidential"
     assert contracts.check_bundle(run_dir)["result"] == "pass"
@@ -282,7 +354,7 @@ def test_empty_findings_still_depend_on_all_evaluated_designs(run_dir):
     assert run_cmd.artifact(run_dir, "findings.yaml", "review_findings", [], [])["classification"] == "internal"
     for name, kind, deps in [("ia-review.md", "ia_review", ["ART-003"]),
                              ("validation-plan.md", "validation_plan", [])]:
-        (run_dir / name).write_text("# 評価\n\n## 仮定に基づく箇所\n\nなし\n", encoding="utf-8")
+        markdown(run_dir, name, kind)
         run_cmd.artifact(run_dir, name, kind, deps, [])
     assert contracts.check_bundle(run_dir)["result"] == "pass"
     inventory(run_dir, version=2)

@@ -5,6 +5,8 @@ import shutil
 import subprocess
 import sys
 
+import pytest
+
 from iakit import contracts, runtime, yamlio
 from iakit.paths import FIXTURES, ROOT
 
@@ -33,6 +35,20 @@ def test_valid_run_passes_and_broken_inventory_fails(tmp_path):
 
 def test_empty_directory_is_not_a_pass(tmp_path):
     assert checker.check(tmp_path)["result"] == "fail"
+
+
+@pytest.mark.parametrize("invalid", ["schema", "yaml", "extra_property"])
+def test_standalone_check_does_not_echo_private_values(tmp_path, invalid):
+    private = "PRIVATE_BODY_SENTINEL"
+    doc = yamlio.load(RUN / "content-inventory.yaml")
+    if invalid == "extra_property":
+        doc[private] = "unexpected property"
+    else:
+        doc["items"][0]["title"] = {"private_text": private}
+    text = f"title: [{private}\n" if invalid == "yaml" else yamlio.dumps(doc)
+    (tmp_path / "content-inventory.yaml").write_text(text, encoding="utf-8")
+    report = checker.check(tmp_path)
+    assert report["result"] == "fail" and private not in yamlio.dumps(report)
 
 
 def test_bundled_copy_uses_only_its_own_schemas(tmp_path):

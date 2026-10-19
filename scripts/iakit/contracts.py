@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-from . import decisions, manifest, provenance, provenance_local, run_outputs, runs, structure, yamlio
+from . import decisions, ingest, manifest, provenance, provenance_local, run_outputs, runs, structure, yamlio
 from .paths import CHECKOUT, EXTRACTED, FIXTURES, ORIGINALS, ROOT
 
 SCHEMAS = {
@@ -150,6 +150,8 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
         errors += found
     inputs_doc = docs.get("inputs.yaml", {"run_id": None, "inputs": []})
     inputs = {i["input_id"]: i for i in inputs_doc["inputs"]}
+    ingested, ingest_errors = ingest.load_registered(directory, inputs_doc)
+    errors += ingest_errors
     errors += runs.input_errors(inputs_doc)
     file_errors, derived["input_files"] = runs.input_file_results(inputs_doc, directory)
     errors += file_errors
@@ -176,7 +178,7 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
         inputs_path = directory / "inputs.yaml"
         inputs_sha = manifest.sha256_file(inputs_path) if inputs_path.is_file() else None
         errors += runs.run_errors(run, inputs_doc, inputs_sha, actual, decision_list, list(studies.values()))
-        errors += runs.review_errors(run, runs.flagged_units(directory, inputs))
+        errors += runs.review_errors(run, runs.flagged_units(directory, inputs, ingested))
     inv, vocab = docs.get("content-inventory.yaml"), docs.get("controlled-vocabulary.yaml")
     if inv:
         errors += structure.inventory_errors(inv, inputs)

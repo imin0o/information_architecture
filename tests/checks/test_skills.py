@@ -71,3 +71,10 @@ def test_routing_matches_checked_routes_and_outputs():
 def test_templates_start_with_assumption_section(path):
     first = next(line for line in path.read_text(encoding="utf-8").splitlines() if line.startswith("## "))
     assert first == run_outputs.ASSUMPTION_HEADING
+
+
+@pytest.mark.parametrize("path", sorted(SKILLS.glob("*/templates/*.md")), ids=lambda p: p.name)
+def test_markdown_contract_matches_templates(path):
+    kind = path.stem.replace("-", "_")
+    headings = [line[3:] for line in path.read_text(encoding="utf-8").splitlines() if line.startswith("## ")]
+    assert headings == [run_outputs.ASSUMPTION_HEADING[3:], *run_outputs.MARKDOWN_HEADINGS[kind]]

@@ -48,7 +48,7 @@ def _check_json_compatible(value, where: str = "$", active: set[int] | None = No
     if isinstance(value, dict):
         for key, item in value.items():
             if not isinstance(key, str):
-                raise DataError(f"{where}: キーは文字列に限る: {key!r}")
+                raise DataError(f"{where}: キーは文字列に限る")
             _check_json_compatible(item, f"{where}.{key}", active)
     elif isinstance(value, list):
         for i, item in enumerate(value):
@@ -65,7 +65,10 @@ def loads(text: str):
     try:
         data = _loader().load(text)
     except Exception as exc:  # ruamel の各種例外をまとめて扱う
-        raise DataError(str(exc)) from exc
+        mark = getattr(exc, "problem_mark", None)
+        position = f" line={mark.line + 1} column={mark.column + 1}" if mark else ""
+        # ruamelのメッセージには入力本文・キー・値が入る。Git管理する検査記録へ流さない。
+        raise DataError(f"YAML解析失敗 ({type(exc).__name__}){position}") from None
     _check_json_compatible(data)
     return data
 
@@ -101,6 +104,16 @@ def schema_errors(data, schema_name: str) -> list[str]:
     schema = _registry().contents(schema_name)
     validator = Draft202012Validator(schema, registry=_registry(), format_checker=FORMAT_CHECKER)
     return [
-        f"{'/'.join(str(p) for p in err.absolute_path) or '$'}: {err.message}"
+        schema_error(err)
         for err in sorted(validator.iter_errors(data), key=lambda e: [str(p) for p in e.absolute_path])
     ]
+
+
+def schema_error(error) -> str:
+    """入力値を含めず、位置と違反したスキーマ制約だけを返す。"""
+    detail = ""
+    if error.validator == "required":
+        detail = ": " + ", ".join(k for k in error.validator_value if k not in error.instance)
+    elif error.validator in ("type", "enum", "const", "format", "pattern", "minItems", "maxItems", "minimum", "maximum"):
+        detail = ": " + json.dumps(error.validator_value, ensure_ascii=False)
+    return f"{'/'.join(str(p) for p in error.absolute_path) or '$'}: {error.validator}{detail}"
