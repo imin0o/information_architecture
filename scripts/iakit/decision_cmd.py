@@ -16,7 +16,7 @@ AUTO = ("decision_id", "decision_revision", "run_id", "status", "supersedes", "r
 
 
 def _state(directory: Path, pending_artifacts: frozenset[str] = frozenset()) -> tuple[list[str], dict, dict, dict]:
-    """契約検査の誤り一覧と、補完に使う照合状態・入力・調査記録。"""
+    """契約検査の誤り一覧と、補完に使う照合状態・入力・調査記録（模擬評価の記録を含む）。"""
     docs, errors = contracts.load_bundle(directory)
     states = {}
     if not errors:
@@ -25,6 +25,8 @@ def _state(directory: Path, pending_artifacts: frozenset[str] = frozenset()) -> 
         errors, states = errors + found, derived.get("states", {})
     inputs = {i["input_id"]: i for i in docs.get("inputs.yaml", {"inputs": []})["inputs"]}
     studies = {s["study_id"]: s for s in docs.get("observations.yaml", {"studies": []})["studies"]}
+    # 機密区分の導出では、模擬評価の記録も参照した記録として扱う
+    studies.update((s["simulation_id"], s) for s in docs.get("simulations.yaml", {"simulations": []})["simulations"])
     return errors, states, inputs, studies
 
 

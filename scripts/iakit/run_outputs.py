@@ -3,7 +3,7 @@
 import re
 from pathlib import Path
 
-from . import runs
+from . import runs, validation_plan
 from .decisions import latest_active
 
 STAGE_KINDS = {
@@ -75,6 +75,8 @@ def markdown_errors(directory: Path, run: dict, decisions: list[dict], *,
             errors.append(f"{tag}: 最初の節を「{ASSUMPTION_HEADING}」にする（仮定がなければ「なし」と書く）")
         errors += [f"{tag}: 必須見出し「## {heading}」がない"
                    for heading in MARKDOWN_HEADINGS[a["kind"]] if f"## {heading}" not in headings]
+        if a["kind"] == "validation_plan":
+            errors += validation_plan.errors(lines, tag)
         header = "\n".join(lines[:next((i for i, ln in enumerate(lines) if ln.startswith("## ")), len(lines))])
         levels = re.findall(r"^\s*(?:[-*]\s+)?機密区分\s*[:：]\s*`?(public|internal|confidential)`?\s*$", header, re.M)
         if levels != [a["classification"]]:

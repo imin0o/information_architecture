@@ -30,8 +30,9 @@ metadata:
 
 ## 評価の制約
 
-- MVPで必須の評価は、ヒューリスティック評価、構造・参照整合性の検査、主要タスクの経路の点検、検証計画の作成である。LLMの模擬カードソートなどは必須にしない。
-- LLMによる模擬評価を行った場合は、結果を `simulated` として扱い、実測と混同しない。推定した認知負荷や発見可能性を実測のスコアとして示さない。
+- MVPで必須の評価は、ヒューリスティック評価、構造・参照整合性の検査（サイトマップがあれば構造の測定を含む）、主要タスクの経路の点検、検証計画の作成である。LLMの模擬ツリーテスト・模擬カードソートは必須にしない。
+- 検証は3種類に分ける。構造の測定（機械検査。判断の検証状態は変えない）、模擬評価（`simulated`。`simulations.yaml` に記録）、実測（人を対象とする調査とアクセス解析。`observations.yaml` に記録し、`tested_*` はここからだけ）。
+- LLMによる模擬評価を行った場合は、結果を `simulated` として扱い、実測と混同しない。推定した認知負荷や発見可能性を実測のスコアとして示さない。模擬評価だけを根拠に `critical` の指摘にしない。
 - 専門家の点検や、このSkillの評価だけを根拠に判断を `tested_*` にしない。`tested_*` はユーザーが提供した調査記録がある場合だけである。
 - 固定ルーブリックがある場合は、項目と合格条件を変えずに観点として使い、`findings.yaml` の `rubric_version` に版を書く。ルーブリックによる合否は、成果物を作ったエージェントとは別の確認者（指定した確認エージェントなど）が判定する（手順は ia-orchestrator の references/independent-review.md にある）。このSkillは合格と書かず、判定を待って止まらない。
 
@@ -40,6 +41,14 @@ metadata:
 ### 1. 機械検査を実行する
 
 `uv run --locked iakit contracts check runs/<run_id>` を実行する。失敗は、構造・参照の問題として指摘にする（例: 到達できないノード、未配置のコンテンツ、判断の状態の不一致）。コマンドを使えない環境では、ia-orchestratorの点検項目で確かめ、機械検査は `not_run` と書く。
+
+サイトマップがある場合は、構造を測定する。ビルド済みのサイトがあれば `--site` に、変更前のサイトがあれば `--baseline` に渡し、HTMLを巡回して同じ指標を測り、変更前後を比べる。
+
+```text
+uv run --locked iakit measure structure runs/<run_id> [--site <ビルド済みのディレクトリ>] [--baseline <変更前のディレクトリ>] [--max-clicks 3]
+```
+
+結果は `measurements/structure.yaml` に書かれる。主要タスクのクリック数、ノードのラベルと優先ラベルの一致、同名の項目、（サイトがあれば）1クリックで着けるページ、ナビ掲載、被リンクのないページ、リンク文言と着地先の名称の一致を測る。基準を下回った項目は `finding_candidates` に、`iakit finding add` へそのまま渡せる形で出る。候補を確かめ、採るものを手順4で指摘にする。測定は利用者の行動ではないため、判断の `validation_status` は変えない。
 
 ia-orchestratorを使わずに単独で実行していて `iakit` を使えない場合は、`uv run <このSkillのディレクトリ>/scripts/check_artifacts.py <成果物のディレクトリ>` で、同梱したスキーマによる形式検査を行い、通るまで直す。この検査は参照や依存の整合を確かめないため、報告には形式検査の結果を書き、契約検査は `not_run` とする。
 
@@ -60,6 +69,22 @@ ia-orchestratorを使わずに単独で実行していて `iakit` を使えな�
 ### 3. 主要タスクの経路を点検する
 
 問題定義の主要タスクごとに、サイトマップの経路（タクソノミーの経路では、語から概念への対応）をたどり、到達先の条件を満たすかを確かめる。別の属性から入る経路も試す。
+
+### 3a. 模擬評価を行う（任意）
+
+ホストが別のエージェント（サブエージェント）を起動できる場合は、模擬ツリーテスト・閉じた模擬カードソートを行ってよい。行わない場合は、ia-review.mdの「模擬評価の扱い」に「行っていない」と書く。
+
+1. `uv run --locked iakit simulation kit runs/<run_id> --method tree_test|closed_card_sort` で、評価者に渡す材料（ラベルの階層、分類先、カード）を出す。
+2. 問題定義から利用者像（1〜3文）を、主要タスクから課題文を書く。課題文に到達先のラベルをそのまま使わない。
+3. 成果物を作っていない別のエージェントを起動し、利用者像・課題文・材料だけを渡す。サイトマップの設計意図、判断記録、統制語彙の説明、評価の観点は渡さない。各課題・カードについて、最初に選んだノードと最終的に選んだノード（あきらめたら null）をノードIDで答えさせる。
+4. これを複数回（目安5回、各回は新しい評価者）行い、試行をすべて記録する。
+5. 次のコマンドで記録する。正解のノード、到達率、最初の選択の分布はコマンドが導く。
+
+```text
+uv run --locked iakit simulation add runs/<run_id> <ファイル|-> | --json '<JSON>'
+```
+
+入力は `method`、`persona.statement`、`evaluator`（`host`・`model`）、`repetitions`、`items`（`item_id` と `prompt`）、`trials`（`repetition`・`item_id`・`first_choice`・`answer`）、カードソートでは `categories`。基準（既定は到達率0.8）を下回った項目は指摘にする（重大度は `major` まで）。判断を `simulated` にする場合は `iakit decision revise` で `validation_record_ids` に `SIM-nnn` を入れる。
 
 ### 4. 指摘を記録する
 
@@ -82,7 +107,7 @@ uv run --locked iakit finding add runs/<run_id> <ファイル|-> | --json '<JSON
 
 ### 6. 検証計画を書く
 
-[templates/validation-plan.md](templates/validation-plan.md) に沿って `validation-plan.md` を書く。未検証の判断（`not_tested`）と仮定ごとに、確かめる方法（ツリーテスト、カードソート、検索ログの確認、聞き取りなど）、対象タスク、成功の基準を対応付ける。計画では判断を `IA-nnn rN` で示す。`not_tested` のまま計画に対応付けてよい。`validation_status: planned` にする場合は判断の新しい版を作り、その判断を参照する成果物も新しい版に更新する（Refineで判断を改訂するときにまとめてよい）。`planned` の判断は必ず計画に載せる。
+[templates/validation-plan.md](templates/validation-plan.md) に沿って `validation-plan.md` を書く。未検証の判断（`not_tested`）と仮定ごとに、確かめる方法（ツリーテスト、カードソート、検索ログの確認、聞き取りなど）、対象タスク、成功の基準、実行者（エージェント・人）、実行状況を対応付ける。エージェントの行（構造の測定、模擬評価）はこの段階で実行し、「実行済み」と結果の記録（`SIM-nnn` または `measurements/structure.yaml`）を書く。実行していないエージェントの行があると登録できない。人の行は「計画」のまま残す。計画では判断を `IA-nnn rN` で示す。`not_tested` のまま計画に対応付けてよい。`validation_status: planned` にする場合は判断の新しい版を作り、その判断を参照する成果物も新しい版に更新する（Refineで判断を改訂するときにまとめてよい）。`planned` の判断は必ず計画に載せる。
 
 ### 7. 登録して検査する
 

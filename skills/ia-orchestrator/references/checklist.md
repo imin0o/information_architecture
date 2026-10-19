@@ -15,6 +15,7 @@
 - 判断の旧版は削除されず、`superseded` か `withdrawn` になり、新しい版の `supersedes` が直前の版を指す。
 - 文献根拠の `source_verification`・`support_status` は出典登録簿と照合記録の値と一致する。`not_supported` の主張を `primary` に使わず、`counter_evidence` に挙げている。
 - 実ユーザー調査の記録がない判断は `not_tested`・`planned`・`simulated` のいずれかである。
+- `simulated` の判断は模擬評価の記録（`SIM-nnn`）を参照し、`tested_*` の判断は実ユーザー調査の記録（`STUDY-nnn`）だけを参照している。
 - `confidence` は要件定義書FR-07の判定基準に合う。`critical` の仮定がある判断は `low` である。
 
 ## 成果物

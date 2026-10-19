@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "simulation.schema.json",
+  "title": "模擬評価の記録 runs/<run_id>/simulations.yaml（FR-06、AC-07）",
+  "description": "LLMによる模擬ツリーテスト・模擬カードソート。実ユーザー調査ではなく、判断を simulated にする根拠にだけ使う。tested_* の根拠にはならない。results は trials からコマンドが導く",
+  "type": "object",
+  "required": ["schema_version", "run_id", "simulations"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "run_id": {"$ref": "common.schema.json#/$defs/run_id"},
+    "simulations": {"type": "array", "items": {"$ref": "#/$defs/simulation"}}
+  },
+  "$defs": {
+    "simulation": {
+      "type": "object",
+      "required": ["simulation_id", "method", "target", "persona", "evaluator", "repetitions", "categories", "items",
+                   "trials", "threshold", "results", "classification", "recorded_at"],
+      "additionalProperties": false,
+      "properties": {
+        "simulation_id": {"$ref": "common.schema.json#/$defs/simulation_id"},
+        "method": {"enum": ["tree_test", "closed_card_sort"]},
+        "target": {"description": "模擬したサイトマップとその版", "$ref": "common.schema.json#/$defs/artifact_ref"},
+        "persona": {
+          "description": "問題定義から作った利用者像。設計意図や判断記録は含めない",
+          "type": "object", "required": ["statement", "source"], "additionalProperties": false,
+          "properties": {"statement": {"$ref": "common.schema.json#/$defs/nonempty"},
+                         "source": {"$ref": "common.schema.json#/$defs/artifact_ref"}}
+        },
+        "evaluator": {
+          "description": "模擬した別のエージェント。成果物を作ったエージェントとは別の実行で、ラベルと課題文だけを渡す",
+          "type": "object", "required": ["host", "model", "context"], "additionalProperties": false,
+          "properties": {"host": {"$ref": "common.schema.json#/$defs/nonempty"},
+                         "model": {"$ref": "common.schema.json#/$defs/nonempty"},
+                         "context": {"const": "labels_and_prompts_only"}}
+        },
+        "repetitions": {"description": "各課題・各カードの試行回数", "type": "integer", "minimum": 1},
+        "categories": {
+          "description": "閉じたカードソートの分類先ノード。ツリーテストでは空",
+          "type": "array", "uniqueItems": true, "items": {"$ref": "common.schema.json#/$defs/node_id"}
+        },
+        "items": {
+          "description": "ツリーテストの課題（TASK）またはカードソートのカード（CONTENT）。expected はコマンドがサイトマップから導く",
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["item_id", "prompt", "expected", "expected_first"],
+            "additionalProperties": false,
+            "properties": {
+              "item_id": {"type": "string", "pattern": "^(TASK-[0-9]{2}|CONTENT-[0-9]{3})$"},
+              "prompt": {"description": "評価者に渡した課題文・カードの文言", "$ref": "common.schema.json#/$defs/nonempty"},
+              "expected": {"type": "array", "minItems": 1, "uniqueItems": true,
+                           "items": {"$ref": "common.schema.json#/$defs/node_id"}},
+              "expected_first": {"oneOf": [{"$ref": "common.schema.json#/$defs/node_id"}, {"type": "null"}]}
+            }
+          }
+        },
+        "trials": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["repetition", "item_id", "first_choice", "answer"],
+            "additionalProperties": false,
+            "properties": {
+              "repetition": {"type": "integer", "minimum": 1},
+              "item_id": {"type": "string", "pattern": "^(TASK-[0-9]{2}|CONTENT-[0-9]{3})$"},
+              "first_choice": {"oneOf": [{"$ref": "common.schema.json#/$defs/node_id"}, {"type": "null"}]},
+              "answer": {"description": "最終的に選んだノード。あきらめた場合は null",
+                         "oneOf": [{"$ref": "common.schema.json#/$defs/node_id"}, {"type": "null"}]}
+            }
+          }
+        },
+        "threshold": {
+          "description": "基準。下回った項目は指摘にする（模擬評価だけを根拠に critical にしない）",
+          "type": "object", "required": ["success_rate"], "additionalProperties": false,
+          "properties": {"success_rate": {"type": "number", "minimum": 0, "maximum": 1}}
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["item_id", "attempts", "success_rate", "direct_first_rate", "first_choices", "below_threshold"],
+            "additionalProperties": false,
+            "properties": {
+              "item_id": {"type": "string", "pattern": "^(TASK-[0-9]{2}|CONTENT-[0-9]{3})$"},
+              "attempts": {"type": "integer", "minimum": 1},
+              "success_rate": {"type": "number", "minimum": 0, "maximum": 1},
+              "direct_first_rate": {"oneOf": [{"type": "number", "minimum": 0, "maximum": 1}, {"type": "null"}]},
+              "first_choices": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 1}},
+              "below_threshold": {"type": "boolean"}
+            }
+          }
+        },
+        "classification": {"$ref": "common.schema.json#/$defs/classification"},
+        "recorded_at": {"$ref": "common.schema.json#/$defs/datetime"}
+      }
+    }
+  }
+}

@@ -42,7 +42,7 @@ uv run --locked iakit decision withdraw runs/<run_id> IA-nnn
 | `alternatives` | 検討した代替案と退けた理由。実質的な選択肢がなければ空にし、`alternatives_not_applicable_reason` に理由を書く。架空の代替案を作らない |
 | `assumptions` | 未検証の条件。欠ければ採用理由が成立しない仮定は `critical: true` |
 | `counter_evidence` | 反証（`not_supported` の主張、反証した調査、矛盾する観察）と解決状況 |
-| `validation_status`・`validation_record_ids` | 実ユーザー調査の記録がなければ `not_tested`、検証計画に載せたら `planned`。LLMの模擬評価だけなら `simulated`。`tested_*` はユーザーが提供した調査記録（`observations.yaml`）を参照する場合だけ |
+| `validation_status`・`validation_record_ids` | 実ユーザー調査の記録がなければ `not_tested`、検証計画に載せたら `planned`。LLMの模擬評価だけなら `simulated` とし、模擬評価の記録（`simulations.yaml` の `SIM-nnn`）を必ず参照する。`tested_*` はユーザーが提供した調査記録（`observations.yaml` の `STUDY-nnn`）だけを参照し、模擬評価や構造の測定を根拠にしない |
 | `confidence`・`confidence_basis` | 下の判定基準で決め、根拠を書く |
 | `classification` | 使った入力・調査記録のうち最も厳しい区分 |
 | `recorded_at`・`skill_version`・`library_version` | 記録日時（タイムゾーン付き）、判断したSkillの版、知識ライブラリの版 |

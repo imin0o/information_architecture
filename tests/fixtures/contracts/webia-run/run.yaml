@@ -227,7 +227,7 @@ artifacts:
   kind: validation_plan
   path: validation-plan.md
   version: 1
-  sha256: aa3e6f630dd2c2aa4de7df350e02782adb2f6654918f2bc40138fc87f72cc3bb
+  sha256: 945e44bf747510cc3eaf876e151c261b939224c929e7d72bd18469bf31451105
   status: current
   stale_reason: null
   classification: internal

@@ -28,9 +28,13 @@ def inventory(d, version=1, classification="internal", rows=(2, 3)):
     (d / "content-inventory.yaml").write_text(yamlio.dumps(doc), encoding="utf-8")
 
 
+PLAN_TABLE = "| 方法 | 実行者 | 実行状況 |\n|---|---|---|\n| ツリーテスト | 人 | 計画 |"
+
+
 def markdown(d, name, kind, text="## 仮定に基づく箇所\n\nなし\n", classification="internal"):
     body = f"# 自作の検査用成果物\n\n- 機密区分: {classification}\n\n" + text
-    body += "".join(f"\n## {heading}\n\n検査用。\n" for heading in run_outputs.MARKDOWN_HEADINGS[kind])
+    body += "".join(f"\n## {heading}\n\n{PLAN_TABLE if heading == '未検証の判断と検証方法' else '検査用。'}\n"
+                    for heading in run_outputs.MARKDOWN_HEADINGS[kind])
     (d / name).write_text(body, encoding="utf-8")
 
 

@@ -19,6 +19,7 @@
     "input_id": {"type": "string", "pattern": "^INPUT-[0-9]{3}$"},
     "observation_id": {"type": "string", "pattern": "^OBS-[0-9]{3}$"},
     "study_id": {"type": "string", "pattern": "^STUDY-[0-9]{3}$"},
+    "simulation_id": {"type": "string", "pattern": "^SIM-[0-9]{3}$"},
     "decision_id": {"type": "string", "pattern": "^IA-[0-9]{3}$"},
     "artifact_id": {"type": "string", "pattern": "^ART-[0-9]{3}$"},
     "content_id": {"type": "string", "pattern": "^CONTENT-[0-9]{3}$"},

@@ -1,11 +1,11 @@
-"""iakit decision・iakit finding・iakit question の引数と実行（記録の書き込み、P1-2・P1-3）。"""
+"""iakit decision・finding・question・simulation・measure の引数と実行（記録の書き込み、P1-2・P1-3・P2）。"""
 
 import sys
 from pathlib import Path
 
-from . import decision_cmd, finding_cmd, question_cmd, yamlio
+from . import decision_cmd, finding_cmd, measure, question_cmd, simulation_cmd, yamlio
 
-GROUPS = ("decision", "finding", "question")
+GROUPS = ("decision", "finding", "question", "simulation", "measure")
 
 
 def _data_args(p) -> None:
@@ -42,6 +42,19 @@ def add_parsers(sub) -> None:
     qa.add_argument("question_id", metavar="Q-nnn")
     qa.add_argument("file", type=Path)
     qa.add_argument("--classification", choices=["public", "internal", "confidential"])
+    sc = sub.add_parser("simulation").add_subparsers(dest="action", required=True)
+    sk = sc.add_parser("kit", help="模擬評価の評価者に渡す材料（ラベルの階層・カード）を出す。設計の文脈は含めない")
+    sk.add_argument("dir", type=Path)
+    sk.add_argument("--method", choices=["tree_test", "closed_card_sort"], required=True)
+    sa = sc.add_parser("add", help="試行の記録から到達率を導いて simulations.yaml に追加する")
+    sa.add_argument("dir", type=Path)
+    _data_args(sa)
+    ms = sub.add_parser("measure").add_subparsers(dest="action", required=True).add_parser(
+        "structure", help="サイトマップ（とビルド済みサイト）の導線を測り、measurements/structure.yaml に書く")
+    ms.add_argument("dir", type=Path)
+    ms.add_argument("--site", type=Path, help="ビルド済みサイトのディレクトリ（index.html を含む）")
+    ms.add_argument("--baseline", type=Path, help="比較する変更前のビルド済みサイト")
+    ms.add_argument("--max-clicks", type=int, default=3, help="到達先までのクリック数の基準")
 
 
 def _data(args) -> dict:
@@ -67,8 +80,13 @@ def command(args) -> int:
             out = finding_cmd.add(args.dir, _data(args), args.rubric_version)
         elif args.group == "finding":
             out = finding_cmd.resolve(args.dir, args.finding_id, args.status, args.version, args.note)
-        else:
+        elif args.group == "question":
             out = question_cmd.answer(args.dir, args.question_id, args.file, args.classification)
+        elif args.group == "simulation":
+            out = (simulation_cmd.kit(args.dir, args.method) if args.action == "kit"
+                   else simulation_cmd.add(args.dir, _data(args)))
+        else:
+            out = measure.structure(args.dir, args.site, args.baseline, args.max_clicks)
     except (ValueError, OSError, yamlio.DataError) as exc:
         sys.stdout.write(yamlio.dumps({"result": "fail", "error": str(exc)}))
         return 1

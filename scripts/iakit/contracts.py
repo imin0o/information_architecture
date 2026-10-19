@@ -6,13 +6,14 @@
 
 from pathlib import Path
 
-from . import decisions, ingest, manifest, provenance, provenance_local, run_outputs, runs, structure, yamlio
+from . import decisions, ingest, manifest, provenance, provenance_local, run_outputs, runs, simulations, structure, yamlio
 from .paths import CHECKOUT, EXTRACTED, FIXTURES, ORIGINALS, ROOT
 
 SCHEMAS = {
     "inputs.yaml": "input.schema.json",
     "decisions.yaml": "decision.schema.json",
     "observations.yaml": "observation.schema.json",
+    "simulations.yaml": "simulation.schema.json",
     "run.yaml": "run.schema.json",
     "provenance.yaml": "provenance.schema.json",
     "receipts.yaml": "verification-receipt.schema.json",
@@ -68,7 +69,8 @@ def load_bundle(directory: Path) -> tuple[dict, list[str]]:
         read(ROOT / provenance.RUNTIME_EVIDENCE, "runtime-evidence.yaml")
     run = docs.get("run.yaml")
     if not (directory / "run.yaml").is_file() and any(
-            name in docs for name in ("inputs.yaml", "decisions.yaml", "observations.yaml", *ARTIFACT_FILES.values())):
+            name in docs for name in ("inputs.yaml", "decisions.yaml", "observations.yaml", "simulations.yaml",
+                                      *ARTIFACT_FILES.values())):
         errors.append("必須ファイル run.yaml がない")
     if run:
         for name in ("inputs.yaml", "decisions.yaml"):
@@ -161,6 +163,9 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
     decision_list = docs.get("decisions.yaml", {"decisions": []})["decisions"]
     studies, study_errors = decisions.study_index(docs.get("observations.yaml", {"studies": []})["studies"], inputs)
     errors += study_errors
+    sims = {s["simulation_id"]: s for s in docs.get("simulations.yaml", {"simulations": []})["simulations"]}
+    if "simulations.yaml" in docs:
+        errors += [f"simulations.yaml: {e}" for e in simulations.record_errors(docs["simulations.yaml"], arts)]
     if "decisions.yaml" in docs:
         target_ids = set(arts)
         for name, collection, key in (("content-inventory.yaml", "items", "content_id"),
@@ -174,7 +179,7 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
         versions = {a: v["version"] for a, v in arts.items()
                     if v["status"] == "current" or a in pending_artifacts}
         errors += decisions.decision_errors(docs["decisions.yaml"], claims,
-                                            derived["states"], inputs, studies, versions, target_ids)
+                                            derived["states"], inputs, studies, versions, target_ids, sims)
     if run:
         errors += _artifact_document_errors(run, docs)
         actual = {a["artifact_id"]: manifest.sha256_file(directory / a["path"])

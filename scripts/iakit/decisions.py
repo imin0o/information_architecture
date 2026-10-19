@@ -121,9 +121,30 @@ def _source_errors(tag: str, d: dict, claims: dict, states: dict) -> list[str]:
     return errors
 
 
+def _simulation_errors(tag: str, d: dict, sims: list[str], simulations: dict, artifact_versions: dict) -> list[str]:
+    """simulated は模擬評価の記録を必ず参照し、模擬評価は tested_* の根拠にならない。"""
+    status = d["validation_status"]
+    if status.startswith("tested_"):
+        return [f"{tag}: 模擬評価 {sid} は {status} の根拠にならない（実ユーザー調査の記録だけを参照する）" for sid in sims]
+    if status != "simulated":
+        return [f"{tag}: 模擬評価 {sid} を参照するなら simulated にする" for sid in sims]
+    errors = [] if sims else [f"{tag}: simulated には模擬評価の記録（SIM-nnn）への参照が必要"]
+    for sid in sims:
+        sim = simulations.get(sid)
+        if sim is None:
+            errors.append(f"{tag}: 模擬評価の記録 {sid} がない")
+        elif artifact_versions.get(sim["target"]["artifact_id"]) != sim["target"]["version"]:
+            errors.append(f"{tag}: {sid} は {sim['target']['artifact_id']} v{sim['target']['version']} の模擬評価で、"
+                          "現行版に適用できるか未確認")
+    return errors
+
+
 def decision_errors(doc: dict, claims: dict, states: dict, inputs: dict[str, dict], studies: dict[str, dict],
-                    artifact_versions: dict[str, int], target_ids: set[str]) -> list[str]:
-    """claims は登録簿の主張索引、states は provenance.derive の導出値、artifact_versions は現行版。"""
+                    artifact_versions: dict[str, int], target_ids: set[str],
+                    simulations: dict[str, dict] | None = None) -> list[str]:
+    """claims は登録簿の主張索引、states は provenance.derive の導出値、artifact_versions は現行版。
+    simulations は模擬評価の記録で、simulated の根拠にだけ使う（AC-07）。"""
+    simulations = simulations or {}
     errors = supersession_errors(doc["decisions"])
     for d in doc["decisions"]:
         if d["run_id"] != doc["run_id"]:
@@ -140,7 +161,9 @@ def decision_errors(doc: dict, claims: dict, states: dict, inputs: dict[str, dic
             else:
                 used.append(inputs[o["input_id"]]["classification"])
         results = []
-        for sid in d["validation_record_ids"]:
+        sims = [sid for sid in d["validation_record_ids"] if sid.startswith("SIM-")]
+        errors += _simulation_errors(tag, d, sims, simulations, artifact_versions)
+        for sid in (sid for sid in d["validation_record_ids"] if not sid.startswith("SIM-")):
             study = studies.get(sid)
             if study is None:
                 errors.append(f"{tag}: 調査記録 {sid} がない")
@@ -156,7 +179,7 @@ def decision_errors(doc: dict, claims: dict, states: dict, inputs: dict[str, dic
                 errors.append(f"{tag}: {d['validation_status']} には実ユーザー調査の記録への参照が必要")
             elif d["validation_status"] != expected:
                 errors.append(f"{tag}: validation_status が {d['validation_status']} だが調査結果からの導出は {expected}")
-        elif d["validation_record_ids"]:
+        elif len(sims) < len(d["validation_record_ids"]):
             errors.append(f"{tag}: 調査記録を参照しながら {d['validation_status']} になっている")
         if RANK[d["classification"]] < RANK[max_classification(used)]:
             errors.append(f"{tag}: 機密区分 {d['classification']} が使用した入力・調査記録の区分より低い")

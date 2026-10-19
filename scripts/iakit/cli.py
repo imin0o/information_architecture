@@ -22,6 +22,10 @@
   iakit finding add DIR [FILE|- | --json TEXT] | resolve DIR FIND-nnn [--status S] [--version N]
                                    評価の指摘を findings.yaml に追加・更新する（登録は run artifact）
   iakit question answer DIR Q-nnn FILE   回答を hearing_answer として登録し、影響する判断と成果物を示す
+  iakit simulation kit DIR --method tree_test|closed_card_sort   模擬評価の評価者に渡す材料（設計の文脈を含めない）
+  iakit simulation add DIR [FILE|- | --json TEXT]   模擬評価の試行を記録し、到達率を導いて simulations.yaml に追加する
+  iakit measure structure DIR [--site DIR] [--baseline DIR] [--max-clicks N]
+                                   サイトマップとビルド済みサイトの導線を測り、指摘の候補を measurements/structure.yaml に書く
   iakit run knowledge DIR KN-nnn ...   段階で読んだ知識本文の内容ハッシュを記録する
   iakit run refresh DIR            入力登録簿のハッシュ・判断参照・未解決の重大な指摘を同期し、依存が変わった成果物をstaleにする
   iakit run event DIR EVENT [--note TEXT] [--status S]   履歴を追加する。resumed は再開前の照合に通った場合だけ

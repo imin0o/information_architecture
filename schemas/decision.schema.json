@@ -68,8 +68,12 @@
         },
         "validation_status": {"enum": ["not_tested", "planned", "simulated", "tested_supported", "tested_refuted",
                                        "tested_inconclusive"]},
-        "validation_record_ids": {"type": "array", "uniqueItems": true,
-                                  "items": {"$ref": "common.schema.json#/$defs/study_id"}},
+        "validation_record_ids": {
+          "description": "tested_* は実ユーザー調査（STUDY）、simulated は模擬評価の記録（SIM）を参照する",
+          "type": "array", "uniqueItems": true,
+          "items": {"oneOf": [{"$ref": "common.schema.json#/$defs/study_id"},
+                              {"$ref": "common.schema.json#/$defs/simulation_id"}]}
+        },
         "confidence": {"enum": ["high", "medium", "low"]},
         "confidence_basis": {"$ref": "common.schema.json#/$defs/nonempty"},
         "classification": {"$ref": "common.schema.json#/$defs/classification"},
