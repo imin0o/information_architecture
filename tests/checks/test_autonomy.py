@@ -1,6 +1,7 @@
 """一括実行の補助（P3）: 常設の許可、段階の契約検査、独立判定の自動実行、終了報告。"""
 
 import shutil
+from pathlib import Path
 
 import pytest
 from test_judgment import record
@@ -142,6 +143,31 @@ def test_report_separates_simulation_from_measurement(run_dir):
     assert "送信を止めた: web-search" in text and "独立判定が未実施" in text
     assert out["lines"] > 10
     assert cli.main(["run", "report", str(run_dir)]) == 0
+
+
+def test_accept_auto_judges_refines_and_reports(tmp_path, monkeypatch):
+    from iakit import accept_auto
+    monkeypatch.setattr(accept_auto, "ROOT", tmp_path)
+    dest, calls = tmp_path / "runs" / "RUN-X", []
+
+    def route(host, case, run_id, refine=False, timeout=0, prompt="", env=None):
+        profile = standing.load_profile(Path(env["IAKIT_PROFILE"]))
+        assert [e["destination"] for e in profile] == ["codex", "claude-code"] and "許可する" not in prompt
+        calls.append("refine" if refine else "full")
+        if refine:
+            run = yamlio.load(dest / "run.yaml")
+            run["refine"]["rounds"] += 1
+            (dest / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+        else:
+            shutil.copytree(BUNDLE, dest)
+        return {"result": "pass", "mode": "refine" if refine else "full"}
+    verdicts = iter(["fail", "pass"])
+    monkeypatch.setattr(accept_auto.accept_route, "route", route)
+    monkeypatch.setattr(accept_auto.judge_cmd, "judge", lambda d, c: (calls.append("judge"), {
+        "result": "pass", "verdict": next(verdicts), "judge": {"model": "m"}})[1])
+    out = accept_auto.auto("codex", "webia-001", "RUN-X")
+    assert calls == ["full", "judge", "refine", "judge"] and out["human_operations"] == 0
+    assert (dest / report.NAME).is_file() and any("送信を止めた" in h for h in out["human_items"])
 
 
 def test_review_registration_warns_about_old_target_version(run_dir):

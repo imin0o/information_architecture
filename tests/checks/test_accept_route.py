@@ -48,7 +48,7 @@ def route_run(tmp_path, monkeypatch):
     monkeypatch.setattr(accept, "DIST", tmp_path / "no-distributions")
 
     def invoke(mutate=None, code=0, refine=False, produce=True):
-        def host_call(host, cwd, prompt, timeout):
+        def host_call(host, cwd, prompt, timeout, env=None):
             produced = cwd / "runs" / RUN_ID
             if produce and not produced.exists():
                 shutil.copytree(template, produced)

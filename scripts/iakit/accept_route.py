@@ -64,8 +64,12 @@ def _collect(produced: Path, dest: Path, out: str, rounds: int | None) -> None:
     shutil.rmtree(backup)
 
 
-def route(host: str, case: str, run_id: str, refine: bool = False, timeout: int = 7200) -> dict:
-    """refine が真なら、回収済みの実行と fail の判定を配置先へ戻し、判定を受けたRefineを依頼する。"""
+def route(host: str, case: str, run_id: str, refine: bool = False, timeout: int = 7200,
+          prompt: str | None = None, env: dict | None = None) -> dict:
+    """refine が真なら、回収済みの実行と fail の判定を配置先へ戻し、判定を受けたRefineを依頼する。
+
+    prompt と env は一括実行の受け入れ（accept_auto）が依頼文とホストの環境変数を差し替えるために使う。
+    """
     dest = ROOT / "runs" / run_id
     if dest.exists() != refine or refine and not (dest / "rubric-judgment.yaml").is_file():
         return {"check": "accept_route", "result": "fail",
@@ -77,9 +81,9 @@ def route(host: str, case: str, run_id: str, refine: bool = False, timeout: int 
         if refine:
             shutil.copytree(dest, workspace / "runs" / run_id)
             rounds = yamlio.load(dest / "run.yaml")["refine"]["rounds"]
-        prompt = REQUESTS[case] + (REFINE if refine else FULL).format(run=run_id, judge=JUDGE[host])
+        prompt = prompt or REQUESTS[case] + (REFINE if refine else FULL).format(run=run_id, judge=JUDGE[host])
         started = time.monotonic()
-        code, out = accept_host._host_call(host, workspace, prompt, timeout)
+        code, out = accept_host._host_call(host, workspace, prompt, timeout, env)
         minutes = round((time.monotonic() - started) / 60, 1)
         produced = workspace / "runs" / run_id
         case_doc = yamlio.load(ROOT / "tests" / "cases" / case / "case.yaml")

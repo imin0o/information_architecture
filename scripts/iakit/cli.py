@@ -40,7 +40,8 @@
   iakit dist diff OLD NEW          2つの配布ディレクトリの配布IDとファイルの差分
   iakit accept host --host claude|codex [--scenario NAME ...]   ホストのモデルで配置先の配布物を使う受け入れ検査（M6）
   iakit accept route --host H --case NAME --run-id ID [--refine]   代表ケースを配置先で最後まで実行し、runs/ へ回収する（M6）
-  iakit accept placement           dist/ をビルド元の外へ両ホストの配置先として写し、同梱の実行時処理で受け入れ検査する（M6）
+  iakit accept auto --host H --case NAME --run-id ID   依頼文と常設の許可だけで一括実行・独立判定・Refine・報告まで進める（P3）
+  iakit accept placement         dist/ をビルド元の外へ両ホストの配置先として写し、同梱の実行時処理で受け入れ検査する（M6）
   iakit review sheet               人の確認用シートを sources/review/ に作る（Git管理外。本文を含む）
   iakit review record --by NAME (--all-ok | --reject EV | --claim CLAIM=STATUS | --sample-issue ID:KIND:MEMO)
                                    人の判定から主張レビュー・照合記録・抽出品質の確認を書き込む
@@ -52,7 +53,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import (accept, accept_host, accept_route, cases, cli_records, cli_run, contracts, dist, extract_cmd, fixtures, hostprobe, leak_history, leaks, library,
+from . import (accept, accept_auto, accept_host, accept_route, cases, cli_records, cli_run, contracts, dist, extract_cmd, fixtures, hostprobe, leak_history, leaks, library,
                manifest, paths, push_check, review, yamlio)
 
 
@@ -141,6 +142,10 @@ def _parser() -> argparse.ArgumentParser:
     ar.add_argument("--case", choices=sorted(accept_route.REQUESTS), required=True)
     ar.add_argument("--run-id", required=True)
     ar.add_argument("--refine", action="store_true", help="fail の独立判定を受けた実行を配置先へ戻してRefineさせる")
+    au = with_report(ac.add_parser("auto"))
+    au.add_argument("--host", choices=sorted(accept_host.COMMANDS), required=True)
+    au.add_argument("--case", choices=sorted(accept_route.REQUESTS), required=True)
+    au.add_argument("--run-id", required=True)
 
     cli_run.add_parsers(sub)
     cli_records.add_parsers(sub)
@@ -203,6 +208,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.group == "accept":
         results = [accept.placement() if args.action == "placement" else
                    accept_host.run(args.host, args.scenario, args.repeat) if args.action == "host" else
+                   accept_auto.auto(args.host, args.case, args.run_id) if args.action == "auto" else
                    accept_route.route(args.host, args.case, args.run_id, args.refine)]
     elif args.group == "review":
         results = [review.sheet() if args.action == "sheet" else
