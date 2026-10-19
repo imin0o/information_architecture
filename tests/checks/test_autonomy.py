@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from test_judgment import record
 
-from iakit import cli, contracts, gate, judge_cmd, report, run_cmd, run_inputs, standing, yamlio
+from iakit import cli, contracts, gate, judge_cmd, judge_findings, judgment, report, run_cmd, run_inputs, standing, yamlio
 from iakit.paths import ROOT
 
 BUNDLE = ROOT / "tests" / "fixtures" / "contracts" / "webia-run"
@@ -90,6 +90,30 @@ def test_judge_not_run_without_approval(run_dir):
     assert yamlio.load(run_dir / "run.yaml")["history"][-1]["event"] == "judged"
 
 
+@pytest.mark.parametrize("change", ["empty", "missing", "invalid", "narrowed", "kinds"])
+def test_judge_does_not_reuse_revoked_or_unreadable_standing_permission(run_dir, tmp_path, change):
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+    judge_cmd.judge(run_dir, "webia-001", call=fake_judge(run_dir))
+    before = yamlio.load(run_dir / "run.yaml")
+    if change == "missing":
+        (tmp_path / "profile.yaml").unlink()
+    elif change == "invalid":
+        (tmp_path / "profile.yaml").write_text("approvals: invalid\n", encoding="utf-8")
+    elif change == "narrowed":
+        write_profile(tmp_path, profile_entry("judge", "codex", "external_service", level="public"))
+    elif change == "kinds":
+        write_profile(tmp_path, profile_entry("judge", "codex", "external_service", kinds=("input",)))
+    else:
+        write_profile(tmp_path)
+    calls = []
+    out = judge_cmd.judge(run_dir, "webia-001", call=lambda *a: calls.append(a))
+    assert out["result"] == "not_run" and calls == []
+    after = yamlio.load(run_dir / "run.yaml")
+    assert after["transmissions"] == before["transmissions"]
+    assert after["approvals"][:len(before["approvals"])] == before["approvals"]  # 過去の送信の証跡は残す
+    assert contracts.check_bundle(run_dir)["result"] == "pass"
+
+
 def fake_judge(run_dir, change=None):
     def call(host, cwd, prompt, timeout):
         assert host == "codex" and "rubric-judgment.yaml" in prompt and "<run_id>" not in prompt
@@ -99,6 +123,17 @@ def fake_judge(run_dir, change=None):
         (run_dir / "rubric-judgment.yaml").write_text(yamlio.dumps(data), encoding="utf-8")
         return 0, "判定した"
     return call
+
+
+def test_explicit_permission_still_works_without_a_profile(run_dir, tmp_path):
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+    standing.sync(run_dir)
+    run = yamlio.load(run_dir / "run.yaml")
+    run["approvals"][-1].pop("standing")
+    (run_dir / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+    (tmp_path / "profile.yaml").unlink()
+    out = judge_cmd.judge(run_dir, "webia-001", call=fake_judge(run_dir))
+    assert out["verdict"] == "pass" and contracts.check_bundle(run_dir)["result"] == "pass"
 
 
 def test_judge_records_transmission_and_passes(run_dir, tmp_path):
@@ -177,6 +212,74 @@ def test_passing_rejudgment_resolves_judge_findings_on_newer_version(run_dir, tm
     assert yamlio.load(run_dir / "run.yaml")["status"] == "completed"
     found = next(f for f in yamlio.load(run_dir / "findings.yaml")["findings"] if f["finding_id"] == fid)
     assert found["status"] == "resolved" and found["resolved_in"] == {"artifact_id": "ART-006", "version": 2}
+
+
+@pytest.mark.parametrize("confirmation", ["pass", "fail", "missing", "revoked"])
+def test_settlement_confirms_updated_versions_once(run_dir, tmp_path, confirmation):
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+
+    def failing(data):
+        fail_change(data)
+        data["issues"][0]["basis"] = ["ART-010 v1"]
+    first = judge_cmd.judge(run_dir, "webia-001", call=fake_judge(run_dir, failing))
+    fid = first["findings_added"][0]
+    path = run_dir / "ia-review.md"
+    path.write_text(path.read_text(encoding="utf-8") + "\n再評価を行った。\n", encoding="utf-8")
+    run_cmd.artifact(run_dir, "ia-review.md", "ia_review", [], [])
+    judge_findings._reconfirm(run_dir, set(), "再評価による記録の変更で、設計への影響はない")
+    run_inputs.event(run_dir, "completed", "再評価を終えた")
+    assert contracts.check_bundle(run_dir)["result"] == "pass"
+    calls = []
+
+    def call(*args):
+        calls.append(args[0])
+        if len(calls) == 1:
+            result = fake_judge(run_dir)(*args)
+            if confirmation == "revoked":
+                write_profile(tmp_path)
+            return result
+        if confirmation == "missing":
+            return 124, ""
+        return fake_judge(run_dir, failing if confirmation == "fail" else None)(*args)
+    out = judge_cmd.judge(run_dir, "webia-001", call=call)
+    assert len(calls) == (1 if confirmation == "revoked" else 2)
+    assert out["findings_resolved"] == [fid]
+    if confirmation == "pass":
+        assert out["verdict"] == "pass" and out["status"] == "completed"
+        assert judgment.check(run_dir, "webia-001")["result"] == "pass"
+        old = yamlio.load(run_dir / "rubric-judgment.round2.yaml")
+        current = yamlio.load(run_dir / judgment.FILE)
+        assert old["artifacts"] != current["artifacts"]  # 判定者の元の証跡を保存する
+    elif confirmation == "fail":
+        assert out["verdict"] == "fail" and out["status"] == "in_progress"
+    else:
+        assert out["result"] == ("not_run" if confirmation == "revoked" else "fail")
+        assert not (run_dir / judgment.FILE).exists()
+    assert contracts.check_bundle(run_dir)["result"] == "pass"
+
+
+@pytest.mark.parametrize("key", ["conditions", "human_checks"])
+def test_failed_checks_create_findings_and_require_a_passing_rejudgment(run_dir, tmp_path, key):
+    write_profile(tmp_path, profile_entry("judge", "codex", "external_service"))
+
+    def failing(data):
+        data[key][0].update(result="not_met", note="条件を満たしていない")
+        data["verdict"] = "fail"
+    out = judge_cmd.judge(run_dir, "webia-001", call=fake_judge(run_dir, failing))
+    assert len(out["findings_added"]) == 1 and out["status"] == "in_progress"
+    fid = out["findings_added"][0]
+    run = yamlio.load(run_dir / "run.yaml")
+    finding = next(f for f in yamlio.load(run_dir / "findings.yaml")["findings"] if f["finding_id"] == fid)
+    assert key in finding["problem"] and finding["return_to"] == "analyze"
+    next(a for a in run["artifacts"] if a["artifact_id"] == finding["target"]["artifact_id"])["version"] += 1
+    (run_dir / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+    again = record(run)
+    failing(again)
+    again[key][0]["note"] = "同じ条件の別の説明"
+    assert judge_findings.settle(run_dir, again) == []
+    moved = judge_findings.to_findings(run_dir, again)
+    assert moved["added"] == [] and moved["existing"] == [fid]
+    assert judge_findings.settle(run_dir, record(run)) == [fid]
 
 
 def test_judge_rejects_changes_outside_judgment(run_dir, tmp_path):
@@ -262,11 +365,62 @@ def test_accept_auto_judges_refines_and_reports(tmp_path, monkeypatch):
         return {"result": "pass", "mode": "refine" if refine else "full"}
     verdicts = iter(["fail", "pass"])
     monkeypatch.setattr(accept_auto.accept_route, "route", route)
-    monkeypatch.setattr(accept_auto.judge_cmd, "judge", lambda d, c: (calls.append("judge"), {
-        "result": "pass", "verdict": next(verdicts), "judge": {"model": "m"}})[1])
+    def judge(d, c):
+        calls.append("judge")
+        verdict = next(verdicts)
+        data = record(yamlio.load(d / "run.yaml"))
+        if verdict == "fail":
+            fail_change(data)
+        (d / judgment.FILE).write_text(yamlio.dumps(data), encoding="utf-8")
+        return {"result": "pass", "verdict": verdict, "judge": data["judge"], "status": "completed"}
+    monkeypatch.setattr(accept_auto.judge_cmd, "judge", judge)
     out = accept_auto.auto("codex", "webia-001", "RUN-X")
     assert calls == ["full", "judge", "refine", "judge"] and out["human_operations"] == 0
     assert (dest / report.NAME).is_file() and any("送信を止めた" in h for h in out["human_items"])
+    assert out["result"] == "pass" and out["judgment"] == "pass"
+
+
+@pytest.mark.parametrize("mode", ["no_progress", "limit", "stale", "unresolved"])
+def test_accept_auto_requires_a_current_pass_for_completed(tmp_path, monkeypatch, mode):
+    from iakit import accept_auto
+    monkeypatch.setattr(accept_auto, "ROOT", tmp_path)
+    dest, calls = tmp_path / "runs" / "RUN-X", []
+
+    def route(host, case, run_id, refine=False, **kwargs):
+        calls.append("refine" if refine else "full")
+        if not refine:
+            shutil.copytree(BUNDLE, dest)
+        else:
+            run = yamlio.load(dest / "run.yaml")
+            if mode != "no_progress":
+                run["refine"]["rounds"] += 1
+            if mode == "unresolved":
+                run["status"] = "unresolved"
+                run["refine"]["reported_to_user"] = True
+            (dest / "run.yaml").write_text(yamlio.dumps(run), encoding="utf-8")
+        return {"result": "pass"}
+
+    def judge(d, c):
+        calls.append("judge")
+        data = record(yamlio.load(d / "run.yaml"))
+        if mode == "stale":
+            data["artifacts"][0]["version"] += 1
+        else:
+            data["conditions"][0]["result"] = "not_met"
+            data["verdict"] = "fail"
+        (d / judgment.FILE).write_text(yamlio.dumps(data), encoding="utf-8")
+        return {"result": "pass", "verdict": data["verdict"], "judge": data["judge"], "status": "completed"}
+    monkeypatch.setattr(accept_auto.accept_route, "route", route)
+    monkeypatch.setattr(accept_auto.judge_cmd, "judge", judge)
+    out = accept_auto.auto("claude", "webia-001", "RUN-X")
+    if mode == "unresolved":
+        assert out["result"] == "pass" and out["status"] == "unresolved"
+    else:
+        assert out["result"] == "fail" and out["errors"]
+    if mode == "limit":
+        assert calls == ["full", "judge", "refine", "judge", "refine", "judge"]
+    if mode == "no_progress":
+        assert calls == ["full", "judge", "refine"]
 
 
 def test_review_registration_warns_about_old_target_version(run_dir):

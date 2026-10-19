@@ -32,9 +32,18 @@ def _findings(directory: Path) -> list[dict]:
     return yamlio.load(path)["findings"] if path.is_file() else []
 
 
+def _failed_checks(j: dict):
+    """必須条件・人の確認方法の、ケース内で安定した識別子と不合格の内容。"""
+    for key in ("conditions", "human_checks"):
+        for check in j[key]:
+            if check["result"] == "not_met":
+                yield f"{key}: {check['text']}", check
+
+
 def settle(directory: Path, j: dict) -> list[str]:
     """判定に由来する open の指摘のうち、この判定で解消条件を満たし、対象の版が進んだものを resolved にする。"""
     failing = {i["item"] for i in j["items"] if i["result"] == "fail"}
+    failing.update(origin for origin, _ in _failed_checks(j))
     raised = {i["problem"] for i in j["issues"]}
     run, done = load(directory, "run.yaml"), []
     current = {a["artifact_id"]: a["version"] for a in run["artifacts"] if a["status"] == "current"}
@@ -79,6 +88,8 @@ def to_findings(directory: Path, j: dict) -> dict:
     entries = [(i["severity"], i["item"], i["problem"], i["basis"], i["residual"]) for i in j["issues"]]
     entries += [("major", i["item"], f"独立判定で {i['item']} が fail: {i['note'] or '基準を満たさない'}", i["basis"], None)
                 for i in j["items"] if i["result"] == "fail" and i["item"] not in covered]
+    entries += [("major", origin, f"独立判定で {origin} が not_met", c["basis"], c["note"] or None)
+                for origin, c in _failed_checks(j)]
     added, existing = [], []
     for severity, item, problem, basis, residual in entries:
         art = _target(run, basis)
@@ -90,7 +101,7 @@ def to_findings(directory: Path, j: dict) -> dict:
             "severity": severity, "target": {"artifact_id": art["artifact_id"]}, "locator": locator,
             "problem": problem, "basis": [f"{ORIGIN}{item}", *basis],
             "recommendation": f"独立判定の {item} の基準を満たすよう修正する" + (f"（判定の residual: {residual}）" if residual else ""),
-            "resolution_condition": f"再判定で {item} が fail にならず、この問題が issues に挙がらない",
+            "resolution_condition": f"再判定で {item} が不合格にならず、この問題が issues に挙がらない",
             "return_to": STAGE_OF[art["kind"]]}, j["rubric_version"])["finding_id"])
     ids = added + sorted(set(existing) - set(added))
     exhausted = run["refine"]["rounds"] >= runs.MAX_REFINE_ROUNDS

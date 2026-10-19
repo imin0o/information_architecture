@@ -122,6 +122,10 @@ Validate（ia-evaluation）の指摘は `findings.yaml` に記録される。重
 
 判定者を手で起動した場合は、判定の記録 `rubric-judgment.yaml` を `iakit run judgment runs/<run_id> --case <case>` で検査し、`fail` で重大（`critical`）な問題を `findings.yaml` の指摘として加える。
 
+自動判定では、必須条件（`conditions`）と人の確認方法（`human_checks`）の `not_met` も指摘に加えてRefineへ戻す。合格した再判定で指摘を自動解消して成果物の版が進んだ場合は、元の判定を退避し、更新後の版について独立判定を追加で1回だけ行う。追加の判定では指摘の自動解消を繰り返さず、不合格なら通常のRefineへ戻す。追加の起動を許可できない場合や有効な記録が得られない場合は、合格として報告しない。
+
+常設の許可の過去の記録は送信の証跡として残すが、新しい送信には現在のプロファイルから適用した許可だけを使う。許可の削除・縮小、プロファイルの不在・不正を、過去の許可で補って送信しない。
+
 ## 中断と再開
 
 中断するときは `iakit run event runs/<run_id> interrupted --note <理由>` を記録する。再開するときは `iakit run event runs/<run_id> resumed` を実行する。コマンドは入力登録簿、入力の実体、取込み結果、成果物のハッシュを照合し、不一致があれば再開を止める。取込み結果の内容ハッシュは `inputs.yaml` の `ingest_sha256` に記録する。旧実行で未登録の場合は入力を `input add --replace` で再登録し、命令候補の確認と、`stale` になった成果物の点検をやり直す。

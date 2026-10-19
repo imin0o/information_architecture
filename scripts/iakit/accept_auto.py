@@ -8,7 +8,7 @@
 
 import os
 
-from . import accept, accept_route, contracts, judge_cmd, report, standing, yamlio
+from . import accept, accept_route, contracts, judge_cmd, judgment, report, standing, yamlio
 from . import accept_hostenv as accept_host
 from .paths import ROOT
 
@@ -72,12 +72,20 @@ def auto(host: str, case: str, run_id: str, timeout: int = 7200) -> dict:
                 break
             if judged["status"] == "unresolved":
                 break  # Refineの上限に達していたため、判定のコマンドが未解決で終えた
+            if i == LIMIT:
+                errors.append("独立判定が fail のまま、判定を受け直す回数の上限に達した")
+                break
             rounds = yamlio.load(dest / "run.yaml")["refine"]["rounds"]
             step = accept_route.route(host, case, run_id, refine=True, timeout=timeout,
                                       prompt=REFINE.format(run=run_id), env=env)
             steps.append(step)
-            if step["result"] == "pass" and (i == LIMIT or yamlio.load(dest / "run.yaml")["refine"]["rounds"] == rounds):
-                break  # Refineの上限に達した（unresolved）か、受け直す回数の上限
+            if step["result"] == "pass":
+                refined = yamlio.load(dest / "run.yaml")
+                if refined["status"] == "unresolved":
+                    break
+                if refined["refine"]["rounds"] <= rounds:
+                    errors.append("独立判定が fail のまま、Refineの巡数が増えずに終了した")
+                    break
     finally:
         if previous is None:
             os.environ.pop("IAKIT_PROFILE", None)
@@ -96,6 +104,15 @@ def auto(host: str, case: str, run_id: str, timeout: int = 7200) -> dict:
             errors.append(f"実行が終了していない: {run['status']}")
         if check["result"] != "pass":
             errors += check.get("errors", [])[:10]
+        if run["status"] == "completed":
+            final = judgment.check(dest, case)
+            details["judgment"] = final["result"]
+            if final["result"] != "pass":
+                errors += final["errors"][:10]
+            elif yamlio.load(dest / judgment.FILE)["verdict"] != "pass":
+                errors.append("completed の実行に、現行版の独立判定 pass がない")
+    else:
+        errors.append(f"実行記録がない: {dest / 'run.yaml'}")
     # 依頼文のほかに人が渡したものはない。ホストへの指示は FULL と REFINE の固定文だけである。
     result = {"check": "accept_auto", "host": host, "case": case, "run_id": run_id, "human_operations": 0,
               "steps": steps, **details, "left_behind": left, "result": "fail" if errors else "pass"}

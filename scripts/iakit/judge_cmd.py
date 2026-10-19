@@ -37,7 +37,7 @@ def request_text(run_path: str, run_id: str, case: str) -> str:
     return body.group(1).replace("runs/<run_id>", run_path).replace("<run_id>", run_id).replace("<case>", case)
 
 
-def _approval(run: dict, inputs: list[dict], judge: str) -> tuple[dict | None, str]:
+def _approval(run: dict, inputs: list[dict], judge: str, active_standing: set[str]) -> tuple[dict | None, str]:
     """判定者に入力と派生物を読ませる許可。最も厳しい区分が許可の上限以下で、confidential でないこと。"""
     level = max_classification([i["classification"] for i in inputs]
                                + [a["classification"] for a in run["artifacts"] if a["status"] == "current"])
@@ -45,6 +45,8 @@ def _approval(run: dict, inputs: list[dict], judge: str) -> tuple[dict | None, s
         return None, "confidential の入力または派生物を含むため、判定を依頼しない"
     ids = {i["input_id"] for i in inputs}
     for a in run["approvals"]:
+        if a.get("standing") and a["approval_id"] not in active_standing:
+            continue  # 過去の送信の証跡として残した許可は、新しい送信には使わない
         if ((a["destination"], a["destination_kind"]) == (judge, "external_service")
                 and {"input", "derived"} <= set(a["data_kinds"]) and ids <= set(a["input_ids"])
                 and RANK[level] <= RANK[a["max_classification"]]):
@@ -101,7 +103,7 @@ def _set_aside(directory: Path, label: str) -> str | None:
     return target.name
 
 
-def judge(directory: Path, case: str, timeout: int = 3600, call=_call) -> dict:
+def judge(directory: Path, case: str, timeout: int = 3600, call=_call, *, _settle: bool = True) -> dict:
     run = load(directory, "run.yaml")
     host = run["environment"]["host"]
     judge_host = standing.partner(host)
@@ -111,10 +113,13 @@ def judge(directory: Path, case: str, timeout: int = 3600, call=_call) -> dict:
         raise ValueError(f"実行は {run['status']}。標準経路を終えてから判定を受ける")
     try:
         synced = standing.sync(directory)
-    except ValueError as e:  # 不正なプロファイルは写さず、記録済みの許可で判断する
-        synced = {"error": str(e)}
+    except ValueError as e:
+        reason = f"常設の許可を同期できないため、判定への送信を止めた: {e}"
+        _history(directory, f"not_run: {reason}")
+        return {"result": "not_run", "judge_host": judge_host, "reason": reason, "standing": {"error": str(e)}}
     run, inputs = load(directory, "run.yaml"), load(directory, "inputs.yaml")["inputs"]
-    approval, level = _approval(run, inputs, judge_host)
+    active = {a["approval_id"] for a in synced["applied"]}
+    approval, level = _approval(run, inputs, judge_host, active)
     if approval is None:
         _history(directory, f"not_run: {level}")
         return {"result": "not_run", "judge_host": judge_host, "reason": level, "standing": synced}
@@ -153,7 +158,14 @@ def judge(directory: Path, case: str, timeout: int = 3600, call=_call) -> dict:
     if changed:
         result["changed"] = changed
     if j:
-        settled = judge_findings.settle(directory, j)
+        settled = judge_findings.settle(directory, j) if _settle else []
+        if j["verdict"] == "pass" and settled:
+            # 自動解消で指摘と後続の版が進んだ。判定者の証跡を書き換えず、新しい版を一度だけ確認させる。
+            _set_aside(directory, "round")
+            confirmed = judge(directory, case, timeout, call, _settle=False)
+            confirmed["findings_resolved"] = settled
+            confirmed["status"] = load(directory, "run.yaml")["status"]
+            return confirmed
         moved = {"added": [], "existing": []} if j["verdict"] == "pass" else judge_findings.to_findings(directory, j)
         result.update(verdict=j["verdict"], judge=j["judge"], findings_added=moved["added"],
                       findings_existing=moved["existing"], findings_resolved=settled,

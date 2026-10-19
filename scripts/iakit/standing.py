@@ -94,7 +94,9 @@ def load_profile(path: Path) -> list[dict]:
 def sync(directory: Path, path: Path | None = None) -> dict:
     """プロファイルの許可を run.yaml の approvals へ写す。対象の入力は、上限以下の区分の登録済み入力すべて。
 
-    再実行すれば、入力の追加とプロファイルの変更に合わせて写した許可を更新する。プロファイルがなければ何もしない。
+    再実行すれば、入力の追加とプロファイルの変更に合わせて写した許可を更新する。送信が参照する許可は
+    過去の証跡として保存し、内容が変わった許可には別のIDを使う。applied は今回有効な許可だけを返す。
+    プロファイルがなければ何もしない。
     """
     path = path or profile_path()
     if not path.is_file():
@@ -102,8 +104,9 @@ def sync(directory: Path, path: Path | None = None) -> dict:
     entries = load_profile(path)
     run, inputs = load(directory, "run.yaml"), load(directory, "inputs.yaml")["inputs"]
     sha, host = manifest.sha256_file(path), run["environment"]["host"]
-    kept = [a for a in run["approvals"] if not a.get("standing")]
-    previous = {a["standing"]["entry"]: a["approval_id"] for a in run["approvals"] if a.get("standing")}
+    used_ids = {t["approval_id"] for t in run["transmissions"]}
+    kept = {a["approval_id"]: a for a in run["approvals"] if not a.get("standing") or a["approval_id"] in used_ids}
+    previous = [a for a in run["approvals"] if a.get("standing")]
     used = {int(a["approval_id"].split("-")[1]) for a in run["approvals"]}
     applied, skipped = [], []
     for e in entries:
@@ -114,19 +117,20 @@ def sync(directory: Path, path: Path | None = None) -> dict:
         if errors:
             skipped.append({"entry": e["entry"], "reasons": errors})
             continue
-        aid = previous.get(e["entry"])
+        content = {"destination": e["destination"], "destination_kind": e["destination_kind"],
+                   "max_classification": e["max_classification"], "data_kinds": list(e["data_kinds"]),
+                   "input_ids": ids, "purpose": e["purpose"], "granted_by": "user", "granted_at": e["granted_at"],
+                   "standing": {"entry": e["entry"], "profile_sha256": sha}}
+        same = next((a for a in previous if {k: v for k, v in a.items() if k != "approval_id"} == content), None)
+        reusable = next((a for a in previous if a["standing"]["entry"] == e["entry"]
+                         and a["approval_id"] not in used_ids), None)
+        aid = (same or reusable or {}).get("approval_id")
         if aid is None:
             aid = f"APPROVAL-{max(used, default=0) + 1:03d}"
             used.add(int(aid.split("-")[1]))
-        kept.append({"approval_id": aid, "destination": e["destination"], "destination_kind": e["destination_kind"],
-                     "max_classification": e["max_classification"], "data_kinds": list(e["data_kinds"]),
-                     "input_ids": ids, "purpose": e["purpose"], "granted_by": "user", "granted_at": e["granted_at"],
-                     "standing": {"entry": e["entry"], "profile_sha256": sha}})
+        kept[aid] = {"approval_id": aid, **content}
         applied.append({"entry": e["entry"], "approval_id": aid, "input_ids": ids})
-    used_ids = {t["approval_id"] for t in run["transmissions"]}
-    dropped = sorted(set(previous.values()) - {a["approval_id"] for a in kept})
-    if set(dropped) & used_ids:
-        raise ValueError(f"送信の記録が参照する常設の許可 {sorted(set(dropped) & used_ids)} を外せない。プロファイルを戻す")
-    run["approvals"] = sorted(kept, key=lambda a: a["approval_id"])
+    dropped = sorted({a["approval_id"] for a in previous} - kept.keys())
+    run["approvals"] = sorted(kept.values(), key=lambda a: a["approval_id"])
     save(directory, "run.yaml", run)
     return {"profile": str(path), "applied": applied, "skipped": skipped, "removed": dropped}
