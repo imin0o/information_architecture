@@ -3,7 +3,7 @@
 import sys
 from pathlib import Path
 
-from . import contracts, ingest, judgment, run_cmd, run_compare, run_inputs, runs, yamlio
+from . import contracts, gate, ingest, judge_cmd, judgment, report, run_cmd, run_compare, run_inputs, runs, standing, yamlio
 
 
 def add_parsers(sub) -> None:
@@ -34,6 +34,17 @@ def add_parsers(sub) -> None:
     rc = rn.add_parser("compare", help="2つの実行の判断・Skill・知識の差分（NFR-02）")
     rc.add_argument("dir", type=Path, help="基準の実行ディレクトリ")
     rc.add_argument("other", type=Path)
+    rp = rn.add_parser("approvals", help="プロファイルの常設の許可を approvals へ写す（P3-2）")
+    rp.add_argument("dir", type=Path)
+    rp.add_argument("--profile", type=Path, help="既定: IAKIT_PROFILE、なければ ~/.iakit/approvals.yaml")
+    rg = rn.add_parser("gate", help="段階の契約検査。同じ誤りが3回続けば中断を記録する（P3-1）")
+    rg.add_argument("dir", type=Path)
+    rg.add_argument("--stage", required=True, choices=["analyze", "classify", "structure", "validate", "refine"])
+    rd = rn.add_parser("judge", help="別ホストの判定エージェントを起動して独立判定を受ける（P3-3）")
+    rd.add_argument("dir", type=Path)
+    rd.add_argument("--case", required=True)
+    rd.add_argument("--timeout", type=int, default=3600)
+    rn.add_parser("report", help="終了報告 report.md を記録から作る（P3-4）").add_argument("dir", type=Path)
     re_ = rn.add_parser("event")
     re_.add_argument("dir", type=Path)
     re_.add_argument("event", choices=["interrupted", "resumed", "rerun", "refine", "completed"])
@@ -85,6 +96,14 @@ def command(args) -> int:
             out = judgment.check(args.dir, args.case)
         elif args.action == "compare":
             out = run_compare.compare(args.dir, args.other)
+        elif args.action == "approvals":
+            out = standing.sync(args.dir, args.profile)
+        elif args.action == "gate":
+            out = gate.gate(args.dir, args.stage)
+        elif args.action == "judge":
+            out = judge_cmd.judge(args.dir, args.case, args.timeout)
+        elif args.action == "report":
+            out = report.write(args.dir)
         else:
             final = args.event == "completed" or args.status in ("completed", "unresolved")
             if final:
@@ -100,4 +119,4 @@ def command(args) -> int:
         sys.stdout.write(yamlio.dumps({"result": "fail", "error": str(exc)}))
         return 1
     sys.stdout.write(yamlio.dumps(out))
-    return 1 if out.get("result") == "fail" else 0
+    return 1 if out.get("result") in ("fail", "interrupted") else 0

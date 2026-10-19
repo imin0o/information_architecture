@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "standing-approvals.schema.json",
+  "title": "常設の許可 ~/.iakit/approvals.yaml（P3-2）",
+  "description": "ユーザーが一度設定する送信許可。iakit run approvals が実行ごとの approvals へ写す。送信先はホストのLLMと独立判定の相手、上限の区分は internal、データの種類は入力と派生物まで",
+  "type": "object",
+  "required": ["schema_version", "approvals"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["entry", "destination", "destination_kind", "max_classification", "data_kinds", "purpose", "granted_at"],
+        "additionalProperties": false,
+        "properties": {
+          "entry": {"description": "プロファイル内の名前。写した許可の standing.entry になる", "type": "string",
+                    "pattern": "^[a-z0-9][a-z0-9-]*$"},
+          "destination": {"description": "host_llm は作業中のホスト、external_service は独立判定の相手", "enum": ["claude-code", "codex"]},
+          "destination_kind": {"enum": ["host_llm", "external_service"]},
+          "max_classification": {"enum": ["public", "internal"]},
+          "data_kinds": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["input", "derived"]}},
+          "purpose": {"$ref": "common.schema.json#/$defs/nonempty"},
+          "granted_at": {"$ref": "common.schema.json#/$defs/datetime"}
+        }
+      }
+    }
+  }
+}

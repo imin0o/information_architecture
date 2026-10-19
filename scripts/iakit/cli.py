@@ -31,6 +31,10 @@
   iakit run event DIR EVENT [--note TEXT] [--status S]   履歴を追加する。resumed は再開前の照合に通った場合だけ
   iakit run resume DIR             再開前の照合（入力登録簿・入力の実体・取込み結果・成果物のハッシュ）
   iakit run judgment DIR --case NAME   独立した判定エージェントのルーブリック判定（rubric-judgment.yaml）を検査する
+  iakit run approvals DIR [--profile PATH]   ユーザーのプロファイルの常設の許可を approvals へ写す（範囲外は写さない）
+  iakit run gate DIR --stage STAGE   段階の契約検査。同じ誤りが3回続けば中断を記録する
+  iakit run judge DIR --case NAME [--timeout S]   別ホストの判定エージェントを起動し、判定を検査して fail を指摘へ戻す
+  iakit run report DIR             成果物と版・仮定・検証の区別・人の判断が必要な事項を report.md にまとめる
   iakit dist build [--out DIR]     配布物を新しいディレクトリで生成・検査し、dist/ を丸ごと入れ替える
   iakit dist check [DIR]           DIR を指定すれば配置済み配布物の検査。省略時は再生成して verification/distributions.yaml と照合
   iakit dist diff OLD NEW          2つの配布ディレクトリの配布IDとファイルの差分

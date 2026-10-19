@@ -184,4 +184,12 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
         raise
     if stamped != original:
         out["rewritten"] = True
+    if kind == "ia_review":
+        # 評価対象の版は書き換えない。再評価で現行版と違うまま登録した場合に気付けるよう警告する
+        now_versions = {a["artifact_id"]: a["version"] for a in run["artifacts"]}
+        old = sorted({f"{m.group(1)} v{m.group(2)}（現行 v{now_versions[m.group(1)]}）"
+                      for m in stamps._MD_REF.finditer(stamped[:stamps._header_end(stamped)])
+                      if m.group(1) != aid and now_versions.get(m.group(1), int(m.group(2))) != int(m.group(2))})
+        if old:
+            out["warnings"] = [f"評価の記録の冒頭が現行でない版を評価対象に挙げている: {', '.join(old)}"]
     return out

@@ -56,7 +56,13 @@
                         "items": {"$ref": "common.schema.json#/$defs/input_id"}},
           "purpose": {"$ref": "common.schema.json#/$defs/nonempty"},
           "granted_by": {"enum": ["user"]},
-          "granted_at": {"$ref": "common.schema.json#/$defs/datetime"}
+          "granted_at": {"$ref": "common.schema.json#/$defs/datetime"},
+          "standing": {
+            "description": "ユーザーのプロファイルの常設の許可から iakit run approvals が写したもの（P3-2）",
+            "type": "object", "required": ["entry", "profile_sha256"], "additionalProperties": false,
+            "properties": {"entry": {"$ref": "common.schema.json#/$defs/nonempty"},
+                           "profile_sha256": {"$ref": "common.schema.json#/$defs/sha256"}}
+          }
         }
       }
     },
@@ -100,12 +106,21 @@
         "reported_to_user": {"type": "boolean"}
       }
     },
+    "gate": {
+      "description": "段階ごとの契約検査（iakit run gate）の連続失敗。同じ誤りが3回続けば中断にする（P3-1）",
+      "type": "object", "required": ["stage", "signature", "failures"], "additionalProperties": false,
+      "properties": {
+        "stage": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "signature": {"description": "誤りの一覧のハッシュ。通過時は null", "type": ["string", "null"]},
+        "failures": {"type": "integer", "minimum": 0}
+      }
+    },
     "history": {
       "type": "array",
       "items": {
         "type": "object", "required": ["event", "at", "note"], "additionalProperties": false,
         "properties": {
-          "event": {"enum": ["started", "interrupted", "resumed", "rerun", "refine", "input_changed", "completed"]},
+          "event": {"enum": ["started", "interrupted", "resumed", "rerun", "refine", "input_changed", "completed", "judged"]},
           "at": {"$ref": "common.schema.json#/$defs/datetime"},
           "note": {"type": "string"}
         }
