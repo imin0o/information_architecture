@@ -7,8 +7,8 @@ runs/<run_id>/ へ回収し（Git管理外）、契約検査の結果と本文�
 """
 
 import shutil
-import tempfile
 import time
+import uuid
 from pathlib import Path
 
 from . import accept, contracts, yamlio
@@ -38,7 +38,9 @@ def _collect(produced: Path, dest: Path, out: str, rounds: int | None) -> None:
         shutil.copytree(produced, dest)
         (dest / "host-final-message.txt").write_text(out, encoding="utf-8", newline="\n")
         return
-    backup = Path(tempfile.mkdtemp(prefix=f".{dest.name}-refine-", dir=dest.parent)).resolve()
+    # tempfile.mkdtemp の所有者だけのACLは入れ替え後の実行にも残り、Codexの判定者が読めなくなる（accept.tempdir と同じ）。
+    backup = (dest.parent / f".{dest.name}-refine-{uuid.uuid4().hex[:8]}").resolve()
+    backup.mkdir()
     staged, old = backup / "candidate", backup / "previous"
     try:
         shutil.copytree(produced, staged)

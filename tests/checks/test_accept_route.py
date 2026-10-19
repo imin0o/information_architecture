@@ -1,6 +1,7 @@
 """代表ケースの配置先照合と、失敗したRefineの再試行。ホスト呼び出しだけを置き換える。"""
 
 import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -126,6 +127,21 @@ def test_failed_refine_preserves_original_run_and_can_be_retried(route_run, fail
     assert (dest / f"host-final-message.round{rounds}.txt").read_bytes() == before["host-final-message.txt"]
     assert not (dest / "rubric-judgment.yaml").exists()
     assert not (dest / "attempt.txt").exists()
+
+
+def test_refine_collection_does_not_use_owner_only_tempdir(tmp_path, monkeypatch):
+    # mkdtemp のACLは入れ替え後の実行に残り、別ホストの判定者が読めなくなる。
+    def no_mkdtemp(*args, **kwargs):
+        raise AssertionError("tempfile.mkdtemp must not be used for collection")
+    monkeypatch.setattr(tempfile, "mkdtemp", no_mkdtemp)
+    dest, produced = tmp_path / "run", tmp_path / "produced"
+    for path in (dest, produced):
+        path.mkdir()
+        (path / "rubric-judgment.yaml").write_text("verdict: fail\n", encoding="utf-8")
+    accept_route._collect(produced, dest, "new response", 1)
+    assert (dest / "rubric-judgment.round1.yaml").is_file()
+    assert (dest / "host-final-message.txt").read_text(encoding="utf-8") == "new response"
+    assert not list(tmp_path.glob(".run-refine-*"))
 
 
 @pytest.mark.parametrize("failure", ["copy", "install"])
