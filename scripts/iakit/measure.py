@@ -110,6 +110,30 @@ def _summary(site: dict) -> dict:
             "same_text_different_dest": len(m["same_text_different_dest"]), "orphans": len(m["orphans"])}
 
 
+def refresh_sources(directory: Path, run: dict, previous_hashes: dict[str, str], paths: set[Path]) -> None:
+    """検証メタデータだけの更新後、構造指標が同一の測定記録の参照ハッシュを更新する。再測定日時は変えない。"""
+    arts = {a["artifact_id"]: a for a in run["artifacts"]}
+    vreg = next((a for a in arts.values() if a["kind"] == "controlled_vocabulary"), None)
+    for path in sorted(paths):
+        if not path.is_file():
+            continue
+        doc = yamlio.load(path)
+        if not isinstance(doc, dict) or doc.get("measurement") != "structure" or doc.get("run_id") != run["run_id"]:
+            continue
+        ref = doc.get("target") or {}
+        a = arts.get(ref.get("artifact_id"))
+        if not a or a["status"] != "current" or a["kind"] != "sitemap" or ref.get("version") != a["version"]:
+            continue
+        if doc.get("source_sha256") != previous_hashes[a["artifact_id"]] or doc["source_sha256"] == a["sha256"]:
+            continue
+        site = yamlio.load(directory / a["path"])
+        vocab = yamlio.load(directory / vreg["path"]) if vreg else None
+        if doc.get("sitemap") != sitemap_metrics(site, vocab):
+            raise ValueError(f"{path.name}: 構造指標が異なるため、検証情報だけの更新はできない")
+        doc["source_sha256"] = a["sha256"]
+        path.write_text(yamlio.dumps(doc), encoding="utf-8", newline="\n")
+
+
 def structure(directory: Path, site_dir: Path | None = None, baseline: Path | None = None, max_clicks: int = 3) -> dict:
     if baseline and not site_dir:
         raise ValueError("--baseline は --site と一緒に指定する")

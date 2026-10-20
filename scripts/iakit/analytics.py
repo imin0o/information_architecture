@@ -5,29 +5,31 @@ GA4・Search Console などのCSVエクスポートから、指定した次元�
 契約検査は登録済みの入力から再計算して照合する。結果は自己申告させない。
 """
 
-import csv
+import math
+from datetime import date
 from pathlib import Path
+
+from . import ingest
 
 
 def read_rows(path: Path) -> list[dict]:
     """先頭のコメント行（#）と空行を飛ばし、最初の表だけを読む。GA4の複数表のエクスポートに対応する。"""
-    block = []
-    for line in path.read_text(encoding="utf-8-sig").splitlines():
-        if not block and (not line.strip() or line.startswith("#")):
-            continue
-        if not line.strip():
-            break
-        block.append(line)
-    if not block:
+    units, errors = ingest._csv(path.read_bytes().decode("utf-8-sig"), path.name, first_table=True)
+    if errors:
+        raise ValueError(" / ".join(f"{e['locator']}: {e['note']}" for e in errors))
+    if not any(u["kind"] == "header" for u in units):
         raise ValueError(f"{path.name}: 表が見つからない")
-    return list(csv.DictReader(block))
+    return [u["fields"] for u in units if u["kind"] == "row"]
 
 
 def _number(text: str | None, where: str) -> float:
     try:
-        return float((text or "").replace(",", "").strip().rstrip("%"))
+        value = float((text or "").replace(",", "").strip().rstrip("%"))
     except ValueError:
         raise ValueError(f"{where}: 数値ではない") from None
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(f"{where}: 有限かつ非負の数値で指定する")
+    return value
 
 
 def observe(rows: list[dict], spec: dict) -> dict:
@@ -46,7 +48,9 @@ def observe(rows: list[dict], spec: dict) -> dict:
         total += amount
         if row[spec["dimension"]].strip() == spec["value"]:
             matched += amount
-    share = round(matched / total, 4) if total else 0.0
+    if not math.isfinite(total):
+        raise ValueError("指標の合計が有限数の範囲を超えている")
+    share = matched / total if total else 0.0
     return {"matched": matched, "total": total, "share": share}
 
 
@@ -63,6 +67,10 @@ def study_errors(directory: Path, studies: list[dict], inputs: dict[str, dict]) 
     errors = []
     for s in (s for s in studies if s["method"] == "analytics" and s["input_id"] in inputs):
         sid, spec, path = s["study_id"], s["analytics"], directory / inputs[s["input_id"]]["path"]
+        if spec["period"]["start"] > spec["period"]["end"]:
+            errors.append(f"{sid}: 期間の開始が終了より後になっている")
+        if spec["period"]["end"] > date.today().isoformat():
+            errors.append(f"{sid}: 期間の終了が未来になっている")
         try:
             observed = observe(read_rows(path), spec)
         except (ValueError, OSError) as exc:

@@ -7,8 +7,8 @@
 from collections import Counter
 import hashlib
 
-from . import yamlio
-from .decisions import RANK, max_classification
+from . import stamps, yamlio
+from .decisions import RANK, max_classification, same_design
 
 NONE = "(none)"
 
@@ -86,7 +86,22 @@ def derive_results(sim: dict) -> list[dict]:
     return out
 
 
-def record_errors(doc: dict, artifacts: dict[str, dict], site: dict | None = None) -> list[str]:
+def _metadata_equivalent(raw: str, site: dict, artifact: dict, decisions: list[dict]) -> bool:
+    """元のスナップショットを保持し、同一設計の判断参照と機密区分だけを正規化して比較する。"""
+    known = {(d["decision_id"], d["decision_revision"]): d for d in decisions}
+    targets = {r["decision_id"]: known[key] for r in artifact["decision_refs"]
+               if (key := (r["decision_id"], r["decision_revision"])) in known}
+    equivalent = [dict(d, status="superseded") for d in decisions if d["decision_id"] in targets
+                  and d["decision_revision"] != targets[d["decision_id"]]["decision_revision"]
+                  and same_design(d, targets[d["decision_id"]])]
+    equivalent += [dict(d, status="active") for d in targets.values()]
+    normalized = stamps.rewrite_decisions(raw, equivalent, markdown=False)
+    normalized = stamps.rewrite(normalized, False, {"classification": site["classification"]}, {})
+    return yamlio.loads(normalized) == site
+
+
+def record_errors(doc: dict, artifacts: dict[str, dict], site: dict | None = None,
+                  decisions: list[dict] | None = None) -> list[str]:
     """artifacts は実行記録の成果物（ID→登録内容）。"""
     errors, seen = [], set()
     for sim in doc["simulations"]:
@@ -113,8 +128,6 @@ def record_errors(doc: dict, artifacts: dict[str, dict], site: dict | None = Non
             if hashlib.sha256(raw.encode("utf-8")).hexdigest() != sim.get("sitemap_sha256"):
                 found.append(f"{sid}: サイトマップのスナップショットのハッシュが一致しない")
             a = artifacts.get(ref["artifact_id"])
-            if a and a["version"] == ref["version"] and a["sha256"] != sim.get("sitemap_sha256"):
-                found.append(f"{sid}: スナップショットが登録済みのサイトマップと一致しない")
             try:
                 snapshot = yamlio.loads(raw)
                 invalid = yamlio.schema_errors(snapshot, "sitemap.schema.json")
@@ -123,6 +136,9 @@ def record_errors(doc: dict, artifacts: dict[str, dict], site: dict | None = Non
                     found.append(f"{sid}: スナップショットの対象・版・実行が一致しないか形式が不正")
                 elif truth is None:
                     truth = snapshot
+                if a and a["version"] == ref["version"] and a["sha256"] != sim.get("sitemap_sha256"):
+                    if not site or not decisions or not _metadata_equivalent(raw, site, a, decisions):
+                        found.append(f"{sid}: スナップショットが登録済みのサイトマップと一致しない")
             except ValueError:
                 found.append(f"{sid}: スナップショットを読み込めない")
         # 旧形式の過去版は履歴として保持する。現行の判断・計画の証跡には使えない。

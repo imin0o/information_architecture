@@ -62,7 +62,9 @@
           "type": "object",
           "required": ["matched", "total", "share"],
           "additionalProperties": false,
-          "properties": {"matched": {"type": "number"}, "total": {"type": "number"}, "share": {"type": "number"}}
+          "properties": {"matched": {"type": "number", "minimum": 0},
+                         "total": {"type": "number", "minimum": 0},
+                         "share": {"type": "number", "minimum": 0, "maximum": 1}}
         }
       }
     }

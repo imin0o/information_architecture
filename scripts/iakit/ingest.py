@@ -75,15 +75,30 @@ def _lines(text: str, name: str, markdown: bool) -> list[dict]:
     return units
 
 
-def _csv(text: str, name: str) -> tuple[list[dict], list[dict]]:
-    rows = list(csv.reader(io.StringIO(text, newline="")))
-    if not rows:
-        return [], []
-    header, units, bad = rows[0], [unit(f"{name}#row=1", "header", ",".join(rows[0]))], []
-    if len(header) != len(set(header)):
-        return units, [unreadable(f"{name}#row=1", "parse_error", "列名が重複している。列を一意に識別できないためデータ行は取り込んでいない")]
-    for n, row in enumerate(rows[1:], 2):
+def _csv(text: str, name: str, *, first_table: bool = False) -> tuple[list[dict], list[dict]]:
+    """解析CSVと共通の読取り。コメント付きエクスポートは空行で表を区切り、元の行位置を保つ。"""
+    reader = csv.reader(io.StringIO(text, newline=""))
+    lines = text.splitlines()
+    export = False
+    header, units, bad, previous = None, [], [], 0
+    for row in reader:
+        n, previous = previous + 1, reader.line_num
         if not any(cell.strip() for cell in row):
+            if header is not None and first_table:
+                break
+            if export:
+                header = None
+            continue
+        if header is None:
+            if lines[n - 1].startswith("#") and (len(row) == 1 or lines[n - 1].startswith("# ")):
+                export = True
+                units.append(unit(f"{name}#row={n}", "line", ",".join(row)))
+                continue
+            header = row
+            units.append(unit(f"{name}#row={n}", "header", ",".join(row)))
+            if len(header) != len(set(header)):
+                bad.append(unreadable(f"{name}#row={n}", "parse_error", "列名が重複している。列を一意に識別できないためデータ行は取り込んでいない"))
+                return units, bad
             continue
         if len(row) != len(header):
             bad.append(unreadable(f"{name}#row={n}", "parse_error", f"列数が見出し行（{len(header)}列）と異なる（{len(row)}列）"))

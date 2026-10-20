@@ -32,6 +32,12 @@ def test_csv_rows_use_file_line_numbers_and_report_broken_rows(tmp_path):
     assert bad == [{"locator": "pages.csv#row=4", "kind": "parse_error", "note": "列数が見出し行（2列）と異なる（3列）"}]
 
 
+def test_csv_hash_prefixed_column_is_not_an_export_comment(tmp_path):
+    units, bad = units_of(write(tmp_path, "ids.csv", "#id,title\n1,Top\n"))
+    assert bad == []
+    assert units[1]["fields"] == {"#id": "1", "title": "Top"}
+
+
 def test_csv_duplicate_headers_do_not_silently_overwrite_columns(tmp_path):
     units, bad = units_of(write(tmp_path, "duplicate.csv", "id,title,title\n1,keep,lost\n"))
     assert [u["kind"] for u in units] == ["header"]

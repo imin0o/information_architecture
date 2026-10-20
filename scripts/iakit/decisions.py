@@ -8,6 +8,14 @@ RANK = {"public": 0, "internal": 1, "confidential": 2}
 TESTED = {"supported": "tested_supported", "refuted": "tested_refuted"}
 
 
+def same_design(previous: dict, revised: dict) -> bool:
+    """設計内容と根拠の観察が同じで、検証情報・管理情報だけが異なる判断。"""
+    metadata = {"decision_revision", "status", "supersedes", "recorded_at", "validation_status",
+                "validation_record_ids", "confidence", "confidence_basis", "classification"}
+    return ({k: v for k, v in previous.items() if k not in metadata}
+            == {k: v for k, v in revised.items() if k not in metadata})
+
+
 def max_classification(values) -> str:
     return max(values, key=RANK.__getitem__, default="public")
 

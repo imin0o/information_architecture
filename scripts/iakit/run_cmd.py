@@ -6,7 +6,7 @@ iakit finding で書き、承認・送信の記録はエージェントが YAML 
 
 from pathlib import Path
 
-from . import artifact_checks, decision_build, manifest, run_outputs, runs, stamps, yamlio
+from . import artifact_checks, decision_build, manifest, measure, run_outputs, runs, stamps, yamlio
 from .decisions import artifact_inputs, latest_active, max_classification
 # init・skill_item などは呼出側（cli_run、テスト）の互換のため run_cmd からも参照できるようにする
 from .run_init import CONTRACT_VERSION, LATER_ROUTES, STAGE_SKILLS, init, skill_item  # noqa: F401
@@ -69,6 +69,74 @@ def refresh(directory: Path, changed_inputs: tuple[str, ...] = ()) -> dict:
         run["refine"]["unresolved_critical"] = runs.unresolved_critical(found)
     save(directory, "run.yaml", run)
     return {"inputs_sha256": sha, "staled": staled}
+
+
+def refresh_validation(directory: Path, previous: dict, revised: dict) -> None:
+    """設計を変えない検証情報の改訂だけを反映する。本文の参照・依存・区分を更新し、成果物の版は保つ。
+
+    呼出側は判断の設計内容が同一であることと、書込み全体のロールバックを保証する。
+    既に stale の成果物や、検証情報以外で変わった依存は更新済みとして扱わない。
+    """
+    run, inputs_doc = load(directory, "run.yaml"), load(directory, "inputs.yaml")
+    decisions = load(directory, "decisions.yaml")["decisions"]
+    studies = yamlio.load(directory / "observations.yaml")["studies"] if (directory / "observations.yaml").is_file() else []
+    inputs = {i["input_id"]: i for i in inputs_doc["inputs"]}
+    arts = {a["artifact_id"]: a for a in run["artifacts"]}
+    previous_hashes = {aid: a["sha256"] for aid, a in arts.items()}
+    pending = {aid for aid, a in arts.items() if a["status"] == "current"}
+    updated = set()
+    while pending:
+        ready = [aid for aid in sorted(pending)
+                 if not any(d["ref"] in pending for d in arts[aid]["depends_on"])]
+        if not ready:
+            raise ValueError("検証情報を反映できない: 成果物の依存が循環している")
+        for aid in ready:
+            pending.remove(aid)
+            a = arts[aid]
+            refs = [{**r, "decision_revision": revised["decision_revision"]}
+                    if (r["decision_id"], r["decision_revision"]) == (
+                        previous["decision_id"], previous["decision_revision"]) else r
+                    for r in a["decision_refs"]]
+            if refs == a["decision_refs"] and not any(d["ref"] in updated for d in a["depends_on"]):
+                continue
+            path = directory / a["path"]
+            if manifest.sha256_file(path) != a["sha256"]:
+                raise ValueError(f"{aid}: 本文が登録時と異なるため、検証情報だけの更新はできない")
+            required, decision_levels = artifact_inputs(refs, decisions, studies)
+            dependencies = {d["ref"]: dict(d) for d in a["depends_on"]}
+            for ref in required - dependencies.keys():
+                dependencies[ref] = {"ref": ref, "sha256": inputs[ref]["sha256"]}
+            for ref in dependencies.keys() & updated:
+                if dependencies[ref]["sha256"] == previous_hashes[ref]:
+                    dependencies[ref]["sha256"] = arts[ref]["sha256"]
+            levels = [v["classification"] for ref in dependencies if (v := inputs.get(ref) or arts.get(ref))]
+            level = a["classification"] if "classification_override" in a else max_classification(
+                [a["classification"], *levels, *decision_levels])
+            text = path.read_bytes().decode("utf-8")
+            if a["kind"] != "review_findings":
+                text = stamps.rewrite_decisions(text, [dict(previous, status="superseded"), revised],
+                                                markdown=a["kind"] not in YAML_KINDS)
+            own = {"artifact_id": aid, "version": a["version"], "classification": level}
+            text = stamps.rewrite(text, a["kind"] not in YAML_KINDS, own, {})
+            path.write_text(text, encoding="utf-8", newline="")
+            a.update(sha256=manifest.sha256_file(path), classification=level, decision_refs=refs,
+                     depends_on=[dependencies[ref] for ref in sorted(dependencies)])
+            updated.add(aid)
+    sim_path = directory / "simulations.yaml"
+    if sim_path.is_file():
+        doc = yamlio.load(sim_path)
+        changed = False
+        for sim in doc["simulations"]:
+            refs = [sim["target"], sim["persona"]["source"]]
+            levels = [arts[r["artifact_id"]]["classification"] for r in refs
+                      if r["artifact_id"] in updated and arts[r["artifact_id"]]["version"] == r["version"]]
+            level = max_classification([sim["classification"], *levels])
+            if level != sim["classification"]:
+                sim["classification"], changed = level, True
+        if changed:
+            sim_path.write_text(yamlio.dumps(doc), encoding="utf-8", newline="\n")
+    measure.refresh_sources(directory, run, previous_hashes, run_outputs.validation_plan.measurement_paths(directory, run))
+    save(directory, "run.yaml", run)
 
 
 def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_refs: list[str],

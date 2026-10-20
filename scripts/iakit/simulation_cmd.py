@@ -94,7 +94,8 @@ def add(directory: Path, data: dict) -> dict:
     errors = yamlio.schema_errors(doc, "simulation.schema.json")
     if not errors:
         sim["results"] = simulations.derive_results(sim)
-        errors = simulations.record_errors(doc, {a["artifact_id"]: a for a in run["artifacts"]}, site)
+        errors = simulations.record_errors(doc, {a["artifact_id"]: a for a in run["artifacts"]}, site,
+                                            load(directory, "decisions.yaml")["decisions"])
     if errors:
         raise ValueError(f"{NAME} に書き込まない: " + " / ".join(errors[:5]))
     path.write_text(yamlio.dumps(doc), encoding="utf-8", newline="\n")

@@ -8,9 +8,9 @@ from collections import Counter
 from copy import deepcopy
 from pathlib import Path
 
-from . import contracts, decision_build, provenance, yamlio
-from .decisions import derive_confidence, max_classification
-from .run_cmd import load, now, refresh, save
+from . import contracts, decision_build, provenance, validation_plan, yamlio
+from .decisions import derive_confidence, max_classification, same_design
+from .run_cmd import load, now, refresh, refresh_validation, save
 
 AUTO = ("decision_id", "decision_revision", "run_id", "status", "supersedes", "recorded_at")
 
@@ -52,11 +52,21 @@ def _derive(d: dict, given: dict, states: dict, inputs: dict, studies: dict) -> 
     return d
 
 
-def _commit(directory: Path, doc: dict, before: list[str]) -> list[str]:
+def _commit(directory: Path, doc: dict, before: list[str], validation_revision: tuple[dict, dict] | None = None) -> list[str]:
     """判断を書き込み、依存をstaleにする。新しい誤りが出れば元に戻す。"""
     saved = {name: (directory / name).read_bytes() for name in ("decisions.yaml", "run.yaml")}
+    if validation_revision:
+        run = load(directory, "run.yaml")
+        saved.update((a["path"], (directory / a["path"]).read_bytes())
+                     for a in run["artifacts"] if a["status"] == "current")
+        saved.update((p.relative_to(directory.resolve()).as_posix(), p.read_bytes())
+                     for p in validation_plan.measurement_paths(directory, run) if p.is_file())
+        if (directory / "simulations.yaml").is_file():
+            saved["simulations.yaml"] = (directory / "simulations.yaml").read_bytes()
     try:
         save(directory, "decisions.yaml", doc)
+        if validation_revision:
+            refresh_validation(directory, *validation_revision)
         staled = refresh(directory)["staled"]
         # stale の後続の計画・調査対象は、再登録まで更新待ちにできる。
         # 通常の契約検査では猶予せず、完了前に必ず再確認する。
@@ -64,11 +74,16 @@ def _commit(directory: Path, doc: dict, before: list[str]) -> list[str]:
         added = Counter(_state(directory, pending_artifacts=pending)[0]) - Counter(before)
         if added:
             raise ValueError("契約検査に通らないため書き込まない: " + " / ".join(list(added)[:5]))
-    except (ValueError, OSError):
+    except Exception:
         for name, data in saved.items():
             (directory / name).write_bytes(data)
         raise
     return staled
+
+
+def _validation_only(previous: dict, revised: dict) -> bool:
+    return (any(previous[k] != revised[k] for k in ("validation_status", "validation_record_ids"))
+            and same_design(previous, revised))
 
 
 def add(directory: Path, data: dict) -> dict:
@@ -114,8 +129,10 @@ def revise(directory: Path, decision_id: str, changes: dict) -> dict:
     d.update(changes, decision_revision=old["decision_revision"] + 1, status="active", recorded_at=now(),
              supersedes={"decision_id": decision_id, "decision_revision": old["decision_revision"]})
     old["status"] = "superseded"
-    doc["decisions"].append(_derive(d, changes, states, inputs, studies))
-    staled = _commit(directory, doc, before)
+    d = _derive(d, changes, states, inputs, studies)
+    doc["decisions"].append(d)
+    validation_revision = (old, d) if _validation_only(old, d) else None
+    staled = _commit(directory, doc, before, validation_revision)
     return {"decision": f"{decision_id} r{d['decision_revision']}", "superseded": f"{decision_id} r{old['decision_revision']}",
             "confidence": d.get("confidence"), "classification": d["classification"], "staled": staled}
 

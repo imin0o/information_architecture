@@ -167,7 +167,7 @@ def consistency_errors(directory: Path, docs: dict, sources: dict,
     sims ={s["simulation_id"]: s for s in docs.get("simulations.yaml", {"simulations": []})["simulations"]}
     if "simulations.yaml" in docs:
         errors += [f"simulations.yaml: {e}" for e in simulations.record_errors(docs["simulations.yaml"], arts,
-                                                                            docs.get("sitemap.yaml"))]
+                                                                            docs.get("sitemap.yaml"), decision_list)]
     if "decisions.yaml" in docs:
         target_ids = set(arts)
         for name, collection, key in (("content-inventory.yaml", "items", "content_id"),

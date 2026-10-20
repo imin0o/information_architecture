@@ -17,6 +17,15 @@ SIM = re.compile(r"(?<![0-9A-Za-z_-])SIM-[0-9]{3}(?![0-9A-Za-z_-])")
 MEASUREMENT = re.compile(r"measurements/[^\s`）)\]|、,]+\.ya?ml")
 
 
+def measurement_paths(directory: Path, run: dict) -> set[Path]:
+    """標準の測定記録と、現行の計画が参照する実行内の測定記録。"""
+    names = {measure.OUT.as_posix()}
+    for a in run["artifacts"]:
+        if a["kind"] == "validation_plan" and a["status"] == "current":
+            names.update(MEASUREMENT.findall((directory / a["path"]).read_text(encoding="utf-8")))
+    return {p for name in names if (p := (directory / name).resolve()).is_relative_to(directory.resolve())}
+
+
 def _cells(line: str) -> list[str]:
     return [c.strip() for c in line.strip().strip("|").split("|")]
 
@@ -83,7 +92,8 @@ def evidence_errors(lines: list[str], tag: str, directory: Path, run: dict) -> l
                 site = yamlio.load(directory / a["path"]) if a else None
                 if site is not None and yamlio.schema_errors(site, "sitemap.schema.json"):
                     raise ValueError("評価対象のサイトマップの形式が不正")
-                invalid = simulations.record_errors(doc, arts, site)
+                decisions = yamlio.load(directory / "decisions.yaml")["decisions"]
+                invalid = simulations.record_errors(doc, arts, site, decisions)
                 if invalid:
                     raise ValueError(" / ".join(invalid[:3]))
             cache[name] = {s[key]: s for s in doc[collection]}
