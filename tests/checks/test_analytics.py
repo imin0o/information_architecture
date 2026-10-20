@@ -1,13 +1,14 @@
 """解析データのエクスポートからの調査記録（P4-1）と、tested_* の根拠としての照合。"""
 
 import hashlib
+import json
 import shutil
 
 import pytest
 
 from pathlib import Path
 
-from iakit import analytics_cmd, contracts, decision_cmd, ingest, manifest, provenance, run_cmd, run_inputs, simulation_cmd, yamlio
+from iakit import analytics_cmd, cli, contracts, decision_cmd, ingest, manifest, provenance, run_cmd, run_inputs, simulation_cmd, yamlio
 
 from conftest import BUNDLE
 from test_simulations import tree_test
@@ -95,6 +96,48 @@ def test_tested_status_uses_analytics_study(run_dir):
     d.update(validation_status="tested_refuted", confidence="low")
     assert any("調査結果からの導出は tested_supported" in e
                for e in contracts.consistency_errors(run_dir, docs, provenance.registered_sources())[0])
+
+
+@pytest.mark.parametrize("source,aspect,csv,dimension,metric,value,filters,threshold,minimum,share,result", [
+    ("ga4", "traffic_source", "流入元,セッション\ngoogle / organic,700\ndirect / none,300\n",
+     "流入元", "セッション", "google / organic", [], 0.6, 100, 0.7, "supported"),
+    ("ga4", "device", GA4_DEVICES, "端末カテゴリ", "セッション", "mobile", [],
+     0.7, 100, 0.65, "refuted"),
+    ("ga4", "page_transition", TRANSITIONS, "ページ", "表示回数", "/services/", ["前のページ=/"],
+     0.5, 300, 0.6, "inconclusive"),
+    ("search_console", "device", "デバイス,クリック数,表示回数,CTR,掲載順位\nモバイル,650,10000,6.5%,2.1\nパソコン,350,5000,7%,3\n",
+     "デバイス", "クリック数", "モバイル", [], 0.6, 100, 0.65, "supported"),
+], ids=["ga4-traffic-supported", "ga4-device-refuted", "ga4-transition-inconclusive", "search-console-device-supported"])
+def test_cli_import_to_tested_revision_and_completion(
+        run_dir, capsys, source, aspect, csv, dimension, metric, value, filters, threshold, minimum, share, result):
+    export = run_dir.parent / "analytics export.csv"
+    export.write_text(csv, encoding="utf-8-sig")
+    assert cli.main([
+        "analytics", "import", str(run_dir), str(export), "--source", source, "--aspect", aspect,
+        "--description", "P4 CLI acceptance", "--period-start", "2026-09-01", "--period-end", "2026-09-30",
+        "--target", "ART-004", "--dimension", dimension, "--metric", metric, "--value", value,
+        "--filter", *filters, "--op", "ge", "--threshold", str(threshold), "--min-total", str(minimum),
+    ]) == 0
+    imported = yamlio.loads(capsys.readouterr().out)
+    assert imported["result"] == result and imported["observed"]["share"] == share
+    study = studies(run_dir)[-1]
+    assert study["analytics"]["source"] == source and study["analytics"]["aspect"] == aspect
+    assert study["target"] == {"artifact_id": "ART-004", "version": 1}
+
+    status = f"tested_{result}"
+    assert cli.main(["decision", "revise", str(run_dir), "IA-003", "--json", json.dumps({
+        "validation_status": status, "validation_record_ids": [imported["study_id"]],
+    })]) == 0
+    assert yamlio.loads(capsys.readouterr().out)["decision"] == "IA-003 r2"
+    decision = next(d for d in yamlio.load(run_dir / "decisions.yaml")["decisions"]
+                    if d["decision_id"] == "IA-003" and d["decision_revision"] == 2)
+    assert decision["validation_status"] == status
+    assert decision["validation_record_ids"] == [imported["study_id"]]
+    assert cli.main(["contracts", "check", str(run_dir)]) == 0
+    assert yamlio.loads(capsys.readouterr().out)["result"] == "pass"
+    assert cli.main(["run", "event", str(run_dir), "completed"]) == 0
+    assert yamlio.loads(capsys.readouterr().out)["status"] == "completed"
+    assert contracts.check_bundle(run_dir)["errors"] == []
 
 
 def test_self_reported_values_are_rejected(run_dir):
