@@ -83,6 +83,15 @@ uv run --locked iakit run artifact runs/<run_id> classification-options.md --kin
 
 ia-orchestratorを使わずに単独で実行していて `iakit` を使えない場合は、`uv run <このSkillのディレクトリ>/scripts/check_artifacts.py <成果物のディレクトリ>` で、同梱したスキーマによる形式検査を行い、通るまで直す。この検査は参照や依存の整合を確かめないため、報告には形式検査の結果を書き、契約検査は `not_run` とする。
 
+### 7. 図にする（任意）
+
+利用者が図を求めた場合、または分類案の比較に図が要る場合は、ホストに外部Skill `diagram-design` が導入されていれば、検査を通った版の分類体系を図にする。導入されていなければ図は作らず、報告に「図は未作成（diagram-design未導入）」と書く。
+
+- 上位・下位関係は体系ごとに `tree` で描く。ファセットは体系ごとに別の木にし、1本の木に混ぜない。概念は優先ラベルと概念IDを併記する。
+- 図は `runs/<run_id>/figures/` に置き、元にした分類体系のART-IDと版を図中に書く。分類体系が `stale` になったら図も作り直す。
+- 図は派生物であり、成果物として登録しない。判断・契約検査・評価の根拠には `taxonomy.yaml`・`controlled-vocabulary.yaml` を使う。
+- diagram-designの出力は閲覧時にGoogle Fontsを読み込む。機密区分の付いた案件では、フォントの読み込みを外したシステムフォントの出力にする。
+
 ## 次の段階へ渡すもの
 
 語彙と分類体系のART-IDと版、採った分類案の判断（`IA-nnn rN`）、ナビゲーションで扱うべき論点（例: 複数の入口が要るファセット、同名異義語の表示上の区別）をia-structureへ渡す。タクソノミーの経路ではia-evaluationへ渡す。
