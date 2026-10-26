@@ -182,8 +182,11 @@ def artifact(directory: Path, rel: str, kind: str, depends: list[str], decision_
     explicit = [(r.split(":")[0], int(r.split(":")[1])) for r in decision_refs]
     decision_items = [{"decision_id": d, "decision_revision": r} for d, r in sorted(set(explicit + found))]
     active = latest_active(decisions)
-    if any((r["decision_id"], r["decision_revision"]) not in active for r in decision_items):
-        raise ValueError("登録する成果物が未知または現行でない判断を参照している")
+    stale_refs = [f"{r['decision_id']} r{r['decision_revision']}" for r in decision_items
+                  if (r["decision_id"], r["decision_revision"]) not in active]
+    if stale_refs:
+        raise ValueError(f"登録する成果物が未知または現行でない判断を参照している: {', '.join(stale_refs)}。"
+                         "判断を先に iakit decision add で記録するか、本文の参照を現行版に直す")
     studies = yamlio.load(directory / "observations.yaml")["studies"] if (directory / "observations.yaml").is_file() else []
     indirect, decision_levels = artifact_inputs(decision_items, decisions, studies)
     refs.update(indirect)
