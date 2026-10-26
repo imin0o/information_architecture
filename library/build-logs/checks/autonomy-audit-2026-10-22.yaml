@@ -1,0 +1,447 @@
+schema_version: 0.1.0
+autonomy_audit:
+  date: '2026-10-22'
+  roadmap: roadmap-autonomy.md
+  source_commit: 3687ed8b17d5b07f8ceaa5aaf9349a5dc6727beb
+  assessment: completed_with_validation_limits
+  basis: implementation, requirements, historical acceptance evidence, current regression and contract checks
+  prerequisite:
+    milestones: M0-M6
+    result: completed
+    evidence: library/build-logs/checks/m6-acceptance.yaml
+  scope:
+    completed_items: 14
+    included_items: 14
+    excluded_items:
+    - id: P4-2
+      reason: External research-service connections excluded by the decision on 2026-10-20
+  phases:
+  - phase: P1
+    status: completed
+    items: [P1-1, P1-2, P1-3, P1-4]
+    evidence:
+    - library/build-logs/checks/p1-acceptance.yaml
+    - library/build-logs/checks/p1-review-fixes.yaml
+    - tests/checks/test_records.py
+  - phase: P2
+    status: completed
+    items: [P2-1, P2-2, P2-3, P2-4, P2-5]
+    evidence:
+    - library/build-logs/checks/p2-acceptance.yaml
+    - library/build-logs/checks/p2-review-fixes.yaml
+    - tests/checks/test_measure.py
+    - tests/checks/test_simulations.py
+  - phase: P3
+    status: completed
+    items: [P3-1, P3-2, P3-3, P3-4]
+    historical_acceptance:
+      date: '2026-10-20'
+      cases: [webia-001, taxonomy-001]
+      human_operations: [0, 0]
+      statuses: [completed, completed]
+      final_independent_verdicts: [pass, pass]
+    evidence:
+    - library/build-logs/checks/p3-acceptance-webia.yaml
+    - library/build-logs/checks/p3-acceptance-taxonomy.yaml
+    - tests/checks/test_autonomy.py
+  - phase: P4
+    status: completed
+    items: [P4-1]
+    cli_acceptance_cases: 4
+    data: synthetic CSV
+    evidence:
+    - library/build-logs/checks/p4-completion.yaml
+    - tests/checks/test_analytics.py
+  current_saved_run_contract_checks:
+  - run: RUN-P1-WEBIA-001
+    result: fail
+    errors:
+    - 'ART-011（validation-plan.md）: 検証方法の表に「実行者」「実行状況」の列がない'
+    interpretation: Historical P1 evidence predates the mandatory columns introduced by P2
+  - run: RUN-P2-WEBIA-001
+    result: pass
+    errors: []
+  - run: RUN-P3-WEBIA-001
+    result: pass
+    errors: []
+  - run: RUN-P3-TAXONOMY-001
+    result: pass
+    errors: []
+  limitations:
+  - Latest-distribution end-to-end host execution was not rerun; full-route evidence is the historical P3 acceptance
+  - P4 was verified with synthetic CSV, not actual analytics-service exports
+  - Human research and analytics-export acquisition remain human tasks by agreement
+  - Historical P1 run does not pass current validation-plan requirements; its original acceptance record is unchanged
+  visualization:
+    path: outputs/autonomy-progress.html
+    checks:
+    - viewport: 736
+      theme: light
+      horizontal_overflow: false
+    - viewport: 320
+      theme: light
+      horizontal_overflow: false
+    - viewport: 320
+      theme: dark
+      horizontal_overflow: false
+    native_detail_toggle: pass
+    screenshot_review: pass
+  cleanup:
+    disposable_visual_check_program: removed
+    disposable_screenshot: removed_after_review
+    verification_environments_and_index: removed_by_verify_runner
+result: pass
+uv: uv 0.12.7 (61291a8ca 2026-08-27 x86_64-pc-windows-msvc)
+tests:
+- python: Python 3.12.13
+  result: pass
+  tests: 811
+- python: Python 3.14.3
+  result: pass
+  tests: 811
+candidate_snapshot: temporary index; actual index unchanged
+checks:
+- check: manifest
+  result: pass
+  local_originals: run
+  status_counts:
+    bibliography_unconfirmed: 9
+    not_received: 9
+  unassigned_originals: 1
+  errors: []
+- check: fixtures
+  result: pass
+  files:
+  - epub/reflowable.epub
+  - pdf/page-labels.pdf
+  - pdf/unicode-layout.pdf
+  expected_catalogue_sha256: 
+    766e3bbb033302989fe3972e5c98cb594a6b17935950cd03da71a61505b74b1c
+  errors: []
+- check: leaks
+  result: pass
+  targets:
+  - git:index
+  files_scanned: 292
+  known_original_hashes: 10
+  violations: []
+  errors: []
+- check: cases
+  result: pass
+  cases:
+    CASE-BOUNDARY-001: 1.2.0
+    CASE-TAXONOMY-001: 1.2.0
+    CASE-WEBIA-001: 1.2.0
+  rubric_version: 1.2.0
+  content_review: human_only
+  errors: []
+- check: contracts
+  target: tests/fixtures/contracts/webia-run
+  result: pass
+  files:
+  - content-inventory.yaml
+  - controlled-vocabulary.yaml
+  - decisions.yaml
+  - findings.yaml
+  - inputs.yaml
+  - observations.yaml
+  - provenance.yaml
+  - receipts.yaml
+  - run.yaml
+  - sitemap.yaml
+  - taxonomy.yaml
+  input_files:
+    run: 3
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 1
+    stale: []
+  errors: []
+- check: contracts
+  target: library
+  result: pass
+  files:
+  - provenance.yaml
+  - receipts.yaml
+  input_files:
+    run: 0
+    not_run: 0
+  local_excerpt_check: skipped
+  human_source_check: not_run
+  existing_receipts:
+    valid: 61
+    stale:
+    - VR-0001
+    - VR-0002
+    - VR-0003
+  errors: []
+- check: library
+  result: pass
+  errors: []
+  knowledge:
+    adopted:
+    - KN-001
+    - KN-002
+    - KN-003
+    - KN-004
+    - KN-005
+    - KN-006
+    - KN-007
+    - KN-008
+    - KN-009
+    - KN-010
+    - KN-011
+    - KN-012
+    - KN-013
+    - KN-014
+    - KN-015
+    - KN-016
+    hypothesis: []
+    not_supported: []
+  needs:
+    NEED-01: adopted
+    NEED-02: adopted
+    NEED-03: adopted
+    NEED-04: adopted
+    NEED-05: adopted
+    NEED-06: adopted
+    NEED-07: adopted
+    NEED-08: adopted
+    NEED-09: adopted
+    NEED-10: adopted
+  coverage:
+    status_counts:
+      not_received: 9
+      not_started: 6
+      partial: 3
+    extractions:
+      EXTRACT-001-001:
+        read:
+        - - 296
+          - 385
+        - - 1365
+          - 1444
+        - - 1700
+          - 1721
+        - - 1995
+          - 2010
+        - - 3137
+          - 3196
+        - - 3445
+          - 3534
+        - - 4417
+          - 4526
+        - - 5492
+          - 5541
+        - - 9130
+          - 9269
+        - - 9606
+          - 9735
+        - - 9763
+          - 9802
+        - - 11140
+          - 11209
+        displayed_lines: 0
+        integrated:
+        - - 1382
+          - 1403
+        - - 1428
+          - 1438
+        - - 3141
+          - 3145
+        - - 3174
+          - 3184
+        - - 3454
+          - 3460
+        - - 3488
+          - 3506
+        - - 3511
+          - 3528
+        - - 4486
+          - 4490
+        - - 4501
+          - 4526
+        - - 5493
+          - 5499
+        - - 5517
+          - 5521
+        - - 9138
+          - 9151
+        - - 9229
+          - 9244
+        - - 9254
+          - 9258
+        - - 9649
+          - 9655
+        - - 9671
+          - 9678
+        - - 9682
+          - 9686
+        - - 9769
+          - 9773
+        - - 9779
+          - 9783
+        - - 11183
+          - 11186
+        - - 11190
+          - 11200
+      EXTRACT-003-001:
+        read:
+        - - 55
+          - 134
+        - - 3843
+          - 3952
+        - - 4060
+          - 4139
+        - - 4250
+          - 4319
+        - - 4440
+          - 4629
+        - - 4847
+          - 5076
+        - - 9968
+          - 10117
+        displayed_lines: 60
+        integrated:
+        - - 3844
+          - 3848
+        - - 3890
+          - 3897
+        - - 3907
+          - 3911
+        - - 3938
+          - 3942
+        - - 4096
+          - 4109
+        - - 4263
+          - 4271
+        - - 4296
+          - 4302
+        - - 4456
+          - 4462
+        - - 4503
+          - 4507
+        - - 4523
+          - 4530
+        - - 4547
+          - 4560
+        - - 4604
+          - 4623
+        - - 4866
+          - 4870
+        - - 4979
+          - 4982
+        - - 4996
+          - 5008
+        - - 5038
+          - 5044
+        - - 5056
+          - 5060
+        - - 5062
+          - 5068
+        - - 5074
+          - 5076
+        - - 9979
+          - 9983
+        - - 10027
+          - 10033
+        - - 10077
+          - 10083
+        - - 10103
+          - 10108
+      EXTRACT-005-001:
+        read:
+        - - 4082
+          - 4095
+        - - 7672
+          - 7687
+        - - 13110
+          - 13171
+        - - 13330
+          - 13389
+        - - 20640
+          - 20699
+        - - 24930
+          - 24974
+        - - 25010
+          - 25029
+        displayed_lines: 14
+        integrated:
+        - - 4082
+          - 4089
+        - - 13119
+          - 13128
+        - - 13337
+          - 13345
+        - - 13368
+          - 13380
+        - - 20670
+          - 20689
+        - - 24946
+          - 24970
+  sample_reviews:
+    EXTRACT-001-001: issue
+    EXTRACT-003-001: issue
+    EXTRACT-005-001: issue
+  quote_ledger:
+    BOOK-001:
+      previews: 28
+      quotes: 0
+      words_total: 248
+      words_unique_spans: 248
+      overlap_undetermined: 0
+    BOOK-003:
+      previews: 23
+      quotes: 0
+      words_total: 232
+      words_unique_spans: 232
+      overlap_undetermined: 0
+    BOOK-005:
+      previews: 8
+      quotes: 0
+      words_total: 38
+      words_unique_spans: 38
+      overlap_undetermined: 0
+  edited_after_generation:
+  - library/books/BOOK-005/notes.md
+  - library/methods/applicability-check.md
+  - library/methods/conflicting-requirements.md
+  - library/methods/hierarchy-acyclicity.md
+  - library/methods/homograph-disambiguation.md
+  - library/provenance.yaml
+  - library/terms.yaml
+  human_review: not_run
+- check: dist
+  human_source_check: not_run
+  target: regenerated
+  result: pass
+  errors: []
+  existing_receipts_checked: 156
+  distributions:
+  - skill: ia-analysis
+    distribution_id: DIST-c4713b17e7b8afc8
+    bundle_receipt_sha256: 
+      8dca164071762b84c8f2488b45c7e9a077bbe9a41c7c3c77aba3516d52b173c8
+    files: 24
+  - skill: ia-evaluation
+    distribution_id: DIST-312b6e0f3032eb64
+    bundle_receipt_sha256: 
+      e9ec7aa87c4507229589624c2842f49cc3450e6483389ee23dfa161adb75508b
+    files: 22
+  - skill: ia-orchestrator
+    distribution_id: DIST-5b60ed5601118212
+    bundle_receipt_sha256: 
+      2af3d27acaafa3054499b99afd06956ab15506ce1da88220e565d58be8929c02
+    files: 104
+  - skill: ia-structure
+    distribution_id: DIST-09f9a81a23bc577d
+    bundle_receipt_sha256: 
+      0e62ba798cea87f03db1ec8a80f36048a8e18c7a0dbc880013d882999d15f185
+    files: 25
+  - skill: ia-taxonomy
+    distribution_id: DIST-d42acce11abe3712
+    bundle_receipt_sha256: 
+      68f5fd30b53e5f892b4ab722f85e69b704b6c8f537cd266d5aa210b04d3f521a
+    files: 30

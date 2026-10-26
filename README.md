@@ -2,6 +2,8 @@
 
 要件の正本は [requirements.md](requirements.md)、実装順と残件は [roadmap.md](roadmap.md)、判断・検証履歴は [milestones.md](library/build-logs/milestones.md) を参照する。
 
+自律実行化の対象と完了条件は [roadmap-autonomy.md](roadmap-autonomy.md)、実装・検証それぞれの進捗と実案件の通し確認は [進捗Markdown](outputs/autonomy-progress.md) を参照する。
+
 ## 実行環境
 
 構築用CLI `iakit` はリポジトリのcheckoutからeditable installして使う。wheel単独での利用・`uv tool install`は対応対象に含めない。CodexとClaude Codeのどちらも同じcheckoutとコマンドを使う。ホストによるSkillの発見・配置はM1で確認した。

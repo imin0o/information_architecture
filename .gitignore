@@ -25,3 +25,4 @@ htmlcov/
 /build/
 *.egg-info/
 /.tmp/
+outputs/
