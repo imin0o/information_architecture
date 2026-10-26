@@ -26,8 +26,10 @@ FORMATS = {
     ".txt": "text", ".md": "markdown", ".markdown": "markdown", ".pdf": "pdf", ".docx": "docx", ".csv": "csv",
     ".xml": "xml", ".json": "json", ".yaml": "yaml", ".yml": "yaml", ".rdf": "skos", ".skos": "skos",
 }
+# 日本語は依頼・命令の形だけを拾う。名詞（「送信先」「アップロード画面」）と否定（「実行していない」）は候補にしない
 INSTRUCTION = re.compile(
-    r"(送信|転送|アップロード|共有して|実行して|削除して|無視して|従って|公開して"
+    r"((送信|転送|アップロード)(して(?!い)|せよ|しろ|すること|しなさい|を?お?願)"
+    r"|(共有|実行|削除|無視|公開)して(?!い)|従って(?!い)"
     r"|ignore (all|any|previous|the above)|send (it|this|the)|upload|execute|run the|disregard)",
     re.IGNORECASE)
 
