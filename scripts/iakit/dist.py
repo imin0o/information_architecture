@@ -142,14 +142,20 @@ def _manifest(name: str, dest: Path) -> dict:
     return doc
 
 
-def verify(root: Path) -> list[str]:
-    """配布ディレクトリ全体の検査。Skillの組の整合と、原典・機密データの混入。"""
+def verify(root: Path, placed: bool = False) -> list[str]:
+    """配布ディレクトリの検査。Skillの組の整合と、原典・機密データの混入。
+
+    placed が真なら配置先（他のSkillと共有するフォルダ）として、正本の配布対象名のフォルダだけを検査する。
+    依存先は正本の名前に含まれるため、欠落は set_errors が検出する。偽なら生成先の全フォルダを検査する。
+    """
     names = sorted(p.name for p in root.iterdir() if p.is_dir()) if root.is_dir() else []
+    if placed:
+        names = sorted(set(names) & set(skill_names()))
     if not names:
         return [f"{root} に配布物がない"]
     errors = distverify.set_errors(root, names) or (
         [] if all((root / n / distverify.MANIFEST_NAME).is_file() for n in names) else ["build-manifest.yaml がない"])
-    leak = leaks.check(dirs=[root])
+    leak = leaks.check(dirs=[root / n for n in names] if placed else [root])
     errors += [f"混入: {v['path']}: {v['reason']}" for v in leak["violations"]]
     errors += [f"混入検査: {e['reason']}" for e in leak["errors"]]
     return errors
@@ -218,7 +224,7 @@ def check(root: Path | None = None, record: Path = RECORD) -> dict:
     """root を指定すれば配置済みの配布物を検査する。省略時は一時ディレクトリで再生成し、記録と照合する。"""
     result = {"check": "dist", "human_source_check": "not_run"}
     if root is not None:
-        errors = verify(root)
+        errors = verify(root, placed=True)
         return result | {"target": root.as_posix(), "result": "fail" if errors else "pass", "errors": errors}
     with tempfile.TemporaryDirectory() as tmp:
         try:

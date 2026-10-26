@@ -80,7 +80,7 @@ uv run --locked iakit accept route --host H --case webia-001 --run-id RUN-...  #
 
 同梱する出典ハッシュと照合記録は、同梱する主張に関係する分だけに絞る。無関係な文献や照合記録を追加しても配布IDは変わらない。原典・固定抽出のない環境（CI）でも、同じ配布IDになる。
 
-`dist check <配置先>` と、配布物での `run init` は、manifestと実ファイルの差（欠落・追加・変更）、配布IDの不一致、依存Skillの不足と契約版の不一致、同じ共有IDで内容の異なる配布物の混在を検出する。`run init` では、経路に要らないSkillの欠落は止めない。Pythonが作る `__pycache__` は同梱物として扱わない。
+`dist check <配置先>` と、配布物での `run init` は、manifestと実ファイルの差（欠落・追加・変更）、配布IDの不一致、依存Skillの不足と契約版の不一致、同じ共有IDで内容の異なる配布物の混在を検出する。`dist check <配置先>` は、正本の `skills/` にある名前のフォルダだけを検査するため、他のSkillと共有するフォルダ（`~/.claude/skills` など）にもかけられる。`run init` では、経路に要らないSkillの欠落は止めない。Pythonが作る `__pycache__` は同梱物として扱わない。
 
 `verification/distributions.yaml` は配布候補ごとの配布IDと照合記録のハッシュを記録する。`iakit check`・CI・pre-pushは、再生成した結果がこの記録と一致しない場合に失敗する。Skill・知識・実行時処理を変更したら `dist build` を実行し、記録を一緒にコミットする。ZIP等に圧縮する場合は、検査した `dist/` から作り、配布IDで対応を確認する。
 

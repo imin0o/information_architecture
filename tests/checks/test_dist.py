@@ -213,6 +213,38 @@ def test_installed_distribution_check(checkout, tmp_path, change):
         assert dist.check(installed)["result"] == "fail"
 
 
+@pytest.mark.parametrize("change", [None, "orchestrator_copy", "remove_dependency", "broken_manifest", "only_foreign"])
+def test_shared_skills_folder_checks_only_distributed_skills(checkout, tmp_path, change):
+    """他のSkillと共有する配置先では、正本の配布対象名だけを検査する。"""
+    shared = tmp_path / "shared skills"
+    shutil.copytree(checkout.parent / "base", shared)
+    foreign = shared / "other-skill"
+    foreign.mkdir()
+    (foreign / "SKILL.md").write_text("---\nname: other-skill\n---\n", encoding="utf-8")
+    (foreign / "book.pdf").write_bytes(b"%PDF-1.4")
+    if change == "orchestrator_copy":
+        (shared / "ia-orchestrator" / distverify.MANIFEST_NAME).unlink()
+    elif change == "remove_dependency":
+        shutil.rmtree(shared / "ia-structure")
+    elif change == "broken_manifest":
+        (shared / "ia-taxonomy" / distverify.MANIFEST_NAME).write_text("[", encoding="utf-8")
+    elif change == "only_foreign":
+        for p in shared.iterdir():
+            if p != foreign:
+                shutil.rmtree(p)
+    out = dist.check(shared)
+    if change is None:
+        assert out["result"] == "pass", out["errors"]
+        return
+    assert out["result"] == "fail"
+    expected = {"orchestrator_copy": "ia-orchestrator: build-manifest.yaml がない",
+                "remove_dependency": "依存Skill ia-structure が配置されていない",
+                "broken_manifest": "ia-taxonomy: build-manifest.yaml の読込み失敗",
+                "only_foreign": "配布物がない"}[change]
+    assert any(expected in e for e in out["errors"]), out["errors"]
+    assert not any("other-skill" in e or "book.pdf" in e for e in out["errors"]), out["errors"]
+
+
 def test_bundled_terms_and_conflicts_have_their_claims(checkout):
     for skill in (checkout / "dist").iterdir():
         claims = {c["claim_id"] for c in yamlio.load(skill / provenance.RUNTIME_EVIDENCE)["claims"]}
