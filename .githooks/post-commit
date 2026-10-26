@@ -1,0 +1,5 @@
+#!/bin/sh
+# 配布物の元を変えたコミットの後、dist を再生成して個人用ルートの ia-* を写し直す（Codex・手作業の変更も拾う）。
+if ! uv run --locked python scripts/sync_global_skills.py --git-head; then
+  printf '%s\n' "個人用ルートへの写し直しに失敗しました。scripts/sync_global_skills.py を手動で実行してください。" >&2
+fi
