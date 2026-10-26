@@ -1,0 +1,160 @@
+"""UI/UX原則カードとの知識対応表の検査。自作の主張とカードだけを使う。"""
+
+import copy
+
+import pytest
+
+from iakit import library_mappings, provenance, yamlio
+from iakit.paths import FIXTURES
+
+PROV = yamlio.load(FIXTURES / "contracts/webia-run/provenance.yaml")
+CLAIMS = provenance.claims_index(PROV)
+ORIGINAL = "a" * 64
+SOURCES = {"FIXTURE-page-labels": ORIGINAL}
+INDEX = {"entries": [{"knowledge_id": "KN-001", "claims": ["CLAIM-0001", "CLAIM-0003"]},
+                     {"knowledge_id": "KN-002", "claims": ["CLAIM-0002"]}]}
+CARD = {"id": "UX-PRINCIPLE-0001", "recommendation": "前付けはローマ数字で数える。",
+        "conditions": [{"text": "前付けがある本に限る", "basis": "source"}],
+        "evidence": [{"source_id": "fixture-page-labels", "locator": "p.1"}]}
+
+
+def mapping(**over):
+    m = {"claim_id": "CLAIM-0001", "knowledge_id": "KN-001", "principle_id": "UX-PRINCIPLE-0001",
+         "ux_field": "conditions[0]", "relation": "broad", "scope_difference": "例",
+         "ia_evidence_id": CLAIMS["CLAIM-0001"]["evidence_id"], "ux_locator": "p.1",
+         "ia_claim_sha256": CLAIMS["CLAIM-0001"]["claim_sha256"],
+         "ux_text_sha256": provenance.text_sha256(CARD["conditions"][0]["text"]),
+         "reviewed_by": "tester", "reviewer_kind": "agent", "reviewed_at": "2026-10-27"}
+    return m | over
+
+
+DOC = {"schema_version": "1.0",
+       "scope": {"ia_knowledge": ["KN-001"], "ux_principles": {"from": "UX-PRINCIPLE-0001", "to": "UX-PRINCIPLE-0009"}},
+       "sources": [{"book": "自作", "edition": "1", "ia_source_id": "FIXTURE-page-labels",
+                    "ux_source_id": "fixture-page-labels", "original_sha256": ORIGINAL, "sections": ["前付け"]}],
+       "claims": [mapping()]}
+
+
+@pytest.fixture
+def ux(tmp_path, monkeypatch):
+    """IAリポジトリと並ぶ ui_ux を作り、環境変数の指定は外す。"""
+    monkeypatch.delenv(library_mappings.UIUX_ENV, raising=False)
+    root, ux_root = tmp_path / "information_architecture", tmp_path / "ui_ux"
+    root.mkdir()
+    (ux_root / "knowledge/principles").mkdir(parents=True)
+    (ux_root / "sources").mkdir()
+
+    def write(card=CARD, local_sha=ORIGINAL):
+        text = f"---\n{yamlio.dumps(card)}---\n\n## 補足\n"
+        (ux_root / f"knowledge/principles/{card['id']}.md").write_text(text, encoding="utf-8", newline="\n")
+        (ux_root / "sources/local-index.yaml").write_text(
+            yamlio.dumps({"fixture-page-labels": [{"file": "x.pdf", "sha256": local_sha}]}), encoding="utf-8")
+        return root
+    write.ux_root = ux_root
+    return write
+
+
+def run(root, doc=DOC, sources=SOURCES):
+    assert yamlio.schema_errors(doc, library_mappings.FILE[1]) == []
+    return library_mappings.check(doc, INDEX, PROV, sources, root)
+
+
+def with_claim(**over):
+    doc = copy.deepcopy(DOC)
+    doc["claims"] = [mapping(**over)]
+    return doc
+
+
+def test_valid_mapping_checks_both_sides(ux):
+    errors, report = run(ux())
+    assert errors == []
+    assert report == {"claims": 1, "relations": {"broad": 1}, "unmapped_claims": ["CLAIM-0003"], "ux_check": "checked"}
+
+
+def test_ux_side_is_not_run_without_repository(tmp_path, monkeypatch):
+    monkeypatch.delenv(library_mappings.UIUX_ENV, raising=False)
+    errors, report = run(tmp_path / "information_architecture")
+    assert errors == [] and report["ux_check"] == "not_run"
+
+
+def test_explicit_ux_root_must_exist(tmp_path, monkeypatch):
+    monkeypatch.setenv(library_mappings.UIUX_ENV, str(tmp_path / "missing"))
+    errors, report = run(tmp_path / "information_architecture")
+    assert report["ux_check"] == "not_run"
+    assert any("knowledge/principles がない" in e for e in errors)
+
+
+def test_env_points_to_ux_repository(ux, monkeypatch, tmp_path):
+    ux()
+    monkeypatch.setenv(library_mappings.UIUX_ENV, str(ux.ux_root))
+    errors, report = run(tmp_path / "elsewhere")
+    assert errors == [] and report["ux_check"] == "checked"
+
+
+@pytest.mark.parametrize("over, message", [
+    ({"claim_id": "CLAIM-0099"}, "未登録の主張 CLAIM-0099"),
+    ({"claim_id": "CLAIM-0002"}, "CLAIM-0002 は KN-001 が引く主張ではない"),
+    ({"knowledge_id": "KN-002", "claim_id": "CLAIM-0002"}, "KN-002 は対応表の範囲外"),
+    ({"principle_id": "UX-PRINCIPLE-0010"}, "UX-PRINCIPLE-0010 は対応表の範囲外"),
+    ({"ia_evidence_id": "EV-0009"}, "ia_evidence_id が主張の根拠"),
+    ({"ia_claim_sha256": "b" * 64}, "主張の版が変わった"),
+])
+def test_ia_side_errors(ux, over, message):
+    errors, _ = run(ux(), with_claim(**over))
+    assert any(message in e for e in errors), errors
+
+
+def test_unregistered_knowledge_in_scope(ux):
+    doc = copy.deepcopy(DOC)
+    doc["scope"]["ia_knowledge"] = ["KN-001", "KN-404"]
+    assert "scope: 未登録の知識 KN-404" in run(ux(), doc)[0]
+
+
+def test_duplicate_pair_is_rejected(ux):
+    doc = copy.deepcopy(DOC)
+    doc["claims"].append(mapping(relation="related"))
+    assert any("対応が重複している" in e for e in run(ux(), doc)[0])
+
+
+def test_claim_from_unpaired_source_is_rejected(ux):
+    doc = copy.deepcopy(DOC)
+    doc["sources"][0]["ia_source_id"] = "BOOK-001"
+    errors, _ = run(ux(), doc, sources=SOURCES | {"BOOK-001": ORIGINAL})
+    assert any("主張の出典 FIXTURE-page-labels が sources にない" in e for e in errors), errors
+
+
+def test_original_hash_must_match_both_registries(ux):
+    errors, _ = run(ux(local_sha="c" * 64), sources={"FIXTURE-page-labels": "d" * 64})
+    assert "sources: FIXTURE-page-labels の原典ハッシュが出典登録簿と一致しない" in errors
+    assert any("UI/UX側の原典ハッシュ" in e for e in errors)
+
+
+@pytest.mark.parametrize("card, over, message", [
+    (CARD | {"conditions": [{"text": "前付けがある本に限らない", "basis": "source"}]}, {}, "conditions[0] が変わった"),
+    (CARD, {"ux_field": "exceptions[0]"}, "原則カードに exceptions[0] がない"),
+    (CARD | {"id": "UX-PRINCIPLE-0002"}, {}, "原則カード UX-PRINCIPLE-0001 がない"),
+    (CARD | {"evidence": [{"source_id": "other-book", "locator": "p.1"}]}, {}, "主張と対応する出典 fixture-page-labels がない"),
+])
+def test_ux_side_errors(ux, card, over, message):
+    errors, _ = run(ux(card), with_claim(**over))
+    assert any(message in e for e in errors), errors
+
+
+def test_exact_requires_human_review():
+    assert yamlio.schema_errors(with_claim(relation="exact"), library_mappings.FILE[1])
+    assert yamlio.schema_errors(with_claim(relation="exact", reviewer_kind="human"), library_mappings.FILE[1]) == []
+
+
+def test_direction_is_fixed_by_schema():
+    reversed_ids = with_claim(claim_id="UX-PRINCIPLE-0001", principle_id="CLAIM-0001")
+    assert yamlio.schema_errors(reversed_ids, library_mappings.FILE[1])
+
+
+def test_repository_mapping_passes_ia_side():
+    from iakit import library
+    from iakit.paths import ROOT
+    doc = yamlio.load(ROOT / library_mappings.FILE[0])
+    assert yamlio.schema_errors(doc, library_mappings.FILE[1]) == []
+    errors = library_mappings.ia_errors(doc, yamlio.load(ROOT / library.FILES["index"][0]),
+                                        yamlio.load(ROOT / library.FILES["provenance"][0]), provenance.registered_sources())
+    assert errors == []

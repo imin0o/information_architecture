@@ -1,0 +1,256 @@
+# UI/UX skill（ui_ux リポジトリ）の原則カードとの知識対応表。schemas/uiux-mapping.schema.json で検証する。
+# 出典の対応（sources）と主張の対応（claims）を分けて持つ。同じ本を引いていても同じ主張とは限らないため。
+# relation は IA の主張から見た原則カードの関係。broad はカードの方が広く、narrow はカードの方が狭い。
+# exact は推移的に同一視を広げるので、主張の文言と適用条件が一致し、人が確認した場合だけに使う。
+# ia_claim_sha256 と ux_text_sha256 は確認した版。文言が変わると iakit library check が失敗し、確認し直すまで通らない。
+# 対応がない主張（図の表記、ユーザーテスト）は検査結果の unmapped_claims に出る。
+schema_version: "1.0"
+scope:
+  ia_knowledge: [KN-005, KN-006, KN-009, KN-010]
+  ux_principles: {from: UX-PRINCIPLE-0060, to: UX-PRINCIPLE-0077}
+sources:
+- book: "Information Architecture: For the Web and Beyond"
+  edition: "4th (2015)"
+  ia_source_id: BOOK-001
+  ux_source_id: rosenfeld-2015-information-architecture
+  original_sha256: 1ad22b2e3c37a7911b10d30729636d3d32978a534f7887d2656787eb475a1707
+  sections: [Ch.6 Organization Systems, Ch.7 Labeling Systems, Ch.8 Navigation Systems, Ch.11 Research]
+claims:
+# KN-005 ラベルの命名と粒度の一貫性
+- claim_id: CLAIM-0034
+  knowledge_id: KN-005
+  principle_id: UX-PRINCIPLE-0067
+  ux_field: conditions[0]
+  relation: broad
+  scope_difference: 主張は、一貫性が予測しやすさと学びやすさを生むという理由だけを述べる。カードは表記、見た目、構文、粒度、網羅性、語彙をそろえる推奨全体を持つ
+  ia_evidence_id: EV-0032
+  ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
+  ia_claim_sha256: ef334b4d16cd6b1f0880eb80f5c7f60bc561718ea376ef56e6347bff5ab1e537
+  ux_text_sha256: 0bcb6f64788dfc4c6bf1f91a0ee257227f4772114c014ce95d9e9dd5d7cdc7ef
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0035
+  knowledge_id: KN-005
+  principle_id: UX-PRINCIPLE-0067
+  ux_field: recommendation
+  relation: broad
+  scope_difference: 主張は構文の形式をそろえることだけを扱う。カードは構文を、そろえる6観点の1つとして扱う
+  ia_evidence_id: EV-0033
+  ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
+  ia_claim_sha256: 6279dda041a69aa2a95560157b852a4a4b8bf49d62335ca17aff5004ebb1afb5
+  ux_text_sha256: 06bb85cba35cd902f702dc0ee433e62c19bece9e20199a51720fa3a0b6215030
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0036
+  knowledge_id: KN-005
+  principle_id: UX-PRINCIPLE-0067
+  ux_field: recommendation
+  relation: broad
+  scope_difference: 主張は粒度をそろえることと索引の例外を扱う。カードは粒度を6観点の1つとし、索引の例外を exceptions[0] に分けて持つ
+  ia_evidence_id: EV-0034
+  ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
+  ia_claim_sha256: c41270048b25eb5a64e8009f115f2c0752677edda47d424182e6c94827bce18e
+  ux_text_sha256: 06bb85cba35cd902f702dc0ee433e62c19bece9e20199a51720fa3a0b6215030
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0037
+  knowledge_id: KN-005
+  principle_id: UX-PRINCIPLE-0067
+  ux_field: recommendation
+  relation: broad
+  scope_difference: 主張は網羅性（目立つ欠けがないこと）だけを扱う。カードは網羅性を6観点の1つとして扱う
+  ia_evidence_id: EV-0035
+  ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
+  ia_claim_sha256: f768c414ffda3551dcdbf381c3469369244289a06b76220d32c7c510b77bbe41
+  ux_text_sha256: 06bb85cba35cd902f702dc0ee433e62c19bece9e20199a51720fa3a0b6215030
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0038
+  knowledge_id: KN-005
+  principle_id: UX-PRINCIPLE-0067
+  ux_field: exceptions[1]
+  relation: close
+  scope_difference: 主張は主な利用者の言葉を考えることと、利用者ごとの別体系を1つにまとめて述べる。カードは前者を推奨の「対象読者の語彙」に、後者を例外に分けて持つ
+  ia_evidence_id: EV-0036
+  ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
+  ia_claim_sha256: 934c5fe0ae58a7f5c0d6b6cf5685d461fa7631810da58cfb1e0afa0eaeea6bec
+  ux_text_sha256: 30d7bc2fed420e803885927807ffb4c5c86a798b448077a928dddddebea43b44
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0038
+  knowledge_id: KN-005
+  principle_id: UX-PRINCIPLE-0068
+  ux_field: recommendation
+  relation: related
+  scope_difference: カードはラベルを利用者の言葉で書くことに加え、候補を検索ログやカードソートから集める方法まで扱う。根拠の節が異なる
+  ia_evidence_id: EV-0036
+  ux_locator: Ch.7 Why You Should Care About Labeling 節（PDF p.159–160）
+  ia_claim_sha256: 934c5fe0ae58a7f5c0d6b6cf5685d461fa7631810da58cfb1e0afa0eaeea6bec
+  ux_text_sha256: 3ac98a32820441720f9a689616c56ff63028bdac669f1fd9717f7277f2337fb0
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+# KN-006 ファセット分類（BOOK-003 由来の主張は出典が異なるため対応させない）
+- claim_id: CLAIM-0029
+  knowledge_id: KN-006
+  principle_id: UX-PRINCIPLE-0062
+  ux_field: conditions[0]
+  relation: broad
+  scope_difference: 主張は正確な分類の利点と限界だけを述べる。カードは曖昧な分類との併用までを推奨する
+  ia_evidence_id: EV-0027
+  ux_locator: Ch.6 Organization Schemes 節（PDF p.126–132）
+  ia_claim_sha256: b72addac80b9102a4d8cf2b00f3100f6733b5ac6935f0cee08b4ce556d14a15d
+  ux_text_sha256: b453b0556cdc3e05ba7ee28345ab84d4e668684099361a9bbfd1eb23e435811f
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0031
+  knowledge_id: KN-006
+  principle_id: UX-PRINCIPLE-0066
+  ux_field: conditions[1]
+  relation: broad
+  scope_difference: 主張はファセットの間では排他性の問題が生じないことだけを述べる。カードは多重階層の推奨と、重複させすぎない制約を加える
+  ia_evidence_id: EV-0029
+  ux_locator: Ch.6 The Hierarchy 項, Designing hierarchies（PDF p.141–142）
+  ia_claim_sha256: 6340aa19891b799910618fc9c4d75bda8f8cbac075e27a84a488f8b30dc324c6
+  ux_text_sha256: 14fbdd05f39fa11e2670333dfb634c908e6629a512aabc657a037d0582c4210d
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+# KN-009 組織化の構造、ナビゲーション、サイトマップ（図の表記 CLAIM-0048/0049 は対応なし）
+- claim_id: CLAIM-0028
+  knowledge_id: KN-009
+  principle_id: UX-PRINCIPLE-0062
+  ux_field: recommendation
+  relation: related
+  scope_difference: 主張は組織化の方式と構造の区別を定義する。カードは方式（正確な分類と曖昧な分類）の使い分けを推奨する
+  ia_evidence_id: EV-0026
+  ux_locator: Ch.6 Organization Schemes 節（PDF p.126–132）
+  ia_claim_sha256: 53721a48100a492cccd5666038750960d9fb42a13baa1bba73c5fcfa4437404e
+  ux_text_sha256: 856a050baff180748f973acad4df04d1186c57a481122eb64728699a211b16bd
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0028
+  knowledge_id: KN-009
+  principle_id: UX-PRINCIPLE-0065
+  ux_field: recommendation
+  relation: related
+  scope_difference: 主張は組織化の方式と構造の区別を定義する。カードは構造（階層、データベース型、ハイパーテキスト）の使い分けを推奨する
+  ia_evidence_id: EV-0026
+  ux_locator: Ch.6 Organization Structures 節, The Database Model 項と Hypertext 項（PDF p.140、145–151）
+  ia_claim_sha256: 53721a48100a492cccd5666038750960d9fb42a13baa1bba73c5fcfa4437404e
+  ux_text_sha256: 8b9816d6ba44ed116f4f2779b803978b97f785656d383c4e2a4962c9a4c36974
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0032
+  knowledge_id: KN-009
+  principle_id: UX-PRINCIPLE-0064
+  ux_field: recommendation
+  relation: broad
+  scope_difference: 主張は幅と深さを釣り合わせることだけを述べる。カードは深さへの注意、拡大が見込まれる場合の広く浅い階層、画面内のグループ化を加える
+  ia_evidence_id: EV-0030
+  ux_locator: Ch.6 Organization Structures 節, The Hierarchy 項, Designing hierarchies（PDF p.142–145）
+  ia_claim_sha256: 3e56a89466c4d741d680b8da53855a90183e0aeea444c781610931d134c8ea13
+  ux_text_sha256: ce8655049165ab968627659fbc6ff10a44468edc4774fa6a4a3d431447c21f8b
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0033
+  knowledge_id: KN-009
+  principle_id: UX-PRINCIPLE-0065
+  ux_field: recommendation
+  relation: close
+  scope_difference: 主張は3つの構造を補い合わせることを勧める。カードはさらに、階層を骨格、データベース型を同種の情報、ハイパーテキストを補助と役割まで割り当てる
+  ia_evidence_id: EV-0031
+  ux_locator: Ch.6 Organization Structures 節, The Database Model 項と Hypertext 項（PDF p.140、145–151）
+  ia_claim_sha256: f04d28b80572ec56c1135e6167a32892e3937a3c55a8f1f16cfb1a4e8180d624
+  ux_text_sha256: 8b9816d6ba44ed116f4f2779b803978b97f785656d383c4e2a4962c9a4c36974
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0050
+  knowledge_id: KN-009
+  principle_id: UX-PRINCIPLE-0070
+  ux_field: recommendation
+  relation: broad
+  scope_difference: 主張は組み込みナビゲーションが現在地と行き先の理解を助けることだけを述べる。カードは3種を合わせて設計し、選択肢で内容を埋もれさせない推奨を加える
+  ia_evidence_id: EV-0048
+  ux_locator: Ch.8 Types of Navigation Systems 節（PDF p.205–206）
+  ia_claim_sha256: 0b2d044eb1e77e5c82e8e072873909a5183465c9e18c5976afa8a4f618e5f574
+  ux_text_sha256: 4b6ee325dd1d293189e6b8c4b0f4c79f8a1a55790c8429c0f822f89966fd424a
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0050
+  knowledge_id: KN-009
+  principle_id: UX-PRINCIPLE-0069
+  ux_field: recommendation
+  relation: related
+  scope_difference: カードは途中の画面から入る利用者に現在地と行き先を示すことが主題で、ナビゲーションの種類は扱わない。根拠の節が異なる
+  ia_evidence_id: EV-0048
+  ux_locator: Ch.8 Placemaking 節（PDF p.209–210）
+  ia_claim_sha256: 0b2d044eb1e77e5c82e8e072873909a5183465c9e18c5976afa8a4f618e5f574
+  ux_text_sha256: b3cc047a965c09c4392c1107c52f0e56cebec805cf7b18d748c207e12beff81e
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0051
+  knowledge_id: KN-009
+  principle_id: UX-PRINCIPLE-0072
+  ux_field: recommendation
+  relation: related
+  scope_difference: 主張はサイトマップ、索引、ガイドを同じ情報への別経路として説明する。カードはガイドを扱わず、大規模な体系で予備として用意する推奨と規模の条件を持つ
+  ia_evidence_id: EV-0049
+  ux_locator: Ch.8 Supplemental Navigation Systems 節, Sitemaps 項と Indexes 項（PDF p.224–227）
+  ia_claim_sha256: 53d15c74b0870eaa96204744857eeaabd3b020cc36f43c40d10917ed2090280e
+  ux_text_sha256: 3d36da4d3e0ada41379e59f0a439769030f457aa4c5ef13b880cefdd3ab0c508
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+# KN-010 構造とラベルの検証方法（ユーザーテスト CLAIM-0046/0047 は対応なし）
+- claim_id: CLAIM-0043
+  knowledge_id: KN-010
+  principle_id: UX-PRINCIPLE-0077
+  ux_field: recommendation
+  relation: related
+  scope_difference: 主張は好みを直接尋ねず別の調査方法で確かめることを述べる。カードはその方法の1つであるカードソートの使い分けだけを扱う
+  ia_evidence_id: EV-0041
+  ux_locator: Ch.11 User Research Sessions 節, Card Sorting 項（PDF p.394–398）
+  ia_claim_sha256: 14291e2ccb90bcbb3afc2d1f60fc556266b6518652c9c52ee6a821799d87ca99
+  ux_text_sha256: e9188fb7cff432e4ae57412d5246df80d5bdb28ce946ef63bf7f13e3c6e7ebbb
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0044
+  knowledge_id: KN-010
+  principle_id: UX-PRINCIPLE-0077
+  ux_field: recommendation
+  relation: close
+  scope_difference: 主張はカードソートがメンタルモデルを明らかにすることも述べる。カードは結果を主に質的な知見として使うことを加える
+  ia_evidence_id: EV-0042
+  ux_locator: Ch.11 User Research Sessions 節, Card Sorting 項（PDF p.394–398）
+  ia_claim_sha256: 8eeb2cec23312e6d665463ab9ffab6bdb86499b13d921a499943dd8d2e4e6d84
+  ux_text_sha256: e9188fb7cff432e4ae57412d5246df80d5bdb28ce946ef63bf7f13e3c6e7ebbb
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"
+- claim_id: CLAIM-0045
+  knowledge_id: KN-010
+  principle_id: UX-PRINCIPLE-0077
+  ux_field: recommendation
+  relation: broad
+  scope_difference: 主張は開放型と閉鎖型の目的の区別だけを述べる。カードは枚数の目安、量的分析の限界、文脈での確認を条件と例外に加える
+  ia_evidence_id: EV-0043
+  ux_locator: Ch.11 User Research Sessions 節, Card Sorting 項（PDF p.394–398）
+  ia_claim_sha256: 84661db79cc2de2e7caa14b4dabe04110bb0c1a818b9c0ae1bdf120a06a50911
+  ux_text_sha256: e9188fb7cff432e4ae57412d5246df80d5bdb28ce946ef63bf7f13e3c6e7ebbb
+  reviewed_by: Claude Code
+  reviewer_kind: agent
+  reviewed_at: "2026-10-27"

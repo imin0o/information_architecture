@@ -130,6 +130,7 @@ information-architecture/
 │   ├── provenance.yaml             # 根拠抜粋の登録簿
 │   ├── conflicts.yaml              # 文献間の矛盾と適用条件
 │   ├── terms.yaml                  # 英日用語対応
+│   ├── mappings/uiux-principles.yaml # UI/UX skillの原則カードとの知識対応表（出典と主張の2層）
 │   └── build-logs/                  # 本文を含めない処理結果。生ログはGit管理外
 ├── skills/                         # Skillのソース
 │   ├── ia-orchestrator/

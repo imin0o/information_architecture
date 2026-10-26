@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "uiux-mapping.schema.json",
+  "title": "UI/UX原則カードとの知識対応表 library/mappings/uiux-principles.yaml",
+  "description": "出典の対応と主張の対応を分けて持つ。relation は IA の主張から見た原則カードの関係で、SKOSの対応関係を参考にしたローカル名（broad: カードの方が広い、narrow: カードの方が狭い）。本文や原文は写さず、IDと版のハッシュだけを持つ",
+  "type": "object",
+  "required": ["schema_version", "scope", "sources", "claims"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"$ref": "common.schema.json#/$defs/schema_version"},
+    "scope": {
+      "description": "対応を記録する範囲。範囲外のIDは検査で拒否する",
+      "type": "object",
+      "required": ["ia_knowledge", "ux_principles"],
+      "additionalProperties": false,
+      "properties": {
+        "ia_knowledge": {"type": "array", "minItems": 1, "uniqueItems": true,
+                         "items": {"$ref": "common.schema.json#/$defs/knowledge_id"}},
+        "ux_principles": {
+          "type": "object", "required": ["from", "to"], "additionalProperties": false,
+          "properties": {"from": {"$ref": "#/$defs/principle_id"}, "to": {"$ref": "#/$defs/principle_id"}}
+        }
+      }
+    },
+    "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+    "claims": {"type": "array", "items": {"$ref": "#/$defs/claim"}}
+  },
+  "$defs": {
+    "principle_id": {"type": "string", "pattern": "^UX-PRINCIPLE-[0-9]{4}$"},
+    "date": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "source": {
+      "description": "出典の対応。同じ原典ファイルであることを原典のハッシュで確かめる",
+      "type": "object",
+      "required": ["book", "edition", "ia_source_id", "ux_source_id", "original_sha256", "sections"],
+      "additionalProperties": false,
+      "properties": {
+        "book": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "edition": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "ia_source_id": {"$ref": "common.schema.json#/$defs/source_id"},
+        "ux_source_id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+        "original_sha256": {"description": "両側の出典登録簿が持つ原典のハッシュ", "$ref": "common.schema.json#/$defs/sha256"},
+        "sections": {"description": "両側が引いている章節", "type": "array", "minItems": 1,
+                     "items": {"$ref": "common.schema.json#/$defs/nonempty"}}
+      }
+    },
+    "claim": {
+      "description": "主張の対応。同じ本を引いていても同じ主張とは限らないため、主張ごとに関係と適用範囲の差を書く",
+      "type": "object",
+      "required": ["claim_id", "knowledge_id", "principle_id", "ux_field", "relation", "scope_difference",
+                   "ia_evidence_id", "ux_locator", "ia_claim_sha256", "ux_text_sha256",
+                   "reviewed_by", "reviewer_kind", "reviewed_at"],
+      "additionalProperties": false,
+      "properties": {
+        "claim_id": {"$ref": "common.schema.json#/$defs/claim_id"},
+        "knowledge_id": {"$ref": "common.schema.json#/$defs/knowledge_id"},
+        "principle_id": {"$ref": "#/$defs/principle_id"},
+        "ux_field": {"description": "原則カードの該当欄", "type": "string",
+                     "pattern": "^(recommendation|(conditions|exceptions|tradeoffs)\\[[0-9]+\\])$"},
+        "relation": {"enum": ["exact", "close", "broad", "narrow", "related"]},
+        "scope_difference": {"description": "適用範囲の差。差がなければその旨を書く", "$ref": "common.schema.json#/$defs/nonempty"},
+        "ia_evidence_id": {"type": "string", "pattern": "^EV-[0-9]{4}$"},
+        "ux_locator": {"description": "原則カードの根拠の位置（章節とページ）", "$ref": "common.schema.json#/$defs/nonempty"},
+        "ia_claim_sha256": {"description": "確認した主張の版（provenance.yaml の claim_sha256）", "$ref": "common.schema.json#/$defs/sha256"},
+        "ux_text_sha256": {"description": "確認した該当欄の text のハッシュ（UTF-8）", "$ref": "common.schema.json#/$defs/sha256"},
+        "reviewed_by": {"$ref": "common.schema.json#/$defs/nonempty"},
+        "reviewer_kind": {"description": "exact は推移的に同一視を広げるため、human の確認を必須にする", "enum": ["human", "agent"]},
+        "reviewed_at": {"$ref": "#/$defs/date"}
+      },
+      "if": {"properties": {"relation": {"const": "exact"}}},
+      "then": {"properties": {"reviewer_kind": {"const": "human"}}}
+    }
+  }
+}

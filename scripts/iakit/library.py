@@ -1,6 +1,6 @@
 """知識ライブラリの検査（iakit library check）。BR-02・BR-04。
 
-索引・用語・矛盾・引用台帳・生成記録の参照整合性と、本文が引く主張の一致を確かめる。
+索引・用語・矛盾・引用台帳・生成記録・UI/UX原則カードとの対応表の参照整合性と、本文が引く主張の一致を確かめる。
 採用状態は記録させず、主張レビューと照合記録から導出する（provenance.derive）。
 adopted は、本文が引く全主張が原典照合済みかつ supported で、有効な照合記録の knowledge_files に
 その本文が含まれる場合に限る。採用の単位は本文のうち「仮説・補完」節より前の部分（adoptable_text）。
@@ -9,7 +9,7 @@ adopted は、本文が引く全主張が原典照合済みかつ supported で�
 import re
 from pathlib import Path
 
-from . import library_coverage, library_ledger, manifest, provenance, snapshot, yamlio
+from . import library_coverage, library_ledger, library_mappings, manifest, provenance, snapshot, yamlio
 from .paths import EXTRACTED, ROOT
 
 FILES = {
@@ -21,6 +21,7 @@ FILES = {
     "quotes": ("library/quotes.yaml", "quote-ledger.schema.json"),
     "generations": ("library/build-logs/knowledge-generation.yaml", "knowledge-generation.schema.json"),
     "provenance": ("library/provenance.yaml", "provenance.schema.json"),
+    "uiux_mappings": library_mappings.FILE,
 }
 RECEIPTS = ("verification/receipts.yaml", "verification-receipt.schema.json")
 BODY_DIRS = ("books", "concepts", "methods", "patterns")
@@ -180,7 +181,9 @@ def check(root: Path = ROOT, extracted_root: Path = EXTRACTED) -> dict:
     states = adoption(docs, receipts, derived)
     coverage_errors, coverage = library_coverage.errors_and_report(docs)
     sample_errors, samples = library_ledger.sample_status(docs)
-    errors += coverage_errors + sample_errors
+    mapping_errors, mappings = library_mappings.check(docs["uiux_mappings"], docs["index"], docs["provenance"],
+                                                      sources, root)
+    errors += coverage_errors + sample_errors + mapping_errors
     edited = sorted({o["path"] for g in docs["generations"]["generations"] for o in g["outputs"]
                      if not (root / o["path"]).is_file() or manifest.sha256_file(root / o["path"]) != o["sha256"]})
     needs = {n["need_id"]: ("gap" if not n["entries"] else
@@ -195,6 +198,7 @@ def check(root: Path = ROOT, extracted_root: Path = EXTRACTED) -> dict:
         "sample_reviews": samples,
         "quote_ledger": library_ledger.ledger(docs),
         "edited_after_generation": edited,
+        "uiux_mappings": mappings,
         # 人による原典・主張の確認はこの検査で代替しない
         "human_review": "not_run",
     })

@@ -10,7 +10,7 @@
   iakit hosts probe --host claude|codex [--space-in-path]   互換性確認用Skillの発見・明示利用・付属資料参照
   iakit contracts check [--local] [DIR ...]   実行記録・判断・出典・構造のスキーマと整合性。--local は抜粋を固定テキストと照合する
   iakit cases check                課題ケースとルーブリックの固定状態（入力ハッシュ・項目の網羅・検査の実在）
-  iakit library check              知識の索引・用語・矛盾・引用台帳・生成記録の整合と、主張レビューから導く採用状態
+  iakit library check              知識の索引・用語・矛盾・引用台帳・生成記録・UI/UX対応表の整合と、主張レビューから導く採用状態
   iakit run init DIR --run-id ID --task-type TYPE --host HOST --model MODEL   実行ディレクトリと経路・Skillの記録を作る
   iakit input add DIR FILE --kind KIND --description TEXT [--format F] [--classification C] [--replace INPUT-nnn]
                                    入力を固定・登録し、位置付きの取込み結果 ingest/<ID>.yaml を作る
