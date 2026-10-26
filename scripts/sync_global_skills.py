@@ -5,7 +5,8 @@
   uv run --locked python scripts/sync_global_skills.py --git-head # post-commit から（直前のコミットの変更）
 
 --hook と --git-head は、配布物の元（skills/・library/・schemas/・scripts/）に変更がなければ何もしない。
-ルートが存在しない場合は飛ばす。失敗時は終了コード2（Claude Code が stderr を受け取る）。
+ルートが存在しない場合は飛ばす。build-manifest.yaml が dist/ と同じで dist check も通るルートは写し直さない。
+失敗時は終了コード2（Claude Code が stderr を受け取る）。
 """
 
 import argparse
@@ -19,6 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
 SOURCES = ("skills/", "library/", "schemas/", "scripts/")
 TARGETS = (Path.home() / ".claude" / "skills", Path.home() / ".agents" / "skills")
+MANIFEST_NAME = "build-manifest.yaml"
 
 
 def touches_source(paths: list[str]) -> bool:
@@ -37,6 +39,16 @@ def touches_source(paths: list[str]) -> bool:
 def iakit(*args: str) -> subprocess.CompletedProcess:
     return subprocess.run(["uv", "run", "--locked", "iakit", *args], cwd=ROOT, capture_output=True,
                           text=True, encoding="utf-8")
+
+
+def matches_dist(target: Path) -> bool:
+    """配置先の build-manifest.yaml が dist/ と同じか。dist check は配置先の内部整合しか見ないので、
+    これと合わせて初めて配置先の全ファイルが dist/ と一致すると言える。"""
+    for src in (p for p in DIST.iterdir() if p.is_dir()):
+        placed = target / src.name / MANIFEST_NAME
+        if not placed.is_file() or placed.read_bytes() != (src / MANIFEST_NAME).read_bytes():
+            return False
+    return True
 
 
 def sync(target: Path) -> None:
@@ -73,13 +85,16 @@ def main(argv: list[str] | None = None) -> int:
     for target in TARGETS:
         if not target.is_dir():
             continue
-        if iakit("dist", "check", str(target)).returncode == 0:
+        if matches_dist(target) and iakit("dist", "check", str(target)).returncode == 0:
             print(f"一致済み: {target}")
             continue
         sync(target)
         checked = iakit("dist", "check", str(target))
         if checked.returncode != 0:
             sys.stderr.write(checked.stdout + checked.stderr + f"\n写し直し後の dist check が失敗しました: {target}\n")
+            return 2
+        if not matches_dist(target):
+            sys.stderr.write(f"写し直し後も build-manifest.yaml が dist/ と一致しません: {target}\n")
             return 2
         print(f"写し直し: {target}")
     return 0
