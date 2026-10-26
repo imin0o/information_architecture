@@ -1,8 +1,9 @@
 # UI/UX skill（ui_ux リポジトリ）の原則カードとの知識対応表。schemas/uiux-mapping.schema.json で検証する。
 # 出典の対応（sources）と主張の対応（claims）を分けて持つ。同じ本を引いていても同じ主張とは限らないため。
-# relation は IA の主張から見た原則カードの関係。broad はカードの方が広く、narrow はカードの方が狭い。
+# relation は IA の主張から見た ux_field の関係。broad は該当欄の方が広く、narrow は該当欄の方が狭い。
 # exact は推移的に同一視を広げるので、主張の文言と適用条件が一致し、人が確認した場合だけに使う。
-# ia_claim_sha256 と ux_text_sha256 は確認した版。文言が変わると iakit library check が失敗し、確認し直すまで通らない。
+# ia_claim_sha256 と ux_text_sha256 は主張と該当欄の版。ux_context_sha256 はカードの条件・例外・根拠を含む版。
+# いずれかが変わると iakit library check が失敗し、対応を確認し直すまで通らない。
 # 対応がない主張（図の表記、ユーザーテスト）は検査結果の unmapped_claims に出る。
 schema_version: "1.0"
 scope:
@@ -21,13 +22,14 @@ claims:
   knowledge_id: KN-005
   principle_id: UX-PRINCIPLE-0067
   ux_field: conditions[0]
-  relation: broad
-  scope_difference: 主張は、一貫性が予測しやすさと学びやすさを生むという理由だけを述べる。カードは表記、見た目、構文、粒度、網羅性、語彙をそろえる推奨全体を持つ
+  relation: close
+  scope_difference: 両者とも一貫性が学びやすさを生むことを述べる。主張は予測しやすさという仕組みと使いやすさを加え、該当欄は初めての利用者に特に重要であることを加える
   ia_evidence_id: EV-0032
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: ef334b4d16cd6b1f0880eb80f5c7f60bc561718ea376ef56e6347bff5ab1e537
   ux_text_sha256: 0bcb6f64788dfc4c6bf1f91a0ee257227f4772114c014ce95d9e9dd5d7cdc7ef
-  reviewed_by: Claude Code
+  ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0035
@@ -40,7 +42,8 @@ claims:
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: 6279dda041a69aa2a95560157b852a4a4b8bf49d62335ca17aff5004ebb1afb5
   ux_text_sha256: 06bb85cba35cd902f702dc0ee433e62c19bece9e20199a51720fa3a0b6215030
-  reviewed_by: Claude Code
+  ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0036
@@ -48,12 +51,13 @@ claims:
   principle_id: UX-PRINCIPLE-0067
   ux_field: recommendation
   relation: broad
-  scope_difference: 主張は粒度をそろえることと索引の例外を扱う。カードは粒度を6観点の1つとし、索引の例外を exceptions[0] に分けて持つ
+  scope_difference: 該当欄は粒度を含む6観点をそろえる推奨で、主張より扱う観点が広い。主張にある索引の例外は該当欄にはなく exceptions[0] にあり、文脈ハッシュで固定する
   ia_evidence_id: EV-0034
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: c41270048b25eb5a64e8009f115f2c0752677edda47d424182e6c94827bce18e
   ux_text_sha256: 06bb85cba35cd902f702dc0ee433e62c19bece9e20199a51720fa3a0b6215030
-  reviewed_by: Claude Code
+  ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0037
@@ -66,7 +70,8 @@ claims:
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: f768c414ffda3551dcdbf381c3469369244289a06b76220d32c7c510b77bbe41
   ux_text_sha256: 06bb85cba35cd902f702dc0ee433e62c19bece9e20199a51720fa3a0b6215030
-  reviewed_by: Claude Code
+  ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0038
@@ -79,7 +84,8 @@ claims:
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: 934c5fe0ae58a7f5c0d6b6cf5685d461fa7631810da58cfb1e0afa0eaeea6bec
   ux_text_sha256: 30d7bc2fed420e803885927807ffb4c5c86a798b448077a928dddddebea43b44
-  reviewed_by: Claude Code
+  ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0038
@@ -92,7 +98,8 @@ claims:
   ux_locator: Ch.7 Why You Should Care About Labeling 節（PDF p.159–160）
   ia_claim_sha256: 934c5fe0ae58a7f5c0d6b6cf5685d461fa7631810da58cfb1e0afa0eaeea6bec
   ux_text_sha256: 3ac98a32820441720f9a689616c56ff63028bdac669f1fd9717f7277f2337fb0
-  reviewed_by: Claude Code
+  ux_context_sha256: 5ef5848a9c9edbe4fbd13975344f2a85e376949fd1c3fee995a36692e357ea4f
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 # KN-006 ファセット分類（BOOK-003 由来の主張は出典が異なるため対応させない）
@@ -100,26 +107,28 @@ claims:
   knowledge_id: KN-006
   principle_id: UX-PRINCIPLE-0062
   ux_field: conditions[0]
-  relation: broad
-  scope_difference: 主張は正確な分類の利点と限界だけを述べる。カードは曖昧な分類との併用までを推奨する
+  relation: close
+  scope_difference: 両者とも正確な分類が対象の名前を知る利用者を前提とすることを述べる。主張は排他的な区分と利点・限界の理由を加え、該当欄は前提条件だけを述べる
   ia_evidence_id: EV-0027
   ux_locator: Ch.6 Organization Schemes 節（PDF p.126–132）
   ia_claim_sha256: b72addac80b9102a4d8cf2b00f3100f6733b5ac6935f0cee08b4ce556d14a15d
   ux_text_sha256: b453b0556cdc3e05ba7ee28345ab84d4e668684099361a9bbfd1eb23e435811f
-  reviewed_by: Claude Code
+  ux_context_sha256: 38ed02f9e506fd36c7df7de3cde4cf6a2903c8cb241ca63e79d55d48514ee424
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0031
   knowledge_id: KN-006
   principle_id: UX-PRINCIPLE-0066
   ux_field: conditions[1]
-  relation: broad
-  scope_difference: 主張はファセットの間では排他性の問題が生じないことだけを述べる。カードは多重階層の推奨と、重複させすぎない制約を加える
+  relation: close
+  scope_difference: 両者とも異なるファセット間で同じ項目が重複しても排他性の問題は生じないことを述べる。主張は組織化の方式の独立性を明示し、該当欄は主題と形式の例で説明する
   ia_evidence_id: EV-0029
   ux_locator: Ch.6 The Hierarchy 項, Designing hierarchies（PDF p.141–142）
   ia_claim_sha256: 6340aa19891b799910618fc9c4d75bda8f8cbac075e27a84a488f8b30dc324c6
   ux_text_sha256: 14fbdd05f39fa11e2670333dfb634c908e6629a512aabc657a037d0582c4210d
-  reviewed_by: Claude Code
+  ux_context_sha256: 4aa31c217f008f608911353027f9885937b46e5bd0a8c604474932cb8e7f0eeb
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 # KN-009 組織化の構造、ナビゲーション、サイトマップ（図の表記 CLAIM-0048/0049 は対応なし）
@@ -133,7 +142,8 @@ claims:
   ux_locator: Ch.6 Organization Schemes 節（PDF p.126–132）
   ia_claim_sha256: 53721a48100a492cccd5666038750960d9fb42a13baa1bba73c5fcfa4437404e
   ux_text_sha256: 856a050baff180748f973acad4df04d1186c57a481122eb64728699a211b16bd
-  reviewed_by: Claude Code
+  ux_context_sha256: 38ed02f9e506fd36c7df7de3cde4cf6a2903c8cb241ca63e79d55d48514ee424
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0028
@@ -146,7 +156,8 @@ claims:
   ux_locator: Ch.6 Organization Structures 節, The Database Model 項と Hypertext 項（PDF p.140、145–151）
   ia_claim_sha256: 53721a48100a492cccd5666038750960d9fb42a13baa1bba73c5fcfa4437404e
   ux_text_sha256: 8b9816d6ba44ed116f4f2779b803978b97f785656d383c4e2a4962c9a4c36974
-  reviewed_by: Claude Code
+  ux_context_sha256: fba36bf3fa659592a13ba7b38c5dfed4c04025627a2d788a7fdbcedb5b55e5ee
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0032
@@ -159,7 +170,8 @@ claims:
   ux_locator: Ch.6 Organization Structures 節, The Hierarchy 項, Designing hierarchies（PDF p.142–145）
   ia_claim_sha256: 3e56a89466c4d741d680b8da53855a90183e0aeea444c781610931d134c8ea13
   ux_text_sha256: ce8655049165ab968627659fbc6ff10a44468edc4774fa6a4a3d431447c21f8b
-  reviewed_by: Claude Code
+  ux_context_sha256: b3d467c9bf32ecd71334dcca42f34373dc925c9b5b5ad009bd5b7e7d3134b516
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0033
@@ -172,7 +184,8 @@ claims:
   ux_locator: Ch.6 Organization Structures 節, The Database Model 項と Hypertext 項（PDF p.140、145–151）
   ia_claim_sha256: f04d28b80572ec56c1135e6167a32892e3937a3c55a8f1f16cfb1a4e8180d624
   ux_text_sha256: 8b9816d6ba44ed116f4f2779b803978b97f785656d383c4e2a4962c9a4c36974
-  reviewed_by: Claude Code
+  ux_context_sha256: fba36bf3fa659592a13ba7b38c5dfed4c04025627a2d788a7fdbcedb5b55e5ee
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0050
@@ -185,7 +198,8 @@ claims:
   ux_locator: Ch.8 Types of Navigation Systems 節（PDF p.205–206）
   ia_claim_sha256: 0b2d044eb1e77e5c82e8e072873909a5183465c9e18c5976afa8a4f618e5f574
   ux_text_sha256: 4b6ee325dd1d293189e6b8c4b0f4c79f8a1a55790c8429c0f822f89966fd424a
-  reviewed_by: Claude Code
+  ux_context_sha256: 5fb1c26b398a9758134d337793a449d92a680e5762577277cfc7670492dabd6b
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0050
@@ -198,7 +212,8 @@ claims:
   ux_locator: Ch.8 Placemaking 節（PDF p.209–210）
   ia_claim_sha256: 0b2d044eb1e77e5c82e8e072873909a5183465c9e18c5976afa8a4f618e5f574
   ux_text_sha256: b3cc047a965c09c4392c1107c52f0e56cebec805cf7b18d748c207e12beff81e
-  reviewed_by: Claude Code
+  ux_context_sha256: 0768401b943917d6d3f5e93b70dde61c78b25845ea711289acf13e831f77476f
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0051
@@ -211,7 +226,8 @@ claims:
   ux_locator: Ch.8 Supplemental Navigation Systems 節, Sitemaps 項と Indexes 項（PDF p.224–227）
   ia_claim_sha256: 53d15c74b0870eaa96204744857eeaabd3b020cc36f43c40d10917ed2090280e
   ux_text_sha256: 3d36da4d3e0ada41379e59f0a439769030f457aa4c5ef13b880cefdd3ab0c508
-  reviewed_by: Claude Code
+  ux_context_sha256: 764786b701b69409b392c912dc98f253bf178a69fc66e82ae24a4b50d9b4da6f
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 # KN-010 構造とラベルの検証方法（ユーザーテスト CLAIM-0046/0047 は対応なし）
@@ -225,7 +241,8 @@ claims:
   ux_locator: Ch.11 User Research Sessions 節, Card Sorting 項（PDF p.394–398）
   ia_claim_sha256: 14291e2ccb90bcbb3afc2d1f60fc556266b6518652c9c52ee6a821799d87ca99
   ux_text_sha256: e9188fb7cff432e4ae57412d5246df80d5bdb28ce946ef63bf7f13e3c6e7ebbb
-  reviewed_by: Claude Code
+  ux_context_sha256: 2b23501d2ee26c573fb30b0143ae3466ed3e6038cbf5abd991e09196efe6859c
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0044
@@ -238,7 +255,8 @@ claims:
   ux_locator: Ch.11 User Research Sessions 節, Card Sorting 項（PDF p.394–398）
   ia_claim_sha256: 8eeb2cec23312e6d665463ab9ffab6bdb86499b13d921a499943dd8d2e4e6d84
   ux_text_sha256: e9188fb7cff432e4ae57412d5246df80d5bdb28ce946ef63bf7f13e3c6e7ebbb
-  reviewed_by: Claude Code
+  ux_context_sha256: 2b23501d2ee26c573fb30b0143ae3466ed3e6038cbf5abd991e09196efe6859c
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"
 - claim_id: CLAIM-0045
@@ -246,11 +264,12 @@ claims:
   principle_id: UX-PRINCIPLE-0077
   ux_field: recommendation
   relation: broad
-  scope_difference: 主張は開放型と閉鎖型の目的の区別だけを述べる。カードは枚数の目安、量的分析の限界、文脈での確認を条件と例外に加える
+  scope_difference: 主張は開放型と閉鎖型の目的の区別と両者の間の調整を述べる。該当欄は設計前と案ができた後という時期を明示し、結果を主に質的な知見として使うことを加える
   ia_evidence_id: EV-0043
   ux_locator: Ch.11 User Research Sessions 節, Card Sorting 項（PDF p.394–398）
   ia_claim_sha256: 84661db79cc2de2e7caa14b4dabe04110bb0c1a818b9c0ae1bdf120a06a50911
   ux_text_sha256: e9188fb7cff432e4ae57412d5246df80d5bdb28ce946ef63bf7f13e3c6e7ebbb
-  reviewed_by: Claude Code
+  ux_context_sha256: 2b23501d2ee26c573fb30b0143ae3466ed3e6038cbf5abd991e09196efe6859c
+  reviewed_by: Claude Code / Codex
   reviewer_kind: agent
   reviewed_at: "2026-10-27"

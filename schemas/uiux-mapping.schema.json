@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "uiux-mapping.schema.json",
   "title": "UI/UX原則カードとの知識対応表 library/mappings/uiux-principles.yaml",
-  "description": "出典の対応と主張の対応を分けて持つ。relation は IA の主張から見た原則カードの関係で、SKOSの対応関係を参考にしたローカル名（broad: カードの方が広い、narrow: カードの方が狭い）。本文や原文は写さず、IDと版のハッシュだけを持つ",
+  "description": "出典の対応と主張の対応を分けて持つ。relation は IA の主張から見た ux_field の関係で、SKOSの対応関係を参考にしたローカル名（broad: 該当欄の方が広い、narrow: 該当欄の方が狭い）。適用条件と根拠は文脈ハッシュで固定する",
   "type": "object",
   "required": ["schema_version", "scope", "sources", "claims"],
   "additionalProperties": false,
@@ -47,7 +47,7 @@
       "description": "主張の対応。同じ本を引いていても同じ主張とは限らないため、主張ごとに関係と適用範囲の差を書く",
       "type": "object",
       "required": ["claim_id", "knowledge_id", "principle_id", "ux_field", "relation", "scope_difference",
-                   "ia_evidence_id", "ux_locator", "ia_claim_sha256", "ux_text_sha256",
+                   "ia_evidence_id", "ux_locator", "ia_claim_sha256", "ux_text_sha256", "ux_context_sha256",
                    "reviewed_by", "reviewer_kind", "reviewed_at"],
       "additionalProperties": false,
       "properties": {
@@ -62,6 +62,7 @@
         "ux_locator": {"description": "原則カードの根拠の位置（章節とページ）", "$ref": "common.schema.json#/$defs/nonempty"},
         "ia_claim_sha256": {"description": "確認した主張の版（provenance.yaml の claim_sha256）", "$ref": "common.schema.json#/$defs/sha256"},
         "ux_text_sha256": {"description": "確認した該当欄の text のハッシュ（UTF-8）", "$ref": "common.schema.json#/$defs/sha256"},
+        "ux_context_sha256": {"description": "claim_type、recommendation、conditions、exceptions、tradeoffs、source_statement、evidence をキー順で正規化したJSONのSHA-256（省略された欄はnull）。確認者や表示名は含めない", "$ref": "common.schema.json#/$defs/sha256"},
         "reviewed_by": {"$ref": "common.schema.json#/$defs/nonempty"},
         "reviewer_kind": {"description": "exact は推移的に同一視を広げるため、human の確認を必須にする", "enum": ["human", "agent"]},
         "reviewed_at": {"$ref": "#/$defs/date"}

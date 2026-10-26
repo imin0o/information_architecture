@@ -14,7 +14,7 @@ SOURCES = {"FIXTURE-page-labels": ORIGINAL}
 INDEX = {"entries": [{"knowledge_id": "KN-001", "claims": ["CLAIM-0001", "CLAIM-0003"]},
                      {"knowledge_id": "KN-002", "claims": ["CLAIM-0002"]}]}
 CARD = {"id": "UX-PRINCIPLE-0001", "recommendation": "前付けはローマ数字で数える。",
-        "conditions": [{"text": "前付けがある本に限る", "basis": "source"}],
+        "conditions": [{"text": "前付けがある本に限る", "basis": "source", "source_id": "fixture-page-labels"}],
         "evidence": [{"source_id": "fixture-page-labels", "locator": "p.1"}]}
 
 
@@ -24,6 +24,7 @@ def mapping(**over):
          "ia_evidence_id": CLAIMS["CLAIM-0001"]["evidence_id"], "ux_locator": "p.1",
          "ia_claim_sha256": CLAIMS["CLAIM-0001"]["claim_sha256"],
          "ux_text_sha256": provenance.text_sha256(CARD["conditions"][0]["text"]),
+         "ux_context_sha256": library_mappings.context_sha256(CARD),
          "reviewed_by": "tester", "reviewer_kind": "agent", "reviewed_at": "2026-10-27"}
     return m | over
 
@@ -138,6 +139,64 @@ def test_original_hash_must_match_both_registries(ux):
 def test_ux_side_errors(ux, card, over, message):
     errors, _ = run(ux(card), with_claim(**over))
     assert any(message in e for e in errors), errors
+
+
+@pytest.mark.parametrize("changes", [
+    {"recommendation": "This recommendation has changed."},
+    {"exceptions": [{"text": "This rule no longer has an exception.", "basis": "interpretation"}]},
+    {"tradeoffs": [{"text": "A newly identified cost.", "basis": "interpretation"}]},
+    {"conditions": CARD["conditions"] + [{"text": "An additional restriction.", "basis": "interpretation"}]},
+    {"evidence": [{"source_id": "fixture-page-labels", "locator": "p.9"}]},
+])
+def test_context_revision_requires_mapping_review(ux, changes):
+    errors, _ = run(ux(CARD | changes))
+    assert any("文脈が変わった" in e for e in errors), errors
+
+
+@pytest.mark.parametrize("basis, source_id", [("source", "other-book"), ("interpretation", None), ("source", None)])
+def test_selected_field_must_come_from_paired_source(ux, basis, source_id):
+    card = copy.deepcopy(CARD)
+    card["conditions"][0]["basis"] = basis
+    card["conditions"][0].pop("source_id", None)
+    if source_id is not None:
+        card["conditions"][0]["source_id"] = source_id
+    card["evidence"].append({"source_id": "other-book", "locator": "p.9"})
+    errors, _ = run(ux(card), with_claim(ux_context_sha256=library_mappings.context_sha256(card)))
+    assert any("該当欄の出典" in e for e in errors), errors
+
+
+def test_recommendation_uses_card_evidence(ux):
+    errors, _ = run(ux(), with_claim(ux_field="recommendation",
+                                   ux_text_sha256=provenance.text_sha256(CARD["recommendation"])))
+    assert errors == []
+
+
+def test_review_metadata_does_not_invalidate_mapping(ux):
+    errors, _ = run(ux(CARD | {"title": "Updated display title", "reviewed_by": "another reviewer"}))
+    assert errors == []
+
+
+def test_context_hash_is_required_even_without_ux_repository():
+    doc = copy.deepcopy(DOC)
+    del doc["claims"][0]["ux_context_sha256"]
+    assert yamlio.schema_errors(doc, library_mappings.FILE[1])
+
+
+@pytest.mark.parametrize("card", [
+    ["not-an-object"], "not-an-object", 1,
+    CARD | {"recommendation": ["not-text"]},
+    CARD | {"conditions": "not-an-array"},
+    CARD | {"conditions": [None]},
+    CARD | {"conditions": [{"text": ["not-text"], "basis": "source"}]},
+    CARD | {"evidence": [None]},
+])
+def test_malformed_card_is_a_reported_error(ux, card):
+    root = ux()
+    (ux.ux_root / "knowledge/principles/UX-PRINCIPLE-0001.md").write_text(
+        f"---\n{yamlio.dumps(card)}---\n", encoding="utf-8")
+    errors, report = run(root)
+    assert any("原則カードを読めない" in e for e in errors), errors
+    assert report["ux_check"] == "checked"
 
 
 def test_exact_requires_human_review():

@@ -3,7 +3,7 @@
 対応表 library/mappings/uiux-principles.yaml は、出典の対応と主張の対応の2層を持つ。
 IA側（索引・主張・根拠・原典ハッシュ）は常に検査する。UI/UX側（原則カード・出典登録簿）は
 リポジトリが見つかる場合だけ検査し、見つからなければ ux_check を not_run にする（CIはIAだけを取得する）。
-主張や該当欄の文言が変わると記録したハッシュと合わなくなり、対応を確認し直すまで失敗する。
+主張、該当欄、カードの適用条件・例外・根拠が変わると、対応を確認し直すまで失敗する。
 """
 
 import os
@@ -16,6 +16,12 @@ from . import provenance, yamlio
 FILE = ("library/mappings/uiux-principles.yaml", "uiux-mapping.schema.json")
 UIUX_ENV = "IAKIT_UIUX_ROOT"
 FIELD = re.compile(r"^(recommendation|(conditions|exceptions|tradeoffs)\[([0-9]+)\])$")
+CONTEXT_FIELDS = ("claim_type", "recommendation", "conditions", "exceptions", "tradeoffs", "source_statement", "evidence")
+
+
+def context_sha256(card: dict) -> str:
+    """該当欄の解釈に必要な文脈と根拠を固定する。表示名や確認者の更新は含めない。"""
+    return provenance.canonical_sha256({k: card.get(k) for k in CONTEXT_FIELDS})
 
 
 def uiux_root(root: Path) -> tuple[Path | None, list[str]]:
@@ -36,7 +42,28 @@ def _card(ux: Path, pid: str) -> dict | None:
     if not path.is_file():
         return None
     parts = path.read_text(encoding="utf-8").replace("\r\n", "\n").split("---\n", 2)
-    return yamlio.loads(parts[1]) if len(parts) == 3 and parts[0] == "" else None
+    if len(parts) != 3 or parts[0] != "":
+        return None
+    card = yamlio.loads(parts[1])
+    # 外部カードのうち、この検査が読む構造を検証する。壊れた値は検査エラーとして返す。
+    if not isinstance(card, dict):
+        raise ValueError("frontmatter はオブジェクトでなければならない")
+    for key in ("id", "recommendation"):
+        if not isinstance(card.get(key), str):
+            raise ValueError(f"{key} は文字列でなければならない")
+    for key in ("conditions", "exceptions", "tradeoffs", "evidence"):
+        items = card.get(key, [])
+        if not isinstance(items, list):
+            raise ValueError(f"{key} は配列でなければならない")
+        for item in items:
+            if not isinstance(item, dict):
+                raise ValueError(f"{key} の各項目はオブジェクトでなければならない")
+            if key == "evidence":
+                if not isinstance(item.get("source_id"), str):
+                    raise ValueError("evidence の source_id は文字列でなければならない")
+            elif not isinstance(item.get("text"), str) or item.get("basis") not in ("source", "interpretation"):
+                raise ValueError(f"{key} の各項目には文字列の text と source/interpretation の basis が必要")
+    return card
 
 
 def _field_text(card: dict, field: str) -> str | None:
@@ -94,7 +121,7 @@ def ia_errors(doc: dict, index: dict, prov: dict, sources: dict) -> list[str]:
 
 
 def ux_errors(doc: dict, prov: dict, ux: Path) -> list[str]:
-    """UI/UX側の原典ハッシュ、原則カードの存在、該当欄の版、カードの根拠の出典。"""
+    """UI/UX側の原典、該当欄と文脈の版、該当欄の出典を確かめる。"""
     errors: list[str] = []
     local = yamlio.load(ux / "sources/local-index.yaml")
     pairs = {s["ia_source_id"]: s["ux_source_id"] for s in doc["sources"]}
@@ -106,7 +133,7 @@ def ux_errors(doc: dict, prov: dict, ux: Path) -> list[str]:
         where = f"{m['claim_id']}→{m['principle_id']}"
         try:
             card = _card(ux, m["principle_id"])
-        except ValueError as exc:
+        except (OSError, ValueError) as exc:
             errors.append(f"{where}: 原則カードを読めない: {exc}")
             continue
         if card is None or card.get("id") != m["principle_id"]:
@@ -117,9 +144,16 @@ def ux_errors(doc: dict, prov: dict, ux: Path) -> list[str]:
             errors.append(f"{where}: 原則カードに {m['ux_field']} がない")
         elif provenance.text_sha256(text) != m["ux_text_sha256"]:
             errors.append(f"{where}: 原則カードの {m['ux_field']} が変わった（対応を確認し直し、ux_text_sha256 を更新する）")
+        if context_sha256(card) != m["ux_context_sha256"]:
+            errors.append(f"{where}: 原則カードの文脈が変わった（条件・例外・根拠を含む対応を確認し直し、ux_context_sha256 を更新する）")
         expected = pairs.get(claims.get(m["claim_id"], {}).get("source_id"))
         if expected not in {e.get("source_id") for e in card.get("evidence") or []}:
             errors.append(f"{where}: 原則カードの根拠に、主張と対応する出典 {expected} がない")
+        field = FIELD.fullmatch(m["ux_field"])
+        if text is not None and field[1] != "recommendation":
+            qualified = card[field[2]][int(field[3])]
+            if qualified.get("basis") != "source" or qualified.get("source_id") != expected:
+                errors.append(f"{where}: 該当欄の出典が主張と対応する出典 {expected} ではない")
     return errors
 
 
