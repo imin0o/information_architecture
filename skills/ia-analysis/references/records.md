@@ -26,6 +26,10 @@ uv run --locked iakit decision withdraw runs/<run_id> IA-nnn
 
 `revise` は最新版を写して変更を当て、版を上げて旧版を `superseded` にする。版が変わった判断を参照する成果物は `stale` になる。改訂時に `classification` を省くと旧版の区分を下限に継承し、使う入力がより厳しければ引き上げる。`stale` の検証計画と同じ版の調査対象の適用確認は、判断の書き込み時だけ更新待ちとして扱う。通常の契約検査と完了時には、その確認を省略しない。
 
+## 記録の順序
+
+判断と成果物は、参照される側を先に記録する。判断の `target_ids` に `ART-` を書くと、その成果物が登録済みでなければ判断を書き込めない。成果物の本文が `IA-nnn rN` を参照すると、その判断が記録済みでなければ成果物を登録できない。同じ成果物を対象にし、かつその成果物から参照される判断は循環するため、`target_ids` には成果物ではなく、判断が実際に扱う項目のID（`CONTENT-`・`CONCEPT-`・`SCHEME-`・`NODE-`）を書く。成果物の登録前に判断を書き、その後で成果物を登録する。
+
 ## 判断の項目
 
 `decision_id`・`decision_revision`・`run_id`・`status`・`supersedes`・`recorded_at` はコマンドが決めるため渡さない。`skill_version`・`library_version`、文献根拠の `source_verification`・`support_status`、`confidence`、`classification` は、省けば記録から導く。`sources`・`input_observations`・`alternatives`・`assumptions`・`counter_evidence`・`validation_record_ids` は省けば空、`validation_status` は `not_tested` になる。
