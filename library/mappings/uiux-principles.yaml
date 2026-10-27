@@ -5,6 +5,8 @@
 # independent_agent が確認した場合だけに使う。independent_agent は照合記録（independent_review）を持ち、
 # 照合した版が現在の版と違えば検査が失敗する。既存の対応を exact へ自動で昇格させず、推移的な対応も作らない。
 # ia_claim_sha256 と ux_text_sha256 は主張と該当欄の版。ux_context_sha256 はカードの条件・例外・根拠を含む版。
+# ia_applicability_sha256 は IA 側の applicability のUTF-8ハッシュ。UI/UXリポジトリがなくても検査する。
+# independent_review にも4つのハッシュを記録し、対応表だけ更新して古い照合を流用しない。
 # いずれかが変わると iakit library check が失敗し、対応を確認し直すまで通らない。
 # 対応がない主張（図の表記、ユーザーテスト）は検査結果の unmapped_claims に出る。
 schema_version: "1.0"
@@ -29,6 +31,7 @@ claims:
   ia_evidence_id: EV-0032
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: ef334b4d16cd6b1f0880eb80f5c7f60bc561718ea376ef56e6347bff5ab1e537
+  ia_applicability_sha256: 1f9f82a1dd7992ac5a1421b9a9365cb6dbf9427ab8c8e55fcfa80e0575c8dae9
   ux_text_sha256: 0bcb6f64788dfc4c6bf1f91a0ee257227f4772114c014ce95d9e9dd5d7cdc7ef
   ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
   reviewed_by: Claude Code / Codex
@@ -43,6 +46,7 @@ claims:
   ia_evidence_id: EV-0033
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: 6279dda041a69aa2a95560157b852a4a4b8bf49d62335ca17aff5004ebb1afb5
+  ia_applicability_sha256: 57b2a675c59abb98c4b9a924d4af9cc6af96c05393458f33f206cf4aad986832
   ux_text_sha256: 06bb85cba35cd902f702dc0ee433e62c19bece9e20199a51720fa3a0b6215030
   ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
   reviewed_by: Claude Code / Codex
@@ -57,6 +61,7 @@ claims:
   ia_evidence_id: EV-0034
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: c41270048b25eb5a64e8009f115f2c0752677edda47d424182e6c94827bce18e
+  ia_applicability_sha256: ab522c77dd20eb5032ec22b7ddefe092ea0b3deeb689616b88247b5e04547929
   ux_text_sha256: 06bb85cba35cd902f702dc0ee433e62c19bece9e20199a51720fa3a0b6215030
   ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
   reviewed_by: Claude Code / Codex
@@ -71,6 +76,7 @@ claims:
   ia_evidence_id: EV-0035
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: f768c414ffda3551dcdbf381c3469369244289a06b76220d32c7c510b77bbe41
+  ia_applicability_sha256: 7b46e257a450a2a467a4e5dbe4daa3785a1e51d23ff53b1e36f670febcf587b3
   ux_text_sha256: 06bb85cba35cd902f702dc0ee433e62c19bece9e20199a51720fa3a0b6215030
   ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
   reviewed_by: Claude Code / Codex
@@ -85,6 +91,7 @@ claims:
   ia_evidence_id: EV-0036
   ux_locator: Ch.7 Designing Labels 節, General Guidelines 項（PDF p.182–185）
   ia_claim_sha256: 934c5fe0ae58a7f5c0d6b6cf5685d461fa7631810da58cfb1e0afa0eaeea6bec
+  ia_applicability_sha256: 22f8593fddc99e45cf59423c8b69b9060359e458997b024a3206a26c337e748a
   ux_text_sha256: 30d7bc2fed420e803885927807ffb4c5c86a798b448077a928dddddebea43b44
   ux_context_sha256: 7e4787a9474eed03102a15deac912d0f139db8c7b3de6fc15c09f11abb27b3f7
   reviewed_by: Claude Code / Codex
@@ -99,6 +106,7 @@ claims:
   ia_evidence_id: EV-0036
   ux_locator: Ch.7 Why You Should Care About Labeling 節（PDF p.159–160）
   ia_claim_sha256: 934c5fe0ae58a7f5c0d6b6cf5685d461fa7631810da58cfb1e0afa0eaeea6bec
+  ia_applicability_sha256: 22f8593fddc99e45cf59423c8b69b9060359e458997b024a3206a26c337e748a
   ux_text_sha256: 3ac98a32820441720f9a689616c56ff63028bdac669f1fd9717f7277f2337fb0
   ux_context_sha256: 5ef5848a9c9edbe4fbd13975344f2a85e376949fd1c3fee995a36692e357ea4f
   reviewed_by: Claude Code / Codex
@@ -114,6 +122,7 @@ claims:
   ia_evidence_id: EV-0027
   ux_locator: Ch.6 Organization Schemes 節（PDF p.126–132）
   ia_claim_sha256: b72addac80b9102a4d8cf2b00f3100f6733b5ac6935f0cee08b4ce556d14a15d
+  ia_applicability_sha256: 4f28e41311339a9ba09e969eccb0374ca0422d91cda3b8dc2d3cf763217fde6b
   ux_text_sha256: b453b0556cdc3e05ba7ee28345ab84d4e668684099361a9bbfd1eb23e435811f
   ux_context_sha256: 38ed02f9e506fd36c7df7de3cde4cf6a2903c8cb241ca63e79d55d48514ee424
   reviewed_by: Claude Code / Codex
@@ -128,6 +137,7 @@ claims:
   ia_evidence_id: EV-0029
   ux_locator: Ch.6 The Hierarchy 項, Designing hierarchies（PDF p.141–142）
   ia_claim_sha256: 6340aa19891b799910618fc9c4d75bda8f8cbac075e27a84a488f8b30dc324c6
+  ia_applicability_sha256: 703178a7f6824c04d790f0b76bbb111da654497110b2bfc94aa632b0d9608df7
   ux_text_sha256: 14fbdd05f39fa11e2670333dfb634c908e6629a512aabc657a037d0582c4210d
   ux_context_sha256: 4aa31c217f008f608911353027f9885937b46e5bd0a8c604474932cb8e7f0eeb
   reviewed_by: Claude Code / Codex
@@ -143,6 +153,7 @@ claims:
   ia_evidence_id: EV-0026
   ux_locator: Ch.6 Organization Schemes 節（PDF p.126–132）
   ia_claim_sha256: 53721a48100a492cccd5666038750960d9fb42a13baa1bba73c5fcfa4437404e
+  ia_applicability_sha256: 36c6167c0ea643244493af83980a42f3bbc9c81b0c427c9e0c38424c9bf50465
   ux_text_sha256: 856a050baff180748f973acad4df04d1186c57a481122eb64728699a211b16bd
   ux_context_sha256: 38ed02f9e506fd36c7df7de3cde4cf6a2903c8cb241ca63e79d55d48514ee424
   reviewed_by: Claude Code / Codex
@@ -157,6 +168,7 @@ claims:
   ia_evidence_id: EV-0026
   ux_locator: Ch.6 Organization Structures 節, The Database Model 項と Hypertext 項（PDF p.140、145–151）
   ia_claim_sha256: 53721a48100a492cccd5666038750960d9fb42a13baa1bba73c5fcfa4437404e
+  ia_applicability_sha256: 36c6167c0ea643244493af83980a42f3bbc9c81b0c427c9e0c38424c9bf50465
   ux_text_sha256: 8b9816d6ba44ed116f4f2779b803978b97f785656d383c4e2a4962c9a4c36974
   ux_context_sha256: fba36bf3fa659592a13ba7b38c5dfed4c04025627a2d788a7fdbcedb5b55e5ee
   reviewed_by: Claude Code / Codex
@@ -171,6 +183,7 @@ claims:
   ia_evidence_id: EV-0030
   ux_locator: Ch.6 Organization Structures 節, The Hierarchy 項, Designing hierarchies（PDF p.142–145）
   ia_claim_sha256: 3e56a89466c4d741d680b8da53855a90183e0aeea444c781610931d134c8ea13
+  ia_applicability_sha256: 31d2dcccf98f1a7a74952e9ae90d797bc9a1eb03c16bd03b3209cdab8cb6c438
   ux_text_sha256: ce8655049165ab968627659fbc6ff10a44468edc4774fa6a4a3d431447c21f8b
   ux_context_sha256: b3d467c9bf32ecd71334dcca42f34373dc925c9b5b5ad009bd5b7e7d3134b516
   reviewed_by: Claude Code / Codex
@@ -185,6 +198,7 @@ claims:
   ia_evidence_id: EV-0031
   ux_locator: Ch.6 Organization Structures 節, The Database Model 項と Hypertext 項（PDF p.140、145–151）
   ia_claim_sha256: f04d28b80572ec56c1135e6167a32892e3937a3c55a8f1f16cfb1a4e8180d624
+  ia_applicability_sha256: e2e98548765e04f59ac6babea2e3b1cf930da346406d21eaa3e3f2f3f0bbfa8d
   ux_text_sha256: 8b9816d6ba44ed116f4f2779b803978b97f785656d383c4e2a4962c9a4c36974
   ux_context_sha256: fba36bf3fa659592a13ba7b38c5dfed4c04025627a2d788a7fdbcedb5b55e5ee
   reviewed_by: Claude Code / Codex
@@ -199,6 +213,7 @@ claims:
   ia_evidence_id: EV-0048
   ux_locator: Ch.8 Types of Navigation Systems 節（PDF p.205–206）
   ia_claim_sha256: 0b2d044eb1e77e5c82e8e072873909a5183465c9e18c5976afa8a4f618e5f574
+  ia_applicability_sha256: 493b503295de9297d4daf6e9b6c118af2eec4d194dcb723d505bc15f72f66b21
   ux_text_sha256: 4b6ee325dd1d293189e6b8c4b0f4c79f8a1a55790c8429c0f822f89966fd424a
   ux_context_sha256: 5fb1c26b398a9758134d337793a449d92a680e5762577277cfc7670492dabd6b
   reviewed_by: Claude Code / Codex
@@ -213,6 +228,7 @@ claims:
   ia_evidence_id: EV-0048
   ux_locator: Ch.8 Placemaking 節（PDF p.209–210）
   ia_claim_sha256: 0b2d044eb1e77e5c82e8e072873909a5183465c9e18c5976afa8a4f618e5f574
+  ia_applicability_sha256: 493b503295de9297d4daf6e9b6c118af2eec4d194dcb723d505bc15f72f66b21
   ux_text_sha256: b3cc047a965c09c4392c1107c52f0e56cebec805cf7b18d748c207e12beff81e
   ux_context_sha256: 0768401b943917d6d3f5e93b70dde61c78b25845ea711289acf13e831f77476f
   reviewed_by: Claude Code / Codex
@@ -227,6 +243,7 @@ claims:
   ia_evidence_id: EV-0049
   ux_locator: Ch.8 Supplemental Navigation Systems 節, Sitemaps 項と Indexes 項（PDF p.224–227）
   ia_claim_sha256: 53d15c74b0870eaa96204744857eeaabd3b020cc36f43c40d10917ed2090280e
+  ia_applicability_sha256: 0501339013f48303fd702289569e58ac75ce8bd48cac0d6eb38795f20ed17216
   ux_text_sha256: 3d36da4d3e0ada41379e59f0a439769030f457aa4c5ef13b880cefdd3ab0c508
   ux_context_sha256: 764786b701b69409b392c912dc98f253bf178a69fc66e82ae24a4b50d9b4da6f
   reviewed_by: Claude Code / Codex
@@ -242,6 +259,7 @@ claims:
   ia_evidence_id: EV-0041
   ux_locator: Ch.11 User Research Sessions 節, Card Sorting 項（PDF p.394–398）
   ia_claim_sha256: 14291e2ccb90bcbb3afc2d1f60fc556266b6518652c9c52ee6a821799d87ca99
+  ia_applicability_sha256: c59c51566dd22ed96e3b931bf09011264fc86fad452a42556d5d7ab43b703a95
   ux_text_sha256: e9188fb7cff432e4ae57412d5246df80d5bdb28ce946ef63bf7f13e3c6e7ebbb
   ux_context_sha256: 2b23501d2ee26c573fb30b0143ae3466ed3e6038cbf5abd991e09196efe6859c
   reviewed_by: Claude Code / Codex
@@ -256,6 +274,7 @@ claims:
   ia_evidence_id: EV-0042
   ux_locator: Ch.11 User Research Sessions 節, Card Sorting 項（PDF p.394–398）
   ia_claim_sha256: 8eeb2cec23312e6d665463ab9ffab6bdb86499b13d921a499943dd8d2e4e6d84
+  ia_applicability_sha256: 7393d333bd3471f823d82485fe1ad9b0300a669c53e75316ac82b2f5d3892ca2
   ux_text_sha256: e9188fb7cff432e4ae57412d5246df80d5bdb28ce946ef63bf7f13e3c6e7ebbb
   ux_context_sha256: 2b23501d2ee26c573fb30b0143ae3466ed3e6038cbf5abd991e09196efe6859c
   reviewed_by: Claude Code / Codex
@@ -270,6 +289,7 @@ claims:
   ia_evidence_id: EV-0043
   ux_locator: Ch.11 User Research Sessions 節, Card Sorting 項（PDF p.394–398）
   ia_claim_sha256: 84661db79cc2de2e7caa14b4dabe04110bb0c1a818b9c0ae1bdf120a06a50911
+  ia_applicability_sha256: d01e0b86a4d87ecde4d28872edefcc84ab6e3fed67dfa0332eaf71e78b099852
   ux_text_sha256: e9188fb7cff432e4ae57412d5246df80d5bdb28ce946ef63bf7f13e3c6e7ebbb
   ux_context_sha256: 2b23501d2ee26c573fb30b0143ae3466ed3e6038cbf5abd991e09196efe6859c
   reviewed_by: Claude Code / Codex

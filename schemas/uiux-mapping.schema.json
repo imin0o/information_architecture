@@ -47,7 +47,7 @@
       "description": "主張の対応。同じ本を引いていても同じ主張とは限らないため、主張ごとに関係と適用範囲の差を書く",
       "type": "object",
       "required": ["claim_id", "knowledge_id", "principle_id", "ux_field", "relation", "scope_difference",
-                   "ia_evidence_id", "ux_locator", "ia_claim_sha256", "ux_text_sha256", "ux_context_sha256",
+                   "ia_evidence_id", "ux_locator", "ia_claim_sha256", "ia_applicability_sha256", "ux_text_sha256", "ux_context_sha256",
                    "reviewed_by", "reviewer_kind", "reviewed_at"],
       "additionalProperties": false,
       "properties": {
@@ -61,6 +61,7 @@
         "ia_evidence_id": {"type": "string", "pattern": "^EV-[0-9]{4}$"},
         "ux_locator": {"description": "原則カードの根拠の位置（章節とページ）", "$ref": "common.schema.json#/$defs/nonempty"},
         "ia_claim_sha256": {"description": "確認した主張の版（provenance.yaml の claim_sha256）", "$ref": "common.schema.json#/$defs/sha256"},
+        "ia_applicability_sha256": {"description": "確認した主張の applicability のハッシュ（UTF-8）。主張本文を維持した適用条件の変更も再確認する", "$ref": "common.schema.json#/$defs/sha256"},
         "ux_text_sha256": {"description": "確認した該当欄の text のハッシュ（UTF-8）", "$ref": "common.schema.json#/$defs/sha256"},
         "ux_context_sha256": {"description": "claim_type、recommendation、conditions、exceptions、tradeoffs、source_statement、evidence をキー順で正規化したJSONのSHA-256（省略された欄はnull）。確認者や表示名は含めない", "$ref": "common.schema.json#/$defs/sha256"},
         "reviewed_by": {"$ref": "common.schema.json#/$defs/nonempty"},
@@ -85,13 +86,14 @@
     "independent_review": {
       "description": "生成者と別の提供元による照合の記録。比較した版を固定し、対応の版が変わったら照合し直す。カードが codex-checked であることは主張どうしの同値性の確認にならない",
       "type": "object",
-      "required": ["generator", "reviewer", "ia_claim_sha256", "ux_text_sha256", "ux_context_sha256",
+      "required": ["generator", "reviewer", "ia_claim_sha256", "ia_applicability_sha256", "ux_text_sha256", "ux_context_sha256",
                    "conditions_comparison", "verdict"],
       "additionalProperties": false,
       "properties": {
         "generator": {"$ref": "#/$defs/party"},
         "reviewer": {"$ref": "#/$defs/party"},
         "ia_claim_sha256": {"description": "照合した主張の版", "$ref": "common.schema.json#/$defs/sha256"},
+        "ia_applicability_sha256": {"description": "照合した主張の適用条件の版", "$ref": "common.schema.json#/$defs/sha256"},
         "ux_text_sha256": {"description": "照合した該当欄の版", "$ref": "common.schema.json#/$defs/sha256"},
         "ux_context_sha256": {"description": "照合したカードの文脈の版", "$ref": "common.schema.json#/$defs/sha256"},
         "conditions_comparison": {"description": "主張とカードの適用条件・例外を比べた結果", "$ref": "common.schema.json#/$defs/nonempty"},

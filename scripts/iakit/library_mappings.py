@@ -3,7 +3,7 @@
 対応表 library/mappings/uiux-principles.yaml は、出典の対応と主張の対応の2層を持つ。
 IA側（索引・主張・根拠・原典ハッシュ）は常に検査する。UI/UX側（原則カード・出典登録簿）は
 リポジトリが見つかる場合だけ検査し、見つからなければ ux_check を not_run にする（CIはIAだけを取得する）。
-主張、該当欄、カードの適用条件・例外・根拠が変わると、対応を確認し直すまで失敗する。
+主張とその適用条件、該当欄、カードの適用条件・例外・根拠が変わると、対応を確認し直すまで失敗する。
 """
 
 import os
@@ -117,6 +117,8 @@ def ia_errors(doc: dict, index: dict, prov: dict, sources: dict) -> list[str]:
             errors.append(f"{where}: ia_evidence_id が主張の根拠 {c['evidence_id']} と一致しない")
         if c["claim_sha256"] != m["ia_claim_sha256"]:
             errors.append(f"{where}: 主張の版が変わった（対応を確認し直し、ia_claim_sha256 を更新する）")
+        if provenance.text_sha256(c["applicability"]) != m["ia_applicability_sha256"]:
+            errors.append(f"{where}: 主張の適用条件の版が変わった（対応を確認し直し、ia_applicability_sha256 を更新する）")
         if "independent_review" in m:
             errors += [f"{where}: {e}" for e in _review_errors(m, m["independent_review"])]
     return errors
@@ -127,7 +129,7 @@ def _review_errors(m: dict, r: dict) -> list[str]:
     errors = []
     if r["generator"]["provider"] == r["reviewer"]["provider"]:
         errors.append(f"生成者と照合者の提供元がともに {r['reviewer']['provider']}（自己確認は独立照合にならない）")
-    if any(r[k] != m[k] for k in ("ia_claim_sha256", "ux_text_sha256", "ux_context_sha256")):
+    if any(r[k] != m[k] for k in ("ia_claim_sha256", "ia_applicability_sha256", "ux_text_sha256", "ux_context_sha256")):
         errors.append("照合した後に対象が変わった（照合し直し、independent_review の版を更新する）")
     if r["verdict"] != m["relation"]:
         errors.append(f"照合の判定 {r['verdict']} が relation {m['relation']} と一致しない")

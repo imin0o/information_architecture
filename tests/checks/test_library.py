@@ -4,7 +4,7 @@ import shutil
 
 import pytest
 
-from iakit import library, manifest, yamlio
+from iakit import library, manifest, provenance, yamlio
 from iakit.paths import FIXTURES, MANIFEST, ROOT
 
 RUN = FIXTURES / "contracts/webia-run"
@@ -77,6 +77,44 @@ def test_valid_library_derives_adoption_from_reviews(lib):
     assert r["quote_ledger"]["FIXTURE-page-labels"]["previews"] == 2
     assert r["coverage"]["extractions"]["EXTRACT-FX-001"]["integrated"] == [[4, 5], [10, 12]]
     assert r["human_review"] == "not_run"
+
+
+def test_ia_mapping_applicability_requires_new_independent_review(lib):
+    def add_mapping(docs, files):
+        claim = provenance.claims_index(docs["provenance"])["CLAIM-0001"]
+        versions = {"ia_claim_sha256": claim["claim_sha256"],
+                    "ia_applicability_sha256": provenance.text_sha256(claim["applicability"]),
+                    "ux_text_sha256": "a" * 64, "ux_context_sha256": "b" * 64}
+        docs["uiux_mappings"]["sources"] = [{"book": "自作", "edition": "1", "sections": ["前付け"],
+            "ia_source_id": claim["source_id"], "ux_source_id": "fixture-page-labels",
+            "original_sha256": provenance.registered_sources()[claim["source_id"]]}]
+        docs["uiux_mappings"]["claims"] = [{"claim_id": "CLAIM-0001", "knowledge_id": "KN-001",
+            "principle_id": "UX-PRINCIPLE-0001", "ux_field": "recommendation", "relation": "exact",
+            "scope_difference": "自作の照合例", "ia_evidence_id": claim["evidence_id"], "ux_locator": "p.1",
+            **versions, "reviewed_by": "fixture-reviewer", "reviewer_kind": "independent_agent",
+            "reviewed_at": "2026-10-27", "independent_review": {
+                "generator": {"provider": "anthropic", "session": "fixture-gen"},
+                "reviewer": {"provider": "openai", "session": "fixture-review"},
+                **versions, "conditions_comparison": "適用条件を照合した自作例", "verdict": "exact"}}]
+    assert lib(add_mapping)["result"] == "pass"
+
+    def change_applicability(docs, files):
+        docs["provenance"]["records"][0]["support_reviews"][0]["applicability"] = "前付けと本文を同じ番号体系で数える文書だけ"
+    result = lib(change_applicability)
+    assert result["result"] == "fail"
+    assert any("適用条件の版が変わった" in e for e in result["errors"]), result["errors"]
+
+    def refresh_mapping(docs, files):
+        claim = provenance.claims_index(docs["provenance"])["CLAIM-0001"]
+        docs["uiux_mappings"]["claims"][0]["ia_applicability_sha256"] = provenance.text_sha256(claim["applicability"])
+    result = lib(refresh_mapping)
+    assert result["result"] == "fail"
+    assert any("照合した後に対象が変わった" in e for e in result["errors"]), result["errors"]
+
+    def refresh_review(docs, files):
+        mapping = docs["uiux_mappings"]["claims"][0]
+        mapping["independent_review"]["ia_applicability_sha256"] = mapping["ia_applicability_sha256"]
+    assert lib(refresh_review)["result"] == "pass"
 
 
 def test_body_not_in_receipt_is_not_adopted(lib):

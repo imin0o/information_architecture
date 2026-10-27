@@ -23,6 +23,7 @@ def mapping(**over):
          "ux_field": "conditions[0]", "relation": "broad", "scope_difference": "例",
          "ia_evidence_id": CLAIMS["CLAIM-0001"]["evidence_id"], "ux_locator": "p.1",
          "ia_claim_sha256": CLAIMS["CLAIM-0001"]["claim_sha256"],
+         "ia_applicability_sha256": provenance.text_sha256(CLAIMS["CLAIM-0001"]["applicability"]),
          "ux_text_sha256": provenance.text_sha256(CARD["conditions"][0]["text"]),
          "ux_context_sha256": library_mappings.context_sha256(CARD),
          "reviewed_by": "tester", "reviewer_kind": "agent", "reviewed_at": "2026-10-27"}
@@ -205,6 +206,7 @@ def review(**over):
     r = {"generator": {"provider": "anthropic", "session": "gen-1"},
          "reviewer": {"provider": "openai", "session": "rev-1"},
          "ia_claim_sha256": m["ia_claim_sha256"], "ux_text_sha256": m["ux_text_sha256"],
+         "ia_applicability_sha256": m["ia_applicability_sha256"],
          "ux_context_sha256": m["ux_context_sha256"],
          "conditions_comparison": "前付けの有無という条件が両側で一致する", "verdict": "exact"}
     return r | over
@@ -225,6 +227,46 @@ def test_exact_requires_human_or_independent_review():
 def test_independent_review_is_accepted(ux):
     errors, report = run(ux(), independent())
     assert errors == [] and report["relations"] == {"exact": 1}
+
+
+@pytest.mark.parametrize("reviewer_kind", ["agent", "human", "independent_agent"])
+@pytest.mark.parametrize("ux_available", [True, False])
+def test_ia_applicability_revision_requires_mapping_review(ux, tmp_path, reviewer_kind, ux_available):
+    root = ux() if ux_available else tmp_path / "isolated/information_architecture"
+    doc = independent() if reviewer_kind == "independent_agent" else with_claim(
+        reviewer_kind=reviewer_kind, relation="exact" if reviewer_kind == "human" else "close")
+    assert run(root, doc)[0] == []
+    prov = copy.deepcopy(PROV)
+    prov["records"][0]["support_reviews"][0]["applicability"] = "前付けと本文を同じ番号体系で数える文書だけ"
+    errors, report = library_mappings.check(doc, INDEX, prov, SOURCES, root)
+    assert any("適用条件の版が変わった" in e for e in errors), errors
+    assert report["ux_check"] == ("checked" if ux_available else "not_run")
+
+
+def test_mapping_refresh_does_not_refresh_independent_applicability_review(ux):
+    root, doc, prov = ux(), independent(), copy.deepcopy(PROV)
+    claim = prov["records"][0]["support_reviews"][0]
+    claim["applicability"] = "前付けと本文を同じ番号体系で数える文書だけ"
+    current = provenance.text_sha256(claim["applicability"])
+    doc["claims"][0]["ia_applicability_sha256"] = current
+    errors, _ = library_mappings.check(doc, INDEX, prov, SOURCES, root)
+    assert any("照合した後に対象が変わった" in e for e in errors), errors
+    doc["claims"][0]["independent_review"]["ia_applicability_sha256"] = current
+    assert library_mappings.check(doc, INDEX, prov, SOURCES, root)[0] == []
+
+
+@pytest.mark.parametrize("in_review", [False, True])
+def test_ia_applicability_hash_is_required(in_review):
+    doc = independent()
+    target = doc["claims"][0]["independent_review"] if in_review else doc["claims"][0]
+    del target["ia_applicability_sha256"]
+    assert any("required: ia_applicability_sha256" in e for e in yamlio.schema_errors(doc, library_mappings.FILE[1]))
+
+
+def test_ia_review_metadata_does_not_invalidate_mapping(ux):
+    prov = copy.deepcopy(PROV)
+    prov["records"][0]["support_reviews"][0].update(reviewed_by="another reviewer", reviewed_at="2026-10-27T12:00:00+09:00")
+    assert library_mappings.check(independent(), INDEX, prov, SOURCES, ux())[0] == []
 
 
 @pytest.mark.parametrize("over, message", [
