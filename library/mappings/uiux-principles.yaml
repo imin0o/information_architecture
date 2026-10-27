@@ -1,7 +1,9 @@
 # UI/UX skill（ui_ux リポジトリ）の原則カードとの知識対応表。schemas/uiux-mapping.schema.json で検証する。
 # 出典の対応（sources）と主張の対応（claims）を分けて持つ。同じ本を引いていても同じ主張とは限らないため。
 # relation は IA の主張から見た ux_field の関係。broad は該当欄の方が広く、narrow は該当欄の方が狭い。
-# exact は推移的に同一視を広げるので、主張の文言と適用条件が一致し、人が確認した場合だけに使う。
+# exact は推移的に同一視を広げるので、主張の文言と適用条件が一致し、人か、生成者と別の提供元による
+# independent_agent が確認した場合だけに使う。independent_agent は照合記録（independent_review）を持ち、
+# 照合した版が現在の版と違えば検査が失敗する。既存の対応を exact へ自動で昇格させず、推移的な対応も作らない。
 # ia_claim_sha256 と ux_text_sha256 は主張と該当欄の版。ux_context_sha256 はカードの条件・例外・根拠を含む版。
 # いずれかが変わると iakit library check が失敗し、対応を確認し直すまで通らない。
 # 対応がない主張（図の表記、ユーザーテスト）は検査結果の unmapped_claims に出る。

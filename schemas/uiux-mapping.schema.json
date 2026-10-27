@@ -64,11 +64,39 @@
         "ux_text_sha256": {"description": "確認した該当欄の text のハッシュ（UTF-8）", "$ref": "common.schema.json#/$defs/sha256"},
         "ux_context_sha256": {"description": "claim_type、recommendation、conditions、exceptions、tradeoffs、source_statement、evidence をキー順で正規化したJSONのSHA-256（省略された欄はnull）。確認者や表示名は含めない", "$ref": "common.schema.json#/$defs/sha256"},
         "reviewed_by": {"$ref": "common.schema.json#/$defs/nonempty"},
-        "reviewer_kind": {"description": "exact は推移的に同一視を広げるため、human の確認を必須にする", "enum": ["human", "agent"]},
-        "reviewed_at": {"$ref": "#/$defs/date"}
+        "reviewer_kind": {"description": "exact は推移的に同一視を広げるため、human か、生成者と別の提供元による independent_agent の確認を必須にする", "enum": ["human", "agent", "independent_agent"]},
+        "reviewed_at": {"$ref": "#/$defs/date"},
+        "independent_review": {"$ref": "#/$defs/independent_review"}
       },
-      "if": {"properties": {"relation": {"const": "exact"}}},
-      "then": {"properties": {"reviewer_kind": {"const": "human"}}}
+      "allOf": [
+        {"if": {"properties": {"relation": {"const": "exact"}}},
+         "then": {"properties": {"reviewer_kind": {"enum": ["human", "independent_agent"]}}}},
+        {"if": {"properties": {"reviewer_kind": {"const": "independent_agent"}}},
+         "then": {"required": ["independent_review"]}}
+      ]
+    },
+    "party": {
+      "type": "object", "required": ["provider", "session"], "additionalProperties": false,
+      "properties": {
+        "provider": {"description": "モデルの提供元（anthropic、openai など）", "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+        "session": {"description": "対応を作った、または照合したセッションの識別子", "$ref": "common.schema.json#/$defs/nonempty"}
+      }
+    },
+    "independent_review": {
+      "description": "生成者と別の提供元による照合の記録。比較した版を固定し、対応の版が変わったら照合し直す。カードが codex-checked であることは主張どうしの同値性の確認にならない",
+      "type": "object",
+      "required": ["generator", "reviewer", "ia_claim_sha256", "ux_text_sha256", "ux_context_sha256",
+                   "conditions_comparison", "verdict"],
+      "additionalProperties": false,
+      "properties": {
+        "generator": {"$ref": "#/$defs/party"},
+        "reviewer": {"$ref": "#/$defs/party"},
+        "ia_claim_sha256": {"description": "照合した主張の版", "$ref": "common.schema.json#/$defs/sha256"},
+        "ux_text_sha256": {"description": "照合した該当欄の版", "$ref": "common.schema.json#/$defs/sha256"},
+        "ux_context_sha256": {"description": "照合したカードの文脈の版", "$ref": "common.schema.json#/$defs/sha256"},
+        "conditions_comparison": {"description": "主張とカードの適用条件・例外を比べた結果", "$ref": "common.schema.json#/$defs/nonempty"},
+        "verdict": {"description": "照合者が判定した関係。relation と一致しなければならない", "enum": ["exact", "close", "broad", "narrow", "related"]}
+      }
     }
   }
 }

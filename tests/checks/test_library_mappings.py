@@ -199,9 +199,43 @@ def test_malformed_card_is_a_reported_error(ux, card):
     assert report["ux_check"] == "checked"
 
 
-def test_exact_requires_human_review():
-    assert yamlio.schema_errors(with_claim(relation="exact"), library_mappings.FILE[1])
-    assert yamlio.schema_errors(with_claim(relation="exact", reviewer_kind="human"), library_mappings.FILE[1]) == []
+def review(**over):
+    """生成者と別の提供元による照合記録。比較した版は mapping() の現在の版と同じにする。"""
+    m = mapping()
+    r = {"generator": {"provider": "anthropic", "session": "gen-1"},
+         "reviewer": {"provider": "openai", "session": "rev-1"},
+         "ia_claim_sha256": m["ia_claim_sha256"], "ux_text_sha256": m["ux_text_sha256"],
+         "ux_context_sha256": m["ux_context_sha256"],
+         "conditions_comparison": "前付けの有無という条件が両側で一致する", "verdict": "exact"}
+    return r | over
+
+
+def independent(**over):
+    return with_claim(relation="exact", reviewer_kind="independent_agent", independent_review=review(**over))
+
+
+def test_exact_requires_human_or_independent_review():
+    schema = library_mappings.FILE[1]
+    assert yamlio.schema_errors(with_claim(relation="exact"), schema)
+    assert yamlio.schema_errors(with_claim(relation="exact", reviewer_kind="human"), schema) == []
+    assert yamlio.schema_errors(with_claim(relation="exact", reviewer_kind="independent_agent"), schema)
+    assert yamlio.schema_errors(independent(), schema) == []
+
+
+def test_independent_review_is_accepted(ux):
+    errors, report = run(ux(), independent())
+    assert errors == [] and report["relations"] == {"exact": 1}
+
+
+@pytest.mark.parametrize("over, message", [
+    ({"reviewer": {"provider": "anthropic", "session": "rev-1"}}, "自己確認"),
+    ({"ux_context_sha256": "b" * 64}, "照合した後に対象が変わった"),
+    ({"ia_claim_sha256": "b" * 64}, "照合した後に対象が変わった"),
+    ({"verdict": "close"}, "照合の判定 close が relation exact と一致しない"),
+])
+def test_independent_review_errors(ux, over, message):
+    errors, _ = run(ux(), independent(**over))
+    assert any(message in e for e in errors), errors
 
 
 def test_direction_is_fixed_by_schema():

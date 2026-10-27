@@ -117,6 +117,20 @@ def ia_errors(doc: dict, index: dict, prov: dict, sources: dict) -> list[str]:
             errors.append(f"{where}: ia_evidence_id が主張の根拠 {c['evidence_id']} と一致しない")
         if c["claim_sha256"] != m["ia_claim_sha256"]:
             errors.append(f"{where}: 主張の版が変わった（対応を確認し直し、ia_claim_sha256 を更新する）")
+        if "independent_review" in m:
+            errors += [f"{where}: {e}" for e in _review_errors(m, m["independent_review"])]
+    return errors
+
+
+def _review_errors(m: dict, r: dict) -> list[str]:
+    """独立照合の記録が、別の提供元による、現在の版と relation についての判定であるか。"""
+    errors = []
+    if r["generator"]["provider"] == r["reviewer"]["provider"]:
+        errors.append(f"生成者と照合者の提供元がともに {r['reviewer']['provider']}（自己確認は独立照合にならない）")
+    if any(r[k] != m[k] for k in ("ia_claim_sha256", "ux_text_sha256", "ux_context_sha256")):
+        errors.append("照合した後に対象が変わった（照合し直し、independent_review の版を更新する）")
+    if r["verdict"] != m["relation"]:
+        errors.append(f"照合の判定 {r['verdict']} が relation {m['relation']} と一致しない")
     return errors
 
 
