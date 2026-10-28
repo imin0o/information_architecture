@@ -96,7 +96,7 @@ uv run --locked iakit leaks check --dir dist
 
 配布ディレクトリではSkill名やbundle名の下も検査し、どの深さでも `sources/`（`manifest.yaml`以外）、`runs/`、`library/build-logs/raw/` の混入を拒否する。
 
-`.gitignore` は `sources/manifest.yaml` を残して原典・抽出物を除外し、`runs/`、生ログ、Python環境・キャッシュ、`dist/`、`build/`、`.tmp/` も除外する。除外は既存の追跡ファイルや `git add -f` には効かないため、漏えい検査も併用する。
+`.gitignore` は `sources/manifest.yaml` を残して原典・抽出物を除外し、`runs/`、生ログ、Python環境・キャッシュ、`dist/`、`build/`、`.tmp/` も除外する。リポジトリの外（配布物を使う別のプロジェクト）でも記録が git に入らないよう、`iakit run init` は実行ディレクトリの中に `*` だけの `.gitignore` を置く（既存の `.gitignore` は上書きしない）。除外は既存の追跡ファイルや `git add -f` には効かないため、漏えい検査も併用する。
 
 `.gitattributes` はテキスト・フックをLF、PDF・EPUB等をバイナリに指定する。Windowsの `core.autocrlf` 設定が有効でも、自作素材のバイト列やシェルの先頭行を変換しない。
 

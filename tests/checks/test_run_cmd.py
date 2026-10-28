@@ -1,6 +1,7 @@
 """実行ディレクトリの管理コマンド（4.4、FR-08、IN-02、IN-05、AC-12）。"""
 
 import shutil
+import subprocess
 from copy import deepcopy
 
 import pytest
@@ -59,6 +60,24 @@ def test_init_stops_when_route_skill_is_missing(tmp_path):
     with pytest.raises(ValueError, match="必要なSkillがない"):
         run_cmd.init(tmp_path / "r", "RUN-X", "taxonomy", "codex", "m", skills_root=skills)
     assert not (tmp_path / "r").exists()
+
+
+def test_init_gitignore_keeps_run_directory_out_of_git(tmp_path):
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    d = tmp_path / "ia" / "RUN-G"
+    run_cmd.init(d, "RUN-G", "web_ia", "claude-code", "m")
+    assert (d / ".gitignore").read_text(encoding="utf-8").splitlines()[-1] == "*"
+    status = subprocess.run(["git", "-C", str(tmp_path), "status", "--porcelain", "--untracked-files=all"],
+                            capture_output=True, text=True, check=True)
+    assert status.stdout == ""
+
+
+def test_init_keeps_existing_gitignore(tmp_path):
+    d = tmp_path / "RUN-G"
+    d.mkdir()
+    (d / ".gitignore").write_text("# 利用者の規則\n", encoding="utf-8")
+    run_cmd.init(d, "RUN-G", "web_ia", "claude-code", "m")
+    assert (d / ".gitignore").read_text(encoding="utf-8") == "# 利用者の規則\n"
 
 
 def test_unsupported_route_is_recorded_and_cannot_complete(tmp_path):

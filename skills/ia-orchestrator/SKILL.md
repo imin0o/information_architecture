@@ -33,13 +33,13 @@ metadata:
 uv run --locked iakit run init runs/<run_id> --run-id <run_id> --task-type <web_ia|taxonomy|...> --host <claude-code|codex|other> --model <モデル名>
 ```
 
-コマンドは経路の段階、必要なSkillの有無と内容ハッシュを記録する。必要なSkillが欠けている場合、または `metadata.contract_version` が実行時処理の契約版と異なる場合は、開始前に止めて更新対象を示す。
+コマンドは経路の段階、必要なSkillの有無と内容ハッシュを記録する。実行ディレクトリには入力の写しが入るため、作るときに中へ `*` だけの `.gitignore` を置き、どのリポジトリで実行しても git status に出さない。すでに `.gitignore` があれば上書きしない。記録をコミットしたい場合は、その `.gitignore` を消す。必要なSkillが欠けている場合、または `metadata.contract_version` が実行時処理の契約版と異なる場合は、開始前に止めて更新対象を示す。
 
 配布物（リポジトリがない環境）では、`uv run --locked iakit` の代わりに `uv run <このSkillのディレクトリ>/scripts/run_iakit.py` を使う。`run`・`input`・`contracts check`・`run judgment` を同じ引数で使える。uvがなければ、依存（jsonschema、pypdf、ruamel.yaml）を入れたPythonで `python <このSkillのディレクトリ>/scripts/run_iakit.py` を実行する。以下では両方を `iakit` と書く。
 
 `iakit run init` が実行できて止まった場合（Skillの欠落、契約版の不一致、配布物の検査の失敗）は、次の代替を使わない。実行記録を手で作らず、入力も登録せず、止まった理由と更新が必要なSkillを示して終える。契約検査は、経路のSkillが欠けた実行記録を失敗にする。
 
-どちらのコマンドも使えない環境では、`run.yaml`・`inputs.yaml`・`decisions.yaml` を各スキーマに合わせて作り、必要なSkill（[routing.md](routing.md) の表）がすべて読めることを確かめてから進める。読めないSkillがあれば、黙って段階を省かず、不足するSkillと対応できる範囲をユーザーに示す。
+どちらのコマンドも使えない環境では、`run.yaml`・`inputs.yaml`・`decisions.yaml` を各スキーマに合わせて作り、`init` と同じ `.gitignore`（`*` の1行）を実行ディレクトリに置き、必要なSkill（[routing.md](routing.md) の表）がすべて読めることを確かめてから進める。読めないSkillがあれば、黙って段階を省かず、不足するSkillと対応できる範囲をユーザーに示す。
 
 依頼を処理するために入力をホストのモデルへ読ませる場合も、ユーザーの許可を `approvals` に記録する（`destination_kind: host_llm`）。
 

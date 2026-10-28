@@ -14,6 +14,8 @@ LATER_ROUTES = {
     "rag_knowledge": ["analyze", "classify", "model", "validate"],
 }
 CONTRACT_VERSION = "1.0"
+# 実行ディレクトリは入力の写しを持つ。置き場所を問わず git status に出さないため、作るときに中へ無視の規則を置く
+GITIGNORE = "# iakit の実行記録（入力の写しを含む）。git に入れない。\n*\n"
 
 
 def skill_item(name: str, skills_root: Path = SKILLS) -> dict | None:
@@ -53,6 +55,9 @@ def init(directory: Path, run_id: str, task_type: str, host: str, model: str, ho
         f"MVP未対応の経路（{' → '.join(stages)}）。不足Skill: {missing}。"
         "対応できる範囲はAnalyzeまでの分析で、残る段階は未実施として報告する")
     directory.mkdir(parents=True, exist_ok=True)
+    # 利用者が置いた .gitignore は上書きしない（記録を git に入れると決めた場合）
+    if not (directory / ".gitignore").exists():
+        (directory / ".gitignore").write_text(GITIGNORE, encoding="utf-8", newline="\n")
     save(directory, "inputs.yaml", {"schema_version": "1.0", "run_id": run_id, "inputs": []})
     save(directory, "decisions.yaml", {"schema_version": "1.0", "run_id": run_id, "decisions": []})
     run = {
